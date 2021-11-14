@@ -27,7 +27,7 @@ def main(argv):
 
 	df = pd.read_pickle(inputfile)
 	
-	df2 = df.iloc[:,df.columns.get_level_values(1)==('Vlugt_DSP')]
+	df2 = df.iloc[:,df.columns.get_level_values(1)==('Vlugt_DSF')]
 	alphas = df.iloc[:,df.columns.get_level_values(1)==('Alpha')]
 	print(alphas)
 
@@ -46,6 +46,10 @@ def main(argv):
 
 	ax = plt.axes(projection='3d')
 	ax.plot_trisurf(x, y, z, cmap='viridis', edgecolor='none');
+	ax.set_title('Vlugt DSF', fontsize=20)
+	ax.set_xlabel('Alpha', fontsize=20, labelpad=20)
+	ax.set_ylabel('RCut', fontsize=20, labelpad=20)
+	ax.set_zlabel('Relative Error', fontsize=20, labelpad=20)
 	plt.show()
 
 
