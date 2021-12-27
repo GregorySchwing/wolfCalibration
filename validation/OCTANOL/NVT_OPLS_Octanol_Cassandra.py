@@ -70,10 +70,7 @@ mc.run(
     moveset=moveset,
     run_type="equilibration",
     run_length=10000,
-    temperature=300.0 * u.K#,
-    #charge_style='dsf',
-    #charge_cutoff=12.0 * u.angstrom,
-    #dsf_damping=0.22
+    temperature=300.0 * u.K
 )
 
 
@@ -113,7 +110,7 @@ mc.run(
     moveset=moveset,
     run_type="equilibration",
     run_length=10000,
-    temperature=300.0 * u.K#,
+    temperature=300.0 * u.K,
     charge_style='dsf',
     charge_cutoff=12.0 * u.angstrom,
     dsf_damping=0.22
