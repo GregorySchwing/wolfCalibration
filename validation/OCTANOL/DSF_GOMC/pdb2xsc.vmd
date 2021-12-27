@@ -1,0 +1,10 @@
+set pdb NVT_octanol
+set psf NVT_octanol
+set xsc NVT_octanol
+#***************************************************************************
+
+
+# load solute molecule
+set solute [mol new $psf.psf waitfor all]
+mol addfile $pdb.pdb mol $solute waitfor all
+pbc writexst $xsc.xsc
