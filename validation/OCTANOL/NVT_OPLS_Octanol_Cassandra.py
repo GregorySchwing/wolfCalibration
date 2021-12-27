@@ -104,7 +104,22 @@ gomc_control.write_gomc_control_file(charmm, 'in_NVT.conf',  'NVT', 10000, 300, 
 
 print('Completed: GOMC EWALD FF file, and the psf and pdb files')
 
+
 os.chdir("../DSF_Cassandra")
+
+# Run a simulation with at 300 K with 10000 MC moveset
+mc.run(
+    system=system,
+    moveset=moveset,
+    run_type="equilibration",
+    run_length=10000,
+    temperature=300.0 * u.K#,
+    charge_style='dsf',
+    charge_cutoff=12.0 * u.angstrom,
+    dsf_damping=0.22
+)
+
+os.chdir("../DSF_GOMC")
 
 charmm.write_inp()
 
