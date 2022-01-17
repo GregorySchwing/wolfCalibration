@@ -1,0 +1,50 @@
+<ForceField>
+ <AtomTypes>
+  <Type name="ZnA" class="ZnA" element="_ZnA" mass="65.39" def="ZnA" desc="Zinc" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="ZnB" class="ZnB" element="ZnB" mass="65.39" def="ZnB" desc="Zinc" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CA" class="CA" element="CA" mass="12.01" def="CA" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CB" class="CB" element="CB" mass="12.01" def="CB" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CC" class="CC" element="CC" mass="12.01" def="CC" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CD" class="CD" element="CD" mass="12.01" def="CD" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CE" class="CE" element="CE" mass="12.01" def="CE" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CF" class="CF" element="CF" mass="12.01" def="CF" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CG" class="CG" element="CG" mass="12.01" def="CG" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="CH" class="CH" element="CH" mass="12.01" def="CH" desc="Carbon" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="OA" class="OA" element="OA" mass="16.0" def="OA" desc="Oxygen" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="OB" class="OB" element="OB" mass="16.0" def="OB" desc="Oxygen" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="OC" class="OC" element="OC" mass="16.0" def="OC" desc="Oxygen" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="HA" class="HA" element="HA" mass="1.01" def="HA" desc="Hydrogen" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="HB" class="HB" element="HB" mass="1.01" def="HB" desc="Hydrogen" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="HC" class="HC" element="HC" mass="1.01" def="HC" desc="Hydrogen" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="HD" class="HD" element="HD" mass="1.01" def="HD" desc="Hydrogen" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="OTC" class="OTC" element="O" mass="15.9994" def="O[C;X2](O)" desc="O_in_CO2" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+  <Type name="COT" class="COT" element="O" mass="12.0110" def="[C;X2](O)(O)" desc="C_in_CO2" doi="10.1002/aic.690470719, 10.1021/j100389a010, 10.1021/acs.jced.5b01002, * DOI: 10.1063/1.4930138"/>
+ </AtomTypes>
+ <HarmonicBondForce>
+  <Bond class1="OTC" class2="COT" length="0.116" k="41867999999996"/>
+  </HarmonicBondForce>
+ <HarmonicAngleForce>
+  <Angle class1="OTC" class2="COT" class3="OTC" angle="3.1415926535898" k="41867999999996"/>
+ </HarmonicAngleForce>
+ <NonbondedForce coulomb14scale="0.0" lj14scale="0.0">
+  <Atom type="ZnA" charge="1.103633" sigma="0.246 " epsilon="0.51916963008744"/>
+  <Atom type="ZnB" charge="1.103634" sigma="0.246" epsilon="0.51916963008744"/>
+  <Atom type="HA" charge="0.115883"  sigma="0.257"    epsilon="0.18420537853584"/>
+  <Atom type="HB" charge="0.115882"  sigma="0.257"    epsilon="0.18420537853584"/>
+  <Atom type="HC" charge="0.115881"  sigma="0.257"    epsilon="0.18420537853584"/>
+  <Atom type="HD" charge="0.115880"  sigma="0.257"    epsilon="0.18420537853584"/>
+  <Atom type="CA" charge="-0.055959"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="CB" charge="-0.055960"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="CC" charge="-0.055963"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="CD" charge="-0.055962"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="CE" charge="0.671920"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="CF" charge="-0.115029"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="CG" charge="0.671921"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="CH" charge="-0.115028"  sigma="0.343"    epsilon="0.43963018030728"/>
+  <Atom type="OA" charge="-1.262055" sigma="0.312" epsilon="0.25118158882824"/>
+  <Atom type="OB" charge="-0.601073"  sigma="0.312"    epsilon="0.25118158882824"/>
+  <Atom type="OC" charge="-0.601074"  sigma="0.312"    epsilon="0.25118158882824"/>
+  <Atom type="OTC" charge="-0.35" sigma="0.3050" epsilon="0.65728206394452"/>
+  <Atom type="COT" charge="0.70"  sigma="0.2800"    epsilon="0.22464070539876"/>
+  </NonbondedForce>
+</ForceField>

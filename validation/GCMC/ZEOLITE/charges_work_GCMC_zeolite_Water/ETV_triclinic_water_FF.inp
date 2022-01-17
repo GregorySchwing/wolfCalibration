@@ -1,0 +1,57 @@
+*  ETV_triclinic_3_cell_box_0 and water_box_reservior - created by mBuild using the on 2021-06-08 09:38:04.912715
+*  parameters from the {'ETV': '../common/Charmm_writer_testing_only_zeolite.xml', 'H2O': '../common/spce.xml'} force field(s) via MoSDef
+*  1-4 coulombic scaling = {'ETV': 0.0, 'H2O': 0.0}, and 1-4 LJ scaling = {'ETV': 0.0, 'H2O': 0.0}
+
+*  16296 atoms
+*  10108 bonds
+*  5054 angles
+*  0 dihedrals
+*  0 impropers
+
+*  4 atom types
+*  1 bond types
+*  1 angle types
+
+
+* masses
+
+! atom_types 	mass 		  atomTypeForceFieldName_ResidueName (i.e., atoms_type_per_utilized_FF)  
+*  A		15.999430	! O_ETV
+*  B		28.085530	! Si_ETV
+*  D		15.999430	! o_spce_H2O
+*  C		1.007947	! h_spce_H2O
+
+BONDS * harmonic
+!
+!V(bond) = Kb(b - b0)**2
+!
+!Kb: kcal/mole/A**2
+!b0: A
+!Kb (kcal/mol) = Kb_K (K) * Boltz. const.; (9999999999 if no stretching)
+!
+!atom_types 	 Kb		b0 		  atoms_types_per_utilized_FF
+C	D	600.40152964	1.0		! h_spce_H2O	o_spce_H2O
+
+ANGLES * harmonic
+!
+!V(angle) = Ktheta(Theta - Theta0)**2
+!
+!Ktheta: kcal/mole/rad**2
+!Theta0: degrees
+!
+! Ktheta (kcal/mol) = Ktheta_K (K) * Boltz. const.		
+!
+!atom_types 		Ktheta		Theta0			  atoms_types_per_utilized_FF
+C	D	C	45.76959847		109.47122		! h_spce_H2O	o_spce_H2O	h_spce_H2O
+
+NONBONDED
+!
+!V(Lennard-Jones) = Eps,i,j[(Rmin,i,j/ri,j)**12 - 2(Rmin,i,j/ri,j)**6]
+!
+!atype 	ignored	epsilon 	Rmin/2 		ignored	eps,1-4		Rmin/2,1-4		  atom_type_per_utilized_FF
+A	0.00	-0.294106119	2.09339172010	0.00	-0.000000000	2.09339172010		! O_ETV	O_ETV
+B	0.00	-0.055641730	1.90818548213	0.00	-0.000000000	1.90818548213		! Si_ETV	Si_ETV
+D	0.00	-0.155377629	1.77663293006	0.00	-0.000000000	1.77663293006		! o_spce_H2O	o_spce_H2O
+C	0.00	-0.000000000	0.00000000000	0.00	-0.000000000	0.00000000000		! h_spce_H2O	h_spce_H2O
+
+END
