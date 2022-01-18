@@ -34,7 +34,7 @@ outputTiming            1000;               # The number of timesteps between ea
 # Force-Field Parameters
 paraTypeCharmm          on;                 # We're using charmm type parameter file(s)
                                             # multiple definitions may be used but only one file per definition
-parameters              toppar/GCMC_water_O2_FF_NAMD.inp
+parameters              GCMC_water_O2_FF_NAMD.inp
 # These are specified by CHARMM
 exclude                 scaled1-4           # non-bonded exclusion policy to use "none,1-2,1-3,1-4,or scaled1-4"
                                             # 1-2: all atoms pairs that are bonded are going to be ignored
