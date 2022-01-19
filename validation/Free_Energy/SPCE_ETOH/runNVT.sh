@@ -21,7 +21,7 @@
 #SBATCH -t 0-2:00:0
 for i in {0..22..1}
   do 
-     cp nvt.sh 
+     cp nvt.sh NVT_Eq/state_$i
      cd NVT_Eq/state_$i
      sbatch nvt.sh
      cd ../..
