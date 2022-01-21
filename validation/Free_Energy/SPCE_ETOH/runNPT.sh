@@ -21,7 +21,7 @@
 #SBATCH -t 0-2:00:0
 for i in {0..22..1}
   do 
-     cp npt.sh 
+     cp npt.sh NPT_Eq/state_$i 
      cd NPT_Eq/state_$i
      sbatch npt.sh
      cd ../..
