@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name
-#SBATCH --job-name NPT_EQ
+#SBATCH --job-name HY
 # Submit to the gpu QoS, the requeue QoS can also be used for gpu's 
 #SBATCH -q secondary
 # Request one node

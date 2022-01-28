@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name
-#SBATCH --job-name NPT_EQ
+#SBATCH --job-name NVT
 # Submit to the gpu QoS, the requeue QoS can also be used for gpu's 
 #SBATCH -q secondary
 # Request one node
@@ -19,7 +19,7 @@
 #SBATCH -e errors_%j.err
 # Set maximum time limit
 #SBATCH -t 7-0:0:0
-/wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NPT NPT_Eq_water_ethanol_fe.conf > log
+/wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT NVT_Eq_water_ethanol_fe.conf > log
 
 
 
