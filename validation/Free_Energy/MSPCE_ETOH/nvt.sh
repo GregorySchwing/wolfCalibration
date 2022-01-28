@@ -18,7 +18,7 @@
 # Create an error file that will be error_<jobid>.out
 #SBATCH -e errors_%j.err
 # Set maximum time limit
-#SBATCH -t 7-0:0:0
+#SBATCH -t 1-0:0:0
 /wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT NVT_Eq_water_ethanol_fe.conf > log
 
 
