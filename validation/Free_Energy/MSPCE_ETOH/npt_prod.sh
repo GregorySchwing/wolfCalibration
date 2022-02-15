@@ -1,8 +1,8 @@
 #!/bin/bash
 # Job name
-#SBATCH --job-name HY
+#SBATCH --job-name MSPCE_ETOH
 # Submit to the gpu QoS, the requeue QoS can also be used for gpu's 
-#SBATCH -q secondary
+#SBATCH -q primary
 # Request one node
 #SBATCH -N 1
 # Total number of cores, in this example it will 1 node with 1 core each.
@@ -19,18 +19,4 @@
 #SBATCH -e errors_%j.err
 # Set maximum time limit
 #SBATCH -t 14-0:0:0
-~/GOMC/bin/GOMC_CPU_NPT NPT_Prod_water_ethanol_fe.conf > log
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+~/GOMC/bin/GOMC_CPU_NPT +p8 NPT_Prod_water_ethanol_fe.conf > log
