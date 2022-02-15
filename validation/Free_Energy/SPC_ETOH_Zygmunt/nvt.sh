@@ -2,7 +2,7 @@
 # Job name
 #SBATCH --job-name NVT
 # Submit to the gpu QoS, the requeue QoS can also be used for gpu's 
-#SBATCH -q secondary
+#SBATCH -q primary
 # Request one node
 #SBATCH -N 1
 # Total number of cores, in this example it will 1 node with 1 core each.
@@ -19,18 +19,4 @@
 #SBATCH -e errors_%j.err
 # Set maximum time limit
 #SBATCH -t 1-0:0:0
-/wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT NVT_Eq_water_ethanol_fe.conf > log
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT +p8 NVT_Eq_water_ethanol_fe.conf > log
