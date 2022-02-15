@@ -22,7 +22,7 @@
 for i in {0..22..1}
   do 
      cp npt_prod.sh
-     cd Prod_Ewald/state_$i
+     cd Prod_Ew/state_$i
      sbatch npt_prod.sh
      cd ../..
  done
