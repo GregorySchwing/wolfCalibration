@@ -1,0 +1,326 @@
+Info: GOMC Version 2.70
+Info: Start Time: Fri Feb 25 17:26:38 2022
+Info: Host Name: wsu187
+CPU information:
+Info: Total number of CPUs: 12
+Info: Total number of CPUs available: 12
+Info: Model name: Intel(R) Xeon(R) CPU           X5650  @ 2.67GHz
+Info: System name: Linux
+Info: Release: 3.10.0-1160.49.1.el7.x86_64
+Info: Version: #1 SMP Tue Nov 30 15:51:32 UTC 2021
+Info: Kernel Architecture: x86_64
+Info: Total Ram: 96506.1MB
+Info: Used Ram: 44887.3MB
+Info: Working in the current directory: /wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/MSPCE_ETOH/DSP_Gross_Cal
+Info: GOMC COMPILED TO RUN ISOBARIC-ISOTHERMAL ENSEMBLE.
+Info: Number of threads                  8 
+Info: Compiled with OpenMP Version       4.5
+
+Reading Input File:                      NPT_Prod_water_ethanol_fe.conf
+Info: Restart simulation                 Active 
+Warning: Unknown input RestartCheckpoint!
+Info: Expert Mode                        Inactive 
+Info: Constant seed                      Active 
+Info: PARAMETER file                     CHARMM format! 
+Info: Input Temperature                  298.0000 K
+Info: Input Pressure                     1.0000 bar
+Info: Volume change using constant ratio.
+Info: Non-truncated potential            Active 
+Info: Long Range Correction              Active 
+Info: Cutoff                             14.0000 A
+Info: Short Range Cutoff                 0.0000 A
+Info: Exclude                            ONE-THREE 
+Info: Geometric mean to combine LJ sigma Active A
+Info: Wolf Electrostatic                 Active 
+Info: Wolf Dampened Shifted Potential    Active 
+Info: Wolf Gross Implementation          Active 
+Info: Wolf Alpha Box 0                   2.100E-01 
+Info: Electrostatic                      Active 
+Info: Cache Ewald Fourier                Inactive 
+Info: Ewald Summation Tolerance          5.000E-05 
+Info: Box  0  CutoffCoulomb              14.0000 A
+Info: Wolf Cutoff Coulomb Range Box      0 START    1.000E+01 END      1.500E+01 DELTA    5.000E-01
+Info: Wolf Alpha Range Box               0 START    0.000E+00 END      5.000E-01 DELTA    1.000E-02
+Info: Pressure calculation frequency     10000 
+Info: Total number of steps              50000 
+Info: Number of equilibration steps      1000 
+Info: Move adjustment frequency          100 
+Info: Displacement move frequency        0.0000 
+Info: Rotation move frequency            0.0000 
+Info: Intra-Swap move frequency          0.0000 
+Warning: Unknown input SwapFreq!
+Info: Regrowth move frequency            0.2000 
+Info: Crank-Shaft move frequency         0.1000 
+Info: Volume move frequency              0.0100 
+Info: Multi-Particle move frequency      0.6900 
+Info: IntraMEMC-1 move frequency         0.0000 
+Warning: Unknown input MEMC-1Freq!
+Info: IntraMEMC-2 move frequency         0.0000 
+Warning: Unknown input MEMC-2Freq!
+Info: IntraMEMC-3 move frequency         0.0000 
+Warning: Unknown input MEMC-3Freq!
+Info: Free Energy Calculation            Inactive 
+Info: Free Energy Calc for Molecule      1 in ETO 
+Info: Free Energy Calc Lambda state      0 
+Info: Soft-core scaling power(p)         2    
+Info: Soft-core softness(alpha)          0.5000 
+Info: Soft-core minimum sigma            3.0000 
+Info: Soft-core for Coulombic interaction Inactive 
+Info: Lambda VDW                         0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.200 0.400 0.600 0.700 0.800 0.900 1.000 
+Info: Lambda Coulomb                     0.000 0.050 0.100 0.150 0.200 0.250 0.300 0.350 0.400 0.450 0.500 0.600 0.700 0.800 0.900 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 
+Info: CBMC First atom trials             10   
+Info: CBMC Secondary atom trials         10   
+Info: CBMC Angle trials                  100  
+Info: CBMC Dihedral trials               50   
+Info: Output name                        NPT_Prod 
+Info: Restart frequency                  50000 
+Warning: Unknown input CheckpointFreq!
+Info: Coordinate frequency               1000000 
+Info: Console output frequency           10000 
+Info: Average output frequency           10000 
+Warning: Unknown input HistogramFreq!
+Info: Wolf Calibration output frequency  100 
+Warning: Unknown input DistName!
+Warning: Unknown input HistName!
+Warning: Unknown input RunNumber!
+Warning: Unknown input RunLetter!
+Warning: Unknown input SampleFreq!
+Default: Multi-Particle Brownian move frequency 0.0000 
+Default: Targeted-Swap move frequency    0.0000 
+Warning: Wolf Damped Shifted Potential (DSP) set with Multiparticle enabled.The force using DSP is discontinuous at the cutoff.  We recommend DSF with MP enabled.
+Warning: Electrostatic calculation with Ewald method Inactive 
+Warning: Cell dimension set, but will be ignored in restart mode.
+Finished Reading Input File:             NPT_Prod_water_ethanol_fe.conf
+
+Reading from CHARMM-Style parameter file:  	../common/NVT_water_ethanol_fe_FF.inp
+Reading BONDS parameters.
+Reading ANGLES parameters.
+Reading DIHEDRALS parameters.
+Reading NONBONDED parameters.
+Reading from system PDB coordinate file:  	../common/NVT_water_ethanol_fe.pdb
+Finished reading:                       	../common/NVT_water_ethanol_fe.pdb
+Random number seed: 878515
+
+Molecules in PSF:
+Molecule Kind: ETO
+Idx	name	type	charge	mass
+0	C1	B	0.0000	15.0350
+1	C2	A	0.2650	14.0270
+2	O1	D	-0.7000	15.9994
+3	H1	C	0.4350	1.0079
+
+Bonds:
+[2 3] [1 2] [0 1] 
+
+Angles:
+[0 1 2] [1 2 3] 
+
+Dihedrals:
+[0 1 2 3] 
+
+Impropers:
+
+Molecule Kind: H2O
+Idx	name	type	charge	mass
+0	O1	F	-0.8216	15.9994
+1	H1	E	0.4108	1.0079
+2	H2	E	0.4108	1.0079
+
+Bonds:
+[0 1] [0 2] 
+
+Angles:
+[1 0 2] 
+
+Dihedrals:
+
+Impropers:
+
+Bonds parameter:
+Atom Types                             Kb(K)           b0(A) 
+D	C	                 302133.8170           0.9450 
+A	D	                 302133.8170           1.4300 
+B	A	                 302133.8170           1.5400 
+
+F	E	                         FIX           0.9839 
+
+Angles parameter:
+Atom Types                         Ktheta(K)         theta0(degree) 
+B	A	D	          25200.0017         109.4699 
+A	D	C	          27700.0019         108.4999 
+
+E	F	E	                 FIX         109.4700 
+
+Dihedrals parameter:
+Atom Types                           Kchi(K)    n    delta(degree) 
+B	A	D	C	    737.1604    0     90.0000 
+B	A	D	C	   -209.8204    1    180.0000 
+B	A	D	C	     29.1701    2      0.0000 
+B	A	D	C	   -187.9299    3    180.0000 
+B	A	D	C	      0.0000    4      0.0000 
+B	A	D	C	      0.0000    5    180.0000 
+
+Warning: Charge detected in ETO but Ewald Summation method is disabled!
+
+Warning: Charge detected in H2O but Ewald Summation method is disabled!
+
+NonBonded 1-4 parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+B      B                     0.0000      3.7500   12.00 
+B      A                     0.0000      3.8487   12.00 
+B      D                     0.0000      3.3653   12.00 
+B      C                     0.0000      6.1237   12.00 
+B      F                     0.0000      3.4183   12.00 
+B      E                     0.0000      0.0000   12.00 
+A      A                     0.0000      3.9500   12.00 
+A      D                     0.0000      3.4538   12.00 
+A      C                     0.0000      6.2849   12.00 
+A      F                     0.0000      3.5083   12.00 
+A      E                     0.0000      0.0000   12.00 
+D      D                     0.0000      3.0200   12.00 
+D      C                     0.0000      5.4955   12.00 
+D      F                     0.0000      3.0676   12.00 
+D      E                     0.0000      0.0000   12.00 
+C      C                     0.0000     10.0000   12.00 
+C      F                     0.0000      5.5821   12.00 
+C      E                     0.0000      0.0000   12.00 
+F      F                     0.0000      3.1160   12.00 
+F      E                     0.0000      0.0000   12.00 
+E      E                     0.0000      0.0000   12.00 
+
+NonBonded parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+B      B                    98.0000      3.7500   12.00 
+B      A                    67.1416      3.8487   12.00 
+B      D                    95.4673      3.3653   12.00 
+B      C                     0.0000      6.1237   12.00 
+B      F                   175.0125      3.4183   12.00 
+B      E                     0.0000      0.0000   12.00 
+A      A                    46.0000      3.9500   12.00 
+A      D                    65.4064      3.4538   12.00 
+A      C                     0.0000      6.2849   12.00 
+A      F                   119.9044      3.5083   12.00 
+A      E                     0.0000      0.0000   12.00 
+D      D                    93.0000      3.0200   12.00 
+D      C                     0.0000      5.4955   12.00 
+D      F                   170.4895      3.0676   12.00 
+D      E                     0.0000      0.0000   12.00 
+C      C                     0.0000     10.0000   12.00 
+C      F                     0.0000      5.5821   12.00 
+C      E                     0.0000      0.0000   12.00 
+F      F                   312.5448      3.1160   12.00 
+F      E                     0.0000      0.0000   12.00 
+E      E                     0.0000      0.0000   12.00 
+
+Info: Reading extended system file ../NPT_Eq/state_0/NPT_Eq_BOX_0_restart.xsc 
+
+Info: Finished reading extended system file ../NPT_Eq/state_0/NPT_Eq_BOX_0_restart.xsc 
+
+Info: Reading from binary file ../NPT_Eq/state_0/NPT_Eq_BOX_0_restart.coor
+
+Info: Finished reading from binary file ../NPT_Eq/state_0/NPT_Eq_BOX_0_restart.coor
+
+Info: Box  0:  Periodic Cell Basis 1     31.075   0.000   0.000 
+Info: Box  0:  Periodic Cell Basis 2      0.000  31.075   0.000 
+Info: Box  0:  Periodic Cell Basis 3      0.000   0.000  31.075 
+
+Minimum coordinates in box 0: x =   -0.619, y =   -0.627, z =   -1.137
+Maximum coordinates in box 0: x =   31.642, y =   31.724, z =   31.789
+Wrapping molecules inside the simulation box 0:
+
+################################################################################
+########################## INITIAL SIMULATION ENERGY ###########################
+
+                        ETITLE:     STEP                                   TOTAL                                INTRA(B)                               INTRA(NB)                               INTER(LJ)                                     LRC                             TOTAL_ELECT                                    REAL                                   RECIP                                    SELF                                    CORR                                ENTHALPY
+
+ENER_0:                                0                -5.31945130496633053e+06                 3.02042447828595812e+02                 0.00000000000000000e+00                -1.55421297282444406e+06                -2.92364989053413119e+04                -3.73630387568437308e+06                -3.57560793294401467e+06                 0.00000000000000000e+00                -2.14738219580042101e+07                 2.13131260152638517e+07                 1.82835892727944099e+02
+
+                        STITLE:     STEP                                  VOLUME                                PRESSURE                         COMPRESSIBILITY                                TOTALMOL                             MOLFRAC_ETO                             MOLFRAC_H2O                             MOLDENS_ETO                             MOLDENS_H2O                             TOT_DENSITY
+
+STAT_0:                                0                 3.00084943548689698e+04                 9.10793661501818747e+02                 6.63636984131403929e-01                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.33238978328730091e-05                 3.33238978328730118e-02                 9.99431917858221254e+02
+
+################################################################################
+############################# STARTING SIMULATION ##############################
+
+                        MTITLE:     STEP                           MULTIPARTICLE                                MPACCEPT                               MPACCEPT%                                REGROWTH                            REGROWACCEPT                           REGROWACCEPT%                              CRANKSHAFT                          CRKSHAFTACCEPT                         CRKSHAFTACCEPT%                                  VOLUME                               VOLACCEPT                              VOLACCEPT%                                  VOLMAX
+
+                        ETITLE:     STEP                                   TOTAL                                INTRA(B)                               INTRA(NB)                               INTER(LJ)                                     LRC                             TOTAL_ELECT                                    REAL                                   RECIP                                    SELF                                    CORR                                ENTHALPY
+
+                        STITLE:     STEP                                  VOLUME                                PRESSURE                         COMPRESSIBILITY                                TOTALMOL                             MOLFRAC_ETO                             MOLFRAC_H2O                             MOLDENS_ETO                             MOLDENS_H2O                             TOT_DENSITY
+
+Printed combined psf to file NPT_Prod_merged.psf
+MOVE_0:                            10000                                    6900                                    2075                 3.00724637681159415e+01                                    1974                                     364                 1.84397163120567349e+01                                    1012                                     419                 4.14031620553359687e+01                                     114                                      58                 5.08771929824561440e+01                 2.63374485596707757e+02
+
+ENER_0:                            10000                -5.34936012256999686e+06                 6.61262542095615913e+02                 0.00000000000000000e+00                -1.57891798530957499e+06                -2.91651967361528841e+04                -3.74193820306636393e+06                -3.58126436904920032e+06                 0.00000000000000000e+00                -2.14738219580042101e+07                 2.13131481239870451e+07                 4.29933662183672372e+00
+
+STAT_0:                            10000                 3.00818581919429234e+04                 1.95033450247241433e+02                 1.42455801037207369e-01                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.32426272878261997e-05                 3.32426272878261972e-02                 9.96994496608495865e+02
+
+PRES_0:                            10000                -9.20885063011771308e+02                -1.40702027019311117e+03                -3.91121745398798851e+02
+
+Steps/sec:   1.481, Simulation ends in:   0 d:   7 h:  31 m 
+
+MOVE_0:                            20000                                   13820                                    4210                 3.04630969609261939e+01                                    3968                                     707                 1.78175403225806441e+01                                    1999                                     855                 4.27713856928464224e+01                                     213                                     103                 4.83568075117370881e+01                 1.56073769242493455e+02
+
+ENER_0:                            20000                -5.29752672340653464e+06                 9.53876490499373631e+02                 0.00000000000000000e+00                -1.57399331814321131e+06                -2.90523608472256201e+04                -3.69543492090659961e+06                -3.53474468778948719e+06                 0.00000000000000000e+00                -2.14738219580042101e+07                 2.13131317248870991e+07                 1.44513696337762969e+01
+
+STAT_0:                            20000                 3.01986925252186629e+04                 2.33035427165851075e+02                 1.70874188712246022e-01                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.31140164152772136e-05                 3.31140164152772115e-02                 9.93137270432443529e+02
+
+PRES_0:                            20000                -9.31551958846661250e+02                -8.18229430526323767e+02                -8.45551681090698025e+02
+
+Steps/sec:   1.482, Simulation ends in:   0 d:   5 h:  38 m 
+
+MOVE_0:                            30000                                   20757                                    6278                 3.02452184805125981e+01                                    5960                                    1008                 1.69127516778523486e+01                                    2962                                    1254                 4.23362592842673848e+01                                     321                                     162                 5.04672897196261658e+01                 2.46635092136285863e+02
+
+ENER_0:                            30000                -5.31915248031317815e+06                 5.00818360579527791e+02                 0.00000000000000000e+00                -1.56411118537051533e+06                -2.90978959581819872e+04                -3.72644421734505892e+06                -3.56574605188563606e+06                 0.00000000000000000e+00                -2.14738219580042101e+07                 2.13131237925447859e+07                 5.47703951524565014e+01
+
+STAT_0:                            30000                 3.01514347847672834e+04                 3.95109049755367266e+02                 2.89261967676297249e-01                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.31659175471545731e-05                 3.31659175471545747e-02                 9.94693860481763409e+02
+
+PRES_0:                            30000                -6.83773151140765094e+02                -1.33177281020573355e+03                -9.74787745523615285e+01
+
+Steps/sec:   1.467, Simulation ends in:   0 d:   3 h:  46 m 
+
+MOVE_0:                            40000                                   27627                                    8374                 3.03109277156404957e+01                                    7941                                    1318                 1.65974058682785532e+01                                    4018                                    1723                 4.28820308611249388e+01                                     414                                     210                 5.07246376811594217e+01                 1.23317546068142931e+02
+
+ENER_0:                            40000                -5.32151559408854321e+06                 5.55558390690422812e+02                 0.00000000000000000e+00                -1.57646529660827527e+06                -2.92117845213159962e+04                -3.71639407134964317e+06                -3.55570227364945458e+06                 0.00000000000000000e+00                -2.14738219580042101e+07                 2.13131301603040211e+07                 5.37679715936229741e+01
+
+STAT_0:                            40000                 3.00338827885323299e+04                 3.92715904513796204e+02                 2.86389009439610209e-01                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.32957282626748614e-05                 3.32957282626748646e-02                 9.98587071684776106e+02
+
+PRES_0:                            40000                -5.35023085203332016e+02                -9.57614072070914176e+02                -6.37335568304208095e+02
+
+Steps/sec:   1.476, Simulation ends in:   0 d:   1 h:  53 m 
+
+MOVE_0:                            50000                                   34506                                   10385                 3.00962151509882325e+01                                    9990                                    1584                 1.58558558558558556e+01                                    5001                                    2155                 4.30913817236552674e+01                                     503                                     254                 5.04970178926441378e+01                 3.89744343128945502e+02
+
+ENER_0:                            50000                -5.30472050205146149e+06                 9.16737219561726761e+02                 0.00000000000000000e+00                -1.60942820476606535e+06                -2.90346310833278185e+04                -3.66717440342162922e+06                -3.50646131254647672e+06                 0.00000000000000000e+00                -2.14738219580042101e+07                 2.13131088671290576e+07                -1.66311851857965905e+02
+
+STAT_0:                            50000                 3.02171331138714959e+04                -4.87074724914434057e+02                -3.57367642713684042e-01                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.30938079476818174e-05                 3.30938079476818178e-02                 9.92531189246289046e+02
+
+PRES_0:                            50000                -1.59814513717458249e+03                -8.66643933214844765e+02                -2.28934999503563904e+03
+
+Writing binary restart coordinate to file NPT_Prod_BOX_0_restart.coor at step 50000 
+Finished writing binary restart coordinate to file NPT_Prod_BOX_0_restart.coor at step 50000 
+Writing checkpoint to file NPT_Prod_restart.chk at step 50000
+Checkpoint saved to NPT_Prod_restart.chk
+Simulation Time (total): 3.38518158240318298e+04 sec.
+
+Move Type                Mol. Kind      BOX_0      
+% Accepted MultiParticle               30.09622 
+% Accepted Volume-Transfer             50.49702 
+% Accepted Regrowth            ETO     19.66502 
+% Accepted Regrowth            H2O     11.92269 
+% Accepted Crank-Shaft         ETO     72.42063 
+% Accepted Crank-Shaft         H2O     13.30109 
+
+Displacement:                            0.0000    sec.
+Rotation:                                0.0000    sec.
+MultiParticle:                        3944.0781    sec.
+MultiParticle-Brownian:                  0.0000    sec.
+Intra-Swap:                              0.0000    sec.
+Regrowth:                               35.2240    sec.
+Intra-MEMC:                              0.0000    sec.
+Crank-Shaft:                            15.3844    sec.
+Vol-Transfer:                           27.4143    sec.
+
+Info: GOMC Version 2.70
+Info: Completed at: Sat Feb 26 02:50:50 2022
+Info: On hostname: wsu187
