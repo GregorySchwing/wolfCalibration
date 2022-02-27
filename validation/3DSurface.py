@@ -67,7 +67,7 @@ def main(argv):
 
 	x = df3.iloc[:,0].to_numpy()
 	y = df3.iloc[:,1].to_numpy()
-	z = df4.iloc[:,0].to_numpy()
+	z = np.abs(df4.iloc[:,0].to_numpy())
 
 	print(x)
 	print(y)
@@ -77,7 +77,7 @@ def main(argv):
 	y2 = np.linspace(minxy[1], minxy[1], 6500)
 	print((maxxy[0] - minxy[0]))
 	print((maxxy[1] - minxy[1]))
-	rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/6500), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/6500)
+	rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/650), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/650)
 	print(rranges)
 	X2, Y2 = np.meshgrid(x2, y2)
 
@@ -106,11 +106,11 @@ def main(argv):
 	ax.set_xlabel('Alpha', fontsize=20, labelpad=20)
 	ax.set_ylabel('RCut', fontsize=20, labelpad=20)
 	ax.set_zlabel('Relative Error', fontsize=20, labelpad=20)
-	xbf,ybf = bf[0]
+
 	add_point(ax, gdXY[0], gdXY[1], gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01, labelArg = "Gradient Descent")
 	add_point(ax, gdXY[0], gdXY[1], 10*gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01)
 	add_point(ax, gdXY[0], gdXY[1], 20*gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01)
-
+	xbf,ybf = bf[0]
 	add_point(ax, bfXY[0], bfXY[1], bf[1], fc = 'r', ec = 'r', radius=0.01, labelArg = "Brute Force")
 	add_point(ax, bfXY[0], bfXY[1], 10*bf[1], fc = 'r', ec = 'r', radius=0.01)
 	add_point(ax, bfXY[0], bfXY[1], 20*bf[1], fc = 'r', ec = 'r', radius=0.01)
