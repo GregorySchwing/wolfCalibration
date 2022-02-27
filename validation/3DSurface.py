@@ -46,16 +46,11 @@ def main(argv):
 
 	df = pd.read_csv(inputfile,sep='\t',index_col=0)
 	df = df.iloc[: , :-1]
-	print(df)
-	#Drop duplicate columns till I work out the nuances in the GOMC code
-	df = df.loc[:,~df.columns.str.contains("\)\.")]
 	dfMean = df.mean()
 
 	points = dfMean.index.map(lambda x: x.strip('('))
 	points = points.map(lambda x: x.strip(')'))
-	print(points[543])
 	pointsSplit = points.str.split(pat=", ", expand=False)
-	print(pointsSplit[543])
 
 	df3 = pd.DataFrame(pointsSplit.tolist(), columns=['rcut','alpha'], dtype=np.float64)
 	df4 = pd.DataFrame(dfMean.values, columns=['err'], dtype=np.float64)
@@ -68,10 +63,6 @@ def main(argv):
 	x = df3.iloc[:,0].to_numpy()
 	y = df3.iloc[:,1].to_numpy()
 	z = np.abs(df4.iloc[:,0].to_numpy())
-
-	print(x)
-	print(y)
-	print(z)
 
 	x2 = np.linspace(minxy[0], maxxy[0], 6500)
 	y2 = np.linspace(minxy[1], minxy[1], 6500)
@@ -88,18 +79,25 @@ def main(argv):
 	Z2 = F2(x2, y2)
 	f = lambda x: np.abs(F2(*x))
 
-	x0 = (0.1, 12)
-	bounds = [(minxy[0], maxxy[0]),(minxy[1], maxxy[1])]
-	gd = minimize(f, x0, method='SLSQP', bounds=bounds)
-	bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
 
+	bounds = [(minxy[0], maxxy[0]),(minxy[1], maxxy[1])]
+	bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
+	bfXY = np.array(bf[0])
+	print(bfXY[0])
+	print(bfXY[1])
+	x0 = (bfXY[0], bfXY[1])
+	gd = minimize(f, x0, method='SLSQP', bounds=bounds)
 	print(gd)
 	gdXY = np.array(gd.x)
 	print(gdXY[0])
 	print(gdXY[1])
-	bfXY = np.array(bf[0])
-	print(bfXY[0])
-	print(bfXY[1])
+
+
+	ZBF = F2(bfXY[0], bfXY[1])
+	ZGD = F2(gdXY[0], gdXY[1])
+
+	print("ZBF : ", ZBF)
+	print("ZGD : ", ZGD)
 	ax = plt.axes(projection='3d')
 	ax.plot_trisurf(x, y, z, cmap='viridis', edgecolor='none');
 	ax.set_title("TITLE", fontsize=20)
