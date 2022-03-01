@@ -1,5 +1,5 @@
 Info: GOMC Version 2.70
-Info: Start Time: Tue Mar  1 12:30:51 2022
+Info: Start Time: Tue Mar  1 12:37:33 2022
 Info: Host Name: asx6
 CPU information:
 Info: Total number of CPUs: 64
@@ -10,7 +10,7 @@ Info: Release: 3.10.0-1160.42.2.el7.x86_64
 Info: Version: #1 SMP Tue Sep 7 14:49:57 UTC 2021
 Info: Kernel Architecture: x86_64
 Info: Total Ram: 257774.9MB
-Info: Used Ram: 139089.1MB
+Info: Used Ram: 139100.4MB
 Info: Working in the current directory: /wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/SPC_ETOH_OPLS/Cal
 Info: GOMC COMPILED TO RUN ISOBARIC-ISOTHERMAL ENSEMBLE.
 Info: Number of threads                  8 
