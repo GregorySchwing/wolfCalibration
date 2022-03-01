@@ -1,0 +1,3 @@
+[submodule "alchemlyb"]
+	path = alchemlyb
+	url = https://github.com/GregorySchwing/alchemlyb.git
