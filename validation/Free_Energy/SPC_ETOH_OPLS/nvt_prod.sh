@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name
-#SBATCH --job-name MSPCE_ETOH
+#SBATCH --job-name SPC_ETOH_OPLS
 # Submit to the gpu QoS, the requeue QoS can also be used for gpu's 
 #SBATCH -q primary
 # Request one node
