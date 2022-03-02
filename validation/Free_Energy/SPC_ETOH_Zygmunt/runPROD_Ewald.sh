@@ -21,8 +21,8 @@
 #SBATCH -t 0-2:00:0
 for i in {0..22..1}
   do 
-     cp npt_prod.sh Prod_Ew/state_$i
+     cp nvt_prod.sh Prod_Ew/state_$i
      cd Prod_Ew/state_$i
-     sbatch npt_prod.sh
+     sbatch nvt_prod.sh
      cd ../..
  done

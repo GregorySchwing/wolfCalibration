@@ -21,24 +21,24 @@
 #SBATCH -t 0-2:00:0
 for i in {0..22..1}
   do 
-     cp npt_prod.sh
+     cp nvt_prod.sh
      cd Prod_DSP/state_$i
-     sbatch npt_prod.sh
+     sbatch nvt_prod.sh
      cd ../..
  done
 
 for i in {0..22..1}
   do 
-     cp npt_prod.sh 
+     cp nvt_prod.sh 
      cd Prod_DSF/state_$i
-     sbatch npt_prod.sh
+     sbatch nvt_prod.sh
      cd ../..
  done
 
 for i in {0..22..1}
   do 
-     cp npt_prod.sh
+     cp nvt_prod.sh
      cd Prod_Ewald/state_$i
-     sbatch npt_prod.sh
+     sbatch nvt_prod.sh
      cd ../..
  done
