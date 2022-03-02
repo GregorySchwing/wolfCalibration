@@ -1,4 +1,4 @@
-*  NVT_water_ethanol_fe - created by mBuild using the on 2022-01-19 16:41:37.455295
+*  NVT_water_ethanol_fe - created by mBuild using the on 2022-03-02 16:39:13.120394
 *  parameters from the {'H2O': '../../common/spc_trappe.xml', 'ETO': '../../common/trappe-ua.xml'} force field(s) via MoSDef
 *  1-4 coulombic scaling = {'H2O': 0.0, 'ETO': 0.0}, and 1-4 LJ scaling = {'H2O': 0.0, 'ETO': 0.0}
 
@@ -34,9 +34,9 @@ BONDS * harmonic
 !
 !atom_types 	 Kb		b0 		  atoms_types_per_utilized_FF
 C	D	600.40152964	0.945		! H_ETO	O_ETO
-A	D	600.40152964	1.43		! CH2_O_ETO	O_ETO
 A	B	600.40152964	1.54		! CH2_O_ETO	CH3_sp3_ETO
 E	F	999999999999	1.0		! h_spc_H2O	o_spc_H2O
+A	D	600.40152964	1.43		! CH2_O_ETO	O_ETO
 
 ANGLES * harmonic
 !
@@ -48,9 +48,9 @@ ANGLES * harmonic
 ! Ktheta (kcal/mol) = Ktheta_K (K) * Boltz. const.		
 !
 !atom_types 		Ktheta		Theta0			  atoms_types_per_utilized_FF
-E	F	E	999999999999		109.47000		! h_spc_H2O	o_spc_H2O	h_spc_H2O
-B	A	D	50.07754422		109.46989		! CH3_sp3_ETO	CH2_O_ETO	O_ETO
 A	D	C	55.04555449		108.49987		! CH2_O_ETO	O_ETO	H_ETO
+B	A	D	50.07754422		109.46989		! CH3_sp3_ETO	CH2_O_ETO	O_ETO
+E	F	E	999999999999		109.47000		! h_spc_H2O	o_spc_H2O	h_spc_H2O
 
 DIHEDRALS * CHARMM
 !

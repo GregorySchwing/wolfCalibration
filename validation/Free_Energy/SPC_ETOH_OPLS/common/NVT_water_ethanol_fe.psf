@@ -3,7 +3,7 @@ PSF
        3 !NTITLE
  REMARKS this file NVT_water_ethanol_fe - created by mBuild/foyer using the
  REMARKS parameters from the {'H2O': '../../common/spc_opls.xml', 'ETO': 'oplsaa'} force field via MoSDef
- REMARKS created on 2022-01-31 21:42:14.664110
+ REMARKS created on 2022-03-02 16:41:19.785139
 
 
     3009 !NATOM
