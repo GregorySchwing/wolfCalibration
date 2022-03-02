@@ -1,4 +1,4 @@
-*  NVT_water_ethanol_fe - created by mBuild using the on 2022-03-02 16:34:27.670877
+*  NVT_water_ethanol_fe - created by mBuild using the on 2022-03-02 17:38:06.833800
 *  parameters from the {'H2O': '../../common/mspce_trappe.xml', 'ETO': '../../common/trappe-ua.xml'} force field(s) via MoSDef
 *  1-4 coulombic scaling = {'H2O': 0.0, 'ETO': 0.0}, and 1-4 LJ scaling = {'H2O': 0.0, 'ETO': 0.0}
 
@@ -33,10 +33,10 @@ BONDS * harmonic
 !Kb (kcal/mol) = Kb_K (K) * Boltz. const.; (9999999999 if no stretching)
 !
 !atom_types 	 Kb		b0 		  atoms_types_per_utilized_FF
-A	D	600.40152964	1.43		! CH2_O_ETO	O_ETO
-C	D	600.40152964	0.945		! H_ETO	O_ETO
 E	F	999999999999	0.9839		! h_mspce_H2O	o_mspce_H2O
+C	D	600.40152964	0.945		! H_ETO	O_ETO
 A	B	600.40152964	1.54		! CH2_O_ETO	CH3_sp3_ETO
+A	D	600.40152964	1.43		! CH2_O_ETO	O_ETO
 
 ANGLES * harmonic
 !
