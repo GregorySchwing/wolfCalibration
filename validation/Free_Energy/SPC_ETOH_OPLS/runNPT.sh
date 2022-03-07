@@ -19,10 +19,13 @@
 #SBATCH -e errors_%j.err
 # Set maximum time limit 
 #SBATCH -t 0-2:00:0
-for i in {0..22..1}
-  do 
-     cp npt.sh NPT_Eq/state_$i 
-     cd NPT_Eq/state_$i
-     sbatch npt.sh
-     cd ../..
+for r in {0..4..1}
+ do
+    for i in {0..22..1}
+      do 
+         cp npt.sh TI_$r/NPT_Eq/state_$i
+         cd TI_$r/NPT_Eq/state_$i
+         sbatch npt.sh
+         cd ../../..
+     done
  done
