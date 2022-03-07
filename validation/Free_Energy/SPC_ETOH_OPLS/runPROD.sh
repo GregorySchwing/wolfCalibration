@@ -19,26 +19,29 @@
 #SBATCH -e errors_%j.err
 # Set maximum time limit 
 #SBATCH -t 0-2:00:0
-for i in {0..22..1}
-  do 
-     cp npt_prod.sh
-     cd Prod_DSP/state_$i
-     sbatch npt_prod.sh
-     cd ../..
- done
+for r in {0..4..1}
+ do
+    for i in {0..22..1}
+      do 
+         cp nvt_prod.sh
+         cd Prod_DSP/state_$i
+         sbatch nvt_prod.sh
+         cd ../..
+     done
 
-for i in {0..22..1}
-  do 
-     cp npt_prod.sh 
-     cd Prod_DSF/state_$i
-     sbatch npt_prod.sh
-     cd ../..
- done
+    for i in {0..22..1}
+      do 
+         cp nvt_prod.sh 
+         cd Prod_DSF/state_$i
+         sbatch nvt_prod.sh
+         cd ../..
+     done
 
-for i in {0..22..1}
-  do 
-     cp npt_prod.sh
-     cd Prod_Ewald/state_$i
-     sbatch npt_prod.sh
-     cd ../..
+    for i in {0..22..1}
+      do 
+         cp nvt_prod.sh
+         cd Prod_Ewald/state_$i
+         sbatch nvt_prod.sh
+         cd ../..
+     done
  done
