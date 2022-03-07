@@ -66,7 +66,6 @@ charmm = mf_charmm.Charmm(water_ethanol_box_liq,
                           ff_filename="NVT_water_ethanol_fe_FF",
                           forcefield_selection=FF_dict,
                           residues=residues_list,
-                          bead_to_atom_name_dict=Bead_to_atom_name_dict,
                           fix_residue=None,
                           gomc_fix_bonds_angles=fix_bonds_angles_residues,
                           reorder_res_in_pdb_psf=True
