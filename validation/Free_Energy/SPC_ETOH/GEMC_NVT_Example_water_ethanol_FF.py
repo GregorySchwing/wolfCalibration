@@ -17,7 +17,7 @@ import shutil
 import pathlib
 import random
 from pathlib import Path
-#Trappe SPCE
+#Trappe SPC
 FF_file_water = '../../common/spc_trappe.xml'
 water = mb.load('O', smiles=True)
 water.name = 'H2O'
