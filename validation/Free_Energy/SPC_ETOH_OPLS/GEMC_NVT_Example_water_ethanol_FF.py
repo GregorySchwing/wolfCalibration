@@ -18,7 +18,7 @@ import pathlib
 import random
 from pathlib import Path
 #Trappe SPC
-FF_file_water = '../../common/spc_trappe.xml'
+FF_file_water = '../../common/spc_trappe_opls_compatible.xml'
 water = mb.load('O', smiles=True)
 water.name = 'H2O'
 water.energy_minimize(forcefield=FF_file_water, steps=10**5)
