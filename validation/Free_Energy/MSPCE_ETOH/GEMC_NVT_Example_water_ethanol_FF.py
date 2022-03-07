@@ -193,36 +193,36 @@ print(replicatePaths)
 
 NVT_Eq_Prefix = Path("NVT_Eq")
 NPT_Eq_Prefix = Path("NPT_Eq")
-NPT_Prod_Ewald_Prefix = Path("Prod_Ew")
-NPT_Prod_DSP_Prefix = Path("Prod_DSP")
-NPT_Prod_DSF_Prefix = Path("Prod_DSF")
+NVT_Prod_Ewald_Prefix = Path("Prod_Ew")
+NVT_Prod_DSP_Prefix = Path("Prod_DSP")
+NVT_Prod_DSF_Prefix = Path("Prod_DSF")
 
 for r in range(0, numReplicates, 1):
 
     NVT_Eq = replicatePaths[r] / NVT_Eq_Prefix
     NPT_Eq = replicatePaths[r] / NPT_Eq_Prefix
-    NPT_Prod_Ewald = replicatePaths[r] / NPT_Prod_Ewald_Prefix
-    NPT_Prod_DSP = replicatePaths[r] / NPT_Prod_DSP_Prefix
-    NPT_Prod_DSF = replicatePaths[r] / NPT_Prod_DSF_Prefix
+    NVT_Prod_Ewald = replicatePaths[r] / NVT_Prod_Ewald_Prefix
+    NVT_Prod_DSP = replicatePaths[r] / NVT_Prod_DSP_Prefix
+    NVT_Prod_DSF = replicatePaths[r] / NVT_Prod_DSF_Prefix
 
     RelPathToNVTEq = Path("../../..") / NVT_Eq
     RelPathToNPTEq = Path("../../..") / NPT_Eq
 
     NVT_Eq.mkdir(parents=True, exist_ok=True)
     NPT_Eq.mkdir(parents=True, exist_ok=True)
-    NPT_Prod_Ewald.mkdir(parents=True, exist_ok=True)
-    NPT_Prod_DSP.mkdir(parents=True, exist_ok=True)
-    NPT_Prod_DSF.mkdir(parents=True, exist_ok=True)
+    NVT_Prod_Ewald.mkdir(parents=True, exist_ok=True)
+    NVT_Prod_DSP.mkdir(parents=True, exist_ok=True)
+    NVT_Prod_DSF.mkdir(parents=True, exist_ok=True)
 
     prefix = "state_"
     NVT_Eq_conf_name = "NVT_Eq_water_ethanol_fe.conf"
     NPT_Eq_conf_name = "NPT_Eq_water_ethanol_fe.conf"
-    NPT_Prod_conf_name = "NPT_Prod_water_ethanol_fe.conf"
+    NVT_Prod_conf_name = "NVT_Prod_water_ethanol_fe.conf"
     NVT_Prod_conf_name = "NVT_Prod_water_ethanol_fe.conf"
 
     NVT_Eq_OutputName = "NVT_Eq"
     NPT_Eq_OutputName = "NPT_Eq"
-    NPT_Prod_OutputName = "NPT_Prod"
+    NVT_Prod_OutputName = "NVT_Prod"
     NVT_Prod_OutputName = "NVT_Prod"
     Restart_XSC_Suffix = "_BOX_0_restart.xsc"
     Restart_COOR_Suffix = "_BOX_0_restart.coor"
@@ -314,14 +314,14 @@ for r in range(0, numReplicates, 1):
         stateName = prefix+str(x)
         statePath = Path(stateName)
 
-        NPT_state_path = NPT_Prod_Ewald / statePath
-        NPT_state_path.mkdir(parents=True, exist_ok=True)
+        NVT_prod_state_path = NVT_Prod_Ewald / statePath
+        NVT_prod_state_path.mkdir(parents=True, exist_ok=True)
 
         NPT_restart_files_state_path = RelPathToNPTEq / statePath 
         NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
         NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
 
-        input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
+        input_variables_dict_NVT_Prod={"Pressure" : Pressure_in_bar,
                            "VDWGeometricSigma": True,
                            "DisFreq": 0.50,
                            "RotFreq": 0.20, 
@@ -350,24 +350,24 @@ for r in range(0, numReplicates, 1):
                            }
 
 
-        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
+        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NVT_Prod
                                             )
-        NPTConfPath = Path(NVT_Prod_conf_name)
-        NPTConfPath.rename(NPT_state_path / NPTConfPath)
+        NVTProdConfPath = Path(NVT_Prod_conf_name)
+        NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
 
     for x in range(0, len(LambdaVDWList)):
 
         stateName = prefix+str(x)
         statePath = Path(stateName)
 
-        NPT_state_path = NPT_Prod_DSP / statePath
-        NPT_state_path.mkdir(parents=True, exist_ok=True)
+        NVT_prod_state_path = NVT_Prod_DSP / statePath
+        NVT_prod_state_path.mkdir(parents=True, exist_ok=True)
 
         NPT_restart_files_state_path = RelPathToNPTEq / statePath 
         NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
         NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
 
-        input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
+        input_variables_dict_NVT_Prod={"Pressure" : Pressure_in_bar,
                            "VDWGeometricSigma": True,
                            "DisFreq": 0.50,
                            "RotFreq": 0.20, 
@@ -396,24 +396,24 @@ for r in range(0, numReplicates, 1):
                            }
 
 
-        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
+        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NVT_Prod
                                             )
-        NPTConfPath = Path(NVT_Prod_conf_name)
-        NPTConfPath.rename(NPT_state_path / NPTConfPath)
+        NVTProdConfPath = Path(NVT_Prod_conf_name)
+        NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
 
     for x in range(0, len(LambdaVDWList)):
 
         stateName = prefix+str(x)
         statePath = Path(stateName)
 
-        NPT_state_path = NPT_Prod_DSF / statePath
-        NPT_state_path.mkdir(parents=True, exist_ok=True)
+        NVT_prod_state_path = NVT_Prod_DSF / statePath
+        NVT_prod_state_path.mkdir(parents=True, exist_ok=True)
 
         NPT_restart_files_state_path = RelPathToNPTEq / statePath 
         NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
         NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
 
-        input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
+        input_variables_dict_NVT_Prod={"Pressure" : Pressure_in_bar,
                            "VDWGeometricSigma": True,
                            "DisFreq": 0.50,
                            "RotFreq": 0.20, 
@@ -442,10 +442,10 @@ for r in range(0, numReplicates, 1):
                            }
 
 
-        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
+        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NVT_Prod
                                             )
-        NPTConfPath = Path(NVT_Prod_conf_name)
-        NPTConfPath.rename(NPT_state_path / NPTConfPath)
+        NVTProdConfPath = Path(NVT_Prod_conf_name)
+        NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
 
 
 
