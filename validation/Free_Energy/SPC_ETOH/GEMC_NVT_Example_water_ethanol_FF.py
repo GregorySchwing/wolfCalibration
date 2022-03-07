@@ -172,265 +172,280 @@ for x in range(0, 8, 1):
 print(LambdaVDWList)
 print(LambdaCoulList)
 
-
+numReplicates = 5
 random.seed(123)
-
 randomSeeds = []
 
-for x in range(0, len(LambdaVDWList), 1):
-    randomSeeds.append(random.randint(0,9999999))
+for r in range(0, numReplicates, 1):
+    replicateSeeds = []
+    for x in range(0, len(LambdaVDWList), 1):
+        replicateSeeds.append(random.randint(0,9999999))
+    randomSeeds.append(replicateSeeds)
 
 print("Random Seeds:")
 print(randomSeeds)
 
-NVT_Eq = Path("NVT_Eq")
-NPT_Eq = Path("NPT_Eq")
-NPT_Prod_Ewald = Path("Prod_Ew")
-NPT_Prod_DSP = Path("Prod_DSP")
-NPT_Prod_DSF = Path("Prod_DSF")
+replicatePathPrefix = "TI_"
+replicatePaths = []
+for r in range(0, numReplicates, 1):
+    replicatePaths.append(Path(replicatePathPrefix + str(r)))
+print(replicatePaths)
 
-RelPathToNVTEq = Path("../../") / NVT_Eq
-RelPathToNPTEq = Path("../../") / NPT_Eq
+NVT_Eq_Prefix = Path("NVT_Eq")
+NPT_Eq_Prefix = Path("NPT_Eq")
+NPT_Prod_Ewald_Prefix = Path("Prod_Ew")
+NPT_Prod_DSP_Prefix = Path("Prod_DSP")
+NPT_Prod_DSF_Prefix = Path("Prod_DSF")
 
-NVT_Eq.mkdir(parents=True, exist_ok=True)
-NPT_Eq.mkdir(parents=True, exist_ok=True)
-NPT_Prod_Ewald.mkdir(parents=True, exist_ok=True)
-NPT_Prod_DSP.mkdir(parents=True, exist_ok=True)
-NPT_Prod_DSF.mkdir(parents=True, exist_ok=True)
+for r in range(0, numReplicates, 1):
 
-prefix = "state_"
-NVT_Eq_conf_name = "NVT_Eq_water_ethanol_fe.conf"
-NPT_Eq_conf_name = "NPT_Eq_water_ethanol_fe.conf"
-NPT_Prod_conf_name = "NPT_Prod_water_ethanol_fe.conf"
-NVT_Prod_conf_name = "NVT_Prod_water_ethanol_fe.conf"
+    NVT_Eq = replicatePaths[r] / NVT_Eq_Prefix
+    NPT_Eq = replicatePaths[r] / NPT_Eq_Prefix
+    NPT_Prod_Ewald = replicatePaths[r] / NPT_Prod_Ewald_Prefix
+    NPT_Prod_DSP = replicatePaths[r] / NPT_Prod_DSP_Prefix
+    NPT_Prod_DSF = replicatePaths[r] / NPT_Prod_DSF_Prefix
 
-NVT_Eq_OutputName = "NVT_Eq"
-NPT_Eq_OutputName = "NPT_Eq"
-NPT_Prod_OutputName = "NPT_Prod"
-NVT_Prod_OutputName = "NVT_Prod"
+    RelPathToNVTEq = Path("../../..") / NVT_Eq
+    RelPathToNPTEq = Path("../../..") / NPT_Eq
 
-Restart_XSC_Suffix = "_BOX_0_restart.xsc"
-Restart_COOR_Suffix = "_BOX_0_restart.coor"
+    NVT_Eq.mkdir(parents=True, exist_ok=True)
+    NPT_Eq.mkdir(parents=True, exist_ok=True)
+    NPT_Prod_Ewald.mkdir(parents=True, exist_ok=True)
+    NPT_Prod_DSP.mkdir(parents=True, exist_ok=True)
+    NPT_Prod_DSF.mkdir(parents=True, exist_ok=True)
 
-NVT_Restart_XSC_path = Path(NVT_Eq_OutputName + Restart_XSC_Suffix)
-NPT_Restart_XSC_path = Path(NPT_Eq_OutputName + Restart_XSC_Suffix)
+    prefix = "state_"
+    NVT_Eq_conf_name = "NVT_Eq_water_ethanol_fe.conf"
+    NPT_Eq_conf_name = "NPT_Eq_water_ethanol_fe.conf"
+    NPT_Prod_conf_name = "NPT_Prod_water_ethanol_fe.conf"
+    NVT_Prod_conf_name = "NVT_Prod_water_ethanol_fe.conf"
 
-NVT_Restart_COOR_path = Path(NVT_Eq_OutputName + Restart_COOR_Suffix)
-NPT_Restart_COOR_path = Path(NPT_Eq_OutputName + Restart_COOR_Suffix)
+    NVT_Eq_OutputName = "NVT_Eq"
+    NPT_Eq_OutputName = "NPT_Eq"
+    NPT_Prod_OutputName = "NPT_Prod"
+    NVT_Prod_OutputName = "NVT_Prod"
+    Restart_XSC_Suffix = "_BOX_0_restart.xsc"
+    Restart_COOR_Suffix = "_BOX_0_restart.coor"
 
-NumNVTEqRunSteps = 5000000
-NumNPTEqRunSteps = 50000000
-NumProdRunSteps = NumNPTEqRunSteps
-Temp_in_K = 298
-Pressure_in_bar = 1.0
+    NVT_Restart_XSC_path = Path(NVT_Eq_OutputName + Restart_XSC_Suffix)
+    NPT_Restart_XSC_path = Path(NPT_Eq_OutputName + Restart_XSC_Suffix)
 
-ff_psf_pdb_file_directory_name = "../../common"
-"""
-for x in range(0, len(LambdaVDWList)):
+    NVT_Restart_COOR_path = Path(NVT_Eq_OutputName + Restart_COOR_Suffix)
+    NPT_Restart_COOR_path = Path(NPT_Eq_OutputName + Restart_COOR_Suffix)
 
-    stateName = prefix+str(x)
-    statePath = Path(stateName)
-    NVT_state_path = NVT_Eq / statePath
+    NumNVTEqRunSteps = 5000000
+    NumNPTEqRunSteps = 50000000
+    NumProdRunSteps = NumNPTEqRunSteps
+    Temp_in_K = 298
+    Pressure_in_bar = 1.0
 
-    NVT_state_path.mkdir(parents=True, exist_ok=True)
+    ff_psf_pdb_file_directory_name = "../../../common"
 
-    input_variables_dict_NVT_Eq={"VDWGeometricSigma": True,
-                       "DisFreq": 0.50,
-                       "RotFreq": 0.20, 
-                       "RegrowthFreq": 0.20,
-                       "CrankShaftFreq": 0.10,
-                       "CBMC_First" : 10,
-                       "CBMC_Nth" : 10,
-                       "CBMC_Ang" : 100,
-                       "CBMC_Dih" : 50,
-                       "Rcut": 14,
-                       "RcutLow": 0,
-                       "LRC": True,
-                       "RcutCoulomb_box_0": 14,
-                       "Tolerance" : 0.00005,
-                       "OutputName" : NVT_Eq_OutputName,
-                       "PRNG" : randomSeeds[x]
-                       }
+    for x in range(0, len(LambdaVDWList)):
 
-    gomc_control.write_gomc_control_file(charmm, NVT_Eq_conf_name, 'NVT', RunSteps=NumNVTEqRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, check_input_files_exist=False, input_variables_dict=input_variables_dict_NVT_Eq
-                                        )
-    NVTConfPath = Path(NVT_Eq_conf_name)
-    NVTConfPath.rename(NVT_state_path / NVTConfPath)
+        stateName = prefix+str(x)
+        statePath = Path(stateName)
+        NVT_state_path = NVT_Eq / statePath
 
-for x in range(0, len(LambdaVDWList)):
+        NVT_state_path.mkdir(parents=True, exist_ok=True)
 
-    stateName = prefix+str(x)
-    statePath = Path(stateName)
-    NPT_state_path = NPT_Eq / statePath
+        input_variables_dict_NVT_Eq={"VDWGeometricSigma": True,
+                           "DisFreq": 0.50,
+                           "RotFreq": 0.20, 
+                           "RegrowthFreq": 0.20,
+                           "CrankShaftFreq": 0.10,
+                           "CBMC_First" : 10,
+                           "CBMC_Nth" : 10,
+                           "CBMC_Ang" : 100,
+                           "CBMC_Dih" : 50,
+                           "Rcut": 14,
+                           "RcutLow": 0,
+                           "LRC": True,
+                           "RcutCoulomb_box_0": 14,
+                           "Tolerance" : 0.00005,
+                           "OutputName" : NVT_Eq_OutputName,
+                           "PRNG" : randomSeeds[r][x]
+                           }
 
-    NPT_state_path.mkdir(parents=True, exist_ok=True)
+        gomc_control.write_gomc_control_file(charmm, NVT_Eq_conf_name, 'NVT', RunSteps=NumNVTEqRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, check_input_files_exist=False, input_variables_dict=input_variables_dict_NVT_Eq
+                                            )
+        NVTConfPath = Path(NVT_Eq_conf_name)
+        NVTConfPath.rename(NVT_state_path / NVTConfPath)
 
-    NVT_restart_files_state_path = RelPathToNVTEq / statePath 
-    NVT_restart_coor = NVT_restart_files_state_path / NVT_Restart_COOR_path
-    NVT_restart_xsc = NVT_restart_files_state_path / NVT_Restart_XSC_path
+    for x in range(0, len(LambdaVDWList)):
 
-    input_variables_dict_NPT_Eq={"Pressure" : Pressure_in_bar,
-                       "VDWGeometricSigma": True,
-                       "DisFreq": 0.49,
-                       "RotFreq": 0.20, 
-                       "RegrowthFreq": 0.20,
-                       "CrankShaftFreq": 0.10,
-                       "VolFreq": 0.01,
-                       "CBMC_First" : 10,
-                       "CBMC_Nth" : 10,
-                       "CBMC_Ang" : 100,
-                       "CBMC_Dih" : 50,
-                       "Rcut": 14,
-                       "RcutLow": 0,
-                       "LRC": True,
-                       "RcutCoulomb_box_0": 14,
-                       "Tolerance" : 0.00005,
-                       "OutputName" : NPT_Eq_OutputName,
-                       "PRNG" : randomSeeds[x]
-                       }
+        stateName = prefix+str(x)
+        statePath = Path(stateName)
+        NPT_state_path = NPT_Eq / statePath
 
-    gomc_control.write_gomc_control_file(charmm, NPT_Eq_conf_name, 'NPT', RunSteps=NumNPTEqRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, check_input_files_exist=False, Restart=True, binCoordinates_box_0=str(NVT_restart_coor),extendedSystem_box_0=str(NVT_restart_xsc), input_variables_dict=input_variables_dict_NPT_Eq
-                                        )
-    NPTConfPath = Path(NPT_Eq_conf_name)
-    NPTConfPath.rename(NPT_state_path / NPTConfPath)
-"""
-for x in range(0, len(LambdaVDWList)):
+        NPT_state_path.mkdir(parents=True, exist_ok=True)
 
-    stateName = prefix+str(x)
-    statePath = Path(stateName)
+        NVT_restart_files_state_path = RelPathToNVTEq / statePath 
+        NVT_restart_coor = NVT_restart_files_state_path / NVT_Restart_COOR_path
+        NVT_restart_xsc = NVT_restart_files_state_path / NVT_Restart_XSC_path
 
-    NPT_state_path = NPT_Prod_Ewald / statePath
-    NPT_state_path.mkdir(parents=True, exist_ok=True)
+        input_variables_dict_NPT_Eq={"Pressure" : Pressure_in_bar,
+                           "VDWGeometricSigma": True,
+                           "DisFreq": 0.49,
+                           "RotFreq": 0.20, 
+                           "RegrowthFreq": 0.20,
+                           "CrankShaftFreq": 0.10,
+                           "VolFreq": 0.01,
+                           "CBMC_First" : 10,
+                           "CBMC_Nth" : 10,
+                           "CBMC_Ang" : 100,
+                           "CBMC_Dih" : 50,
+                           "Rcut": 14,
+                           "RcutLow": 0,
+                           "LRC": True,
+                           "RcutCoulomb_box_0": 14,
+                           "Tolerance" : 0.00005,
+                           "OutputName" : NPT_Eq_OutputName,
+                           "PRNG" : randomSeeds[r][x]
+                           }
 
-    NPT_restart_files_state_path = RelPathToNPTEq / statePath 
-    NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
-    NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
+        gomc_control.write_gomc_control_file(charmm, NPT_Eq_conf_name, 'NPT', RunSteps=NumNPTEqRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, check_input_files_exist=False, Restart=True, binCoordinates_box_0=str(NVT_restart_coor),extendedSystem_box_0=str(NVT_restart_xsc), input_variables_dict=input_variables_dict_NPT_Eq
+                                            )
+        NPTConfPath = Path(NPT_Eq_conf_name)
+        NPTConfPath.rename(NPT_state_path / NPTConfPath)
 
-    input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
-                       "VDWGeometricSigma": True,
-                       "DisFreq": 0.50,
-                       "RotFreq": 0.20, 
-                       "RegrowthFreq": 0.20,
-                       "CrankShaftFreq": 0.10,
-                       "CBMC_First" : 10,
-                       "CBMC_Nth" : 10,
-                       "CBMC_Ang" : 100,
-                       "CBMC_Dih" : 50,
-                       "Rcut": 14,
-                       "RcutLow": 0,
-                       "LRC": True,
-                       "RcutCoulomb_box_0": 14,
-                       "Tolerance" : 0.00005,
-                       "LambdaVDW" : LambdaVDWList,
-                       "LambdaCoulomb" : LambdaCoulList,
-                       "FreeEnergyCalc" : [True, 5000],
-                       "PressureCalc" : [True, 5000],
-                       "MoleculeType" : [ethanol.name, 1],
-                       "ScaleAlpha" : 0.5,
-                       "ScalePower" : 2,
-                       "MinSigma" : 3,
-                       "InitialState" : x,
-                       "OutputName" : NVT_Prod_OutputName,
-                       "PRNG" : randomSeeds[x]
-                       }
+    for x in range(0, len(LambdaVDWList)):
 
+        stateName = prefix+str(x)
+        statePath = Path(stateName)
 
-    gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
-                                        )
-    NPTConfPath = Path(NVT_Prod_conf_name)
-    NPTConfPath.rename(NPT_state_path / NPTConfPath)
+        NPT_state_path = NPT_Prod_Ewald / statePath
+        NPT_state_path.mkdir(parents=True, exist_ok=True)
 
-for x in range(0, len(LambdaVDWList)):
+        NPT_restart_files_state_path = RelPathToNPTEq / statePath 
+        NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
+        NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
 
-    stateName = prefix+str(x)
-    statePath = Path(stateName)
-
-    NPT_state_path = NPT_Prod_DSP / statePath
-    NPT_state_path.mkdir(parents=True, exist_ok=True)
-
-    NPT_restart_files_state_path = RelPathToNPTEq / statePath 
-    NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
-    NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
-
-    input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
-                       "VDWGeometricSigma": True,
-                       "DisFreq": 0.50,
-                       "RotFreq": 0.20, 
-                       "RegrowthFreq": 0.20,
-                       "CrankShaftFreq": 0.10,
-                       "CBMC_First" : 10,
-                       "CBMC_Nth" : 10,
-                       "CBMC_Ang" : 100,
-                       "CBMC_Dih" : 50,
-                       "Rcut": 14,
-                       "RcutLow": 0,
-                       "LRC": True,
-                       "RcutCoulomb_box_0": 14,
-                       "Tolerance" : 0.00005,
-                       "LambdaVDW" : LambdaVDWList,
-                       "LambdaCoulomb" : LambdaCoulList,
-                       "FreeEnergyCalc" : [True, 5000],
-                       "MoleculeType" : [ethanol.name, 1],
-                       "PressureCalc" : [True, 5000],
-                       "ScaleAlpha" : 0.5,
-                       "ScalePower" : 2,
-                       "MinSigma" : 3,
-                       "InitialState" : x,
-                       "OutputName" : NVT_Prod_OutputName,
-                       "PRNG" : randomSeeds[x]
-                       }
+        input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
+                           "VDWGeometricSigma": True,
+                           "DisFreq": 0.50,
+                           "RotFreq": 0.20, 
+                           "RegrowthFreq": 0.20,
+                           "CrankShaftFreq": 0.10,
+                           "CBMC_First" : 10,
+                           "CBMC_Nth" : 10,
+                           "CBMC_Ang" : 100,
+                           "CBMC_Dih" : 50,
+                           "Rcut": 14,
+                           "RcutLow": 0,
+                           "LRC": True,
+                           "RcutCoulomb_box_0": 14,
+                           "Tolerance" : 0.00005,
+                           "LambdaVDW" : LambdaVDWList,
+                           "LambdaCoulomb" : LambdaCoulList,
+                           "FreeEnergyCalc" : [True, 5000],
+                           "PressureCalc" : [True, 5000],
+                           "MoleculeType" : [ethanol.name, 1],
+                           "ScaleAlpha" : 0.5,
+                           "ScalePower" : 2,
+                           "MinSigma" : 3,
+                           "InitialState" : x,
+                           "OutputName" : NVT_Prod_OutputName,
+                           "PRNG" : randomSeeds[r][x]
+                           }
 
 
-    gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
-                                        )
-    NPTConfPath = Path(NVT_Prod_conf_name)
-    NPTConfPath.rename(NPT_state_path / NPTConfPath)
+        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
+                                            )
+        NPTConfPath = Path(NVT_Prod_conf_name)
+        NPTConfPath.rename(NPT_state_path / NPTConfPath)
 
-for x in range(0, len(LambdaVDWList)):
+    for x in range(0, len(LambdaVDWList)):
 
-    stateName = prefix+str(x)
-    statePath = Path(stateName)
+        stateName = prefix+str(x)
+        statePath = Path(stateName)
 
-    NPT_state_path = NPT_Prod_DSF / statePath
-    NPT_state_path.mkdir(parents=True, exist_ok=True)
+        NPT_state_path = NPT_Prod_DSP / statePath
+        NPT_state_path.mkdir(parents=True, exist_ok=True)
 
-    NPT_restart_files_state_path = RelPathToNPTEq / statePath 
-    NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
-    NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
+        NPT_restart_files_state_path = RelPathToNPTEq / statePath 
+        NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
+        NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
 
-    input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
-                       "VDWGeometricSigma": True,
-                       "DisFreq": 0.50,
-                       "RotFreq": 0.20, 
-                       "RegrowthFreq": 0.20,
-                       "CrankShaftFreq": 0.10,
-                       "CBMC_First" : 10,
-                       "CBMC_Nth" : 10,
-                       "CBMC_Ang" : 100,
-                       "CBMC_Dih" : 50,
-                       "Rcut": 14,
-                       "RcutLow": 0,
-                       "LRC": True,
-                       "RcutCoulomb_box_0": 14,
-                       "Tolerance" : 0.00005,
-                       "LambdaVDW" : LambdaVDWList,
-                       "LambdaCoulomb" : LambdaCoulList,
-                       "FreeEnergyCalc" : [True, 5000],
-                       "MoleculeType" : [ethanol.name, 1],
-                       "PressureCalc" : [True, 5000],
-                       "ScaleAlpha" : 0.5,
-                       "ScalePower" : 2,
-                       "MinSigma" : 3,
-                       "InitialState" : x,
-                       "OutputName" : NVT_Prod_OutputName,
-                       "PRNG" : randomSeeds[x]
-                       }
+        input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
+                           "VDWGeometricSigma": True,
+                           "DisFreq": 0.50,
+                           "RotFreq": 0.20, 
+                           "RegrowthFreq": 0.20,
+                           "CrankShaftFreq": 0.10,
+                           "CBMC_First" : 10,
+                           "CBMC_Nth" : 10,
+                           "CBMC_Ang" : 100,
+                           "CBMC_Dih" : 50,
+                           "Rcut": 14,
+                           "RcutLow": 0,
+                           "LRC": True,
+                           "RcutCoulomb_box_0": 14,
+                           "Tolerance" : 0.00005,
+                           "LambdaVDW" : LambdaVDWList,
+                           "LambdaCoulomb" : LambdaCoulList,
+                           "FreeEnergyCalc" : [True, 5000],
+                           "MoleculeType" : [ethanol.name, 1],
+                           "PressureCalc" : [True, 5000],
+                           "ScaleAlpha" : 0.5,
+                           "ScalePower" : 2,
+                           "MinSigma" : 3,
+                           "InitialState" : x,
+                           "OutputName" : NVT_Prod_OutputName,
+                           "PRNG" : randomSeeds[r][x]
+                           }
 
 
-    gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
-                                        )
-    NPTConfPath = Path(NVT_Prod_conf_name)
-    NPTConfPath.rename(NPT_state_path / NPTConfPath)
+        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
+                                            )
+        NPTConfPath = Path(NVT_Prod_conf_name)
+        NPTConfPath.rename(NPT_state_path / NPTConfPath)
+
+    for x in range(0, len(LambdaVDWList)):
+
+        stateName = prefix+str(x)
+        statePath = Path(stateName)
+
+        NPT_state_path = NPT_Prod_DSF / statePath
+        NPT_state_path.mkdir(parents=True, exist_ok=True)
+
+        NPT_restart_files_state_path = RelPathToNPTEq / statePath 
+        NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
+        NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
+
+        input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
+                           "VDWGeometricSigma": True,
+                           "DisFreq": 0.50,
+                           "RotFreq": 0.20, 
+                           "RegrowthFreq": 0.20,
+                           "CrankShaftFreq": 0.10,
+                           "CBMC_First" : 10,
+                           "CBMC_Nth" : 10,
+                           "CBMC_Ang" : 100,
+                           "CBMC_Dih" : 50,
+                           "Rcut": 14,
+                           "RcutLow": 0,
+                           "LRC": True,
+                           "RcutCoulomb_box_0": 14,
+                           "Tolerance" : 0.00005,
+                           "LambdaVDW" : LambdaVDWList,
+                           "LambdaCoulomb" : LambdaCoulList,
+                           "FreeEnergyCalc" : [True, 5000],
+                           "MoleculeType" : [ethanol.name, 1],
+                           "PressureCalc" : [True, 5000],
+                           "ScaleAlpha" : 0.5,
+                           "ScalePower" : 2,
+                           "MinSigma" : 3,
+                           "InitialState" : x,
+                           "OutputName" : NVT_Prod_OutputName,
+                           "PRNG" : randomSeeds[r][x]
+                           }
+
+
+        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
+                                            )
+        NPTConfPath = Path(NVT_Prod_conf_name)
+        NPTConfPath.rename(NPT_state_path / NPTConfPath)
 
 
 

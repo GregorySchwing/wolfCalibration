@@ -18,7 +18,7 @@ import pathlib
 import random
 from pathlib import Path
 #Trappe SPCE
-FF_file_water = '../../common/spc_trappe.xml'
+FF_file_water = '../../common/mspce_trappe.xml'
 water = mb.load('O', smiles=True)
 water.name = 'H2O'
 water.energy_minimize(forcefield=FF_file_water, steps=10**5)
@@ -260,8 +260,7 @@ for r in range(0, numReplicates, 1):
                            "CBMC_Dih" : 50,
                            "Rcut": 14,
                            "RcutLow": 0,
-                           "LRC": False,
-                           "Potential": "SWITCH",
+                           "LRC": True,
                            "RcutCoulomb_box_0": 14,
                            "Tolerance" : 0.00005,
                            "OutputName" : NVT_Eq_OutputName,
@@ -298,8 +297,7 @@ for r in range(0, numReplicates, 1):
                            "CBMC_Dih" : 50,
                            "Rcut": 14,
                            "RcutLow": 0,
-                           "LRC": False,
-                           "Potential": "SWITCH",
+                           "LRC": True,
                            "RcutCoulomb_box_0": 14,
                            "Tolerance" : 0.00005,
                            "OutputName" : NPT_Eq_OutputName,
@@ -335,8 +333,7 @@ for r in range(0, numReplicates, 1):
                            "CBMC_Dih" : 50,
                            "Rcut": 14,
                            "RcutLow": 0,
-                           "LRC": False,
-                           "Potential": "SWITCH",
+                           "LRC": True,
                            "RcutCoulomb_box_0": 14,
                            "Tolerance" : 0.00005,
                            "LambdaVDW" : LambdaVDWList,
@@ -382,8 +379,7 @@ for r in range(0, numReplicates, 1):
                            "CBMC_Dih" : 50,
                            "Rcut": 14,
                            "RcutLow": 0,
-                           "LRC": False,
-                           "Potential": "SWITCH",
+                           "LRC": True,
                            "RcutCoulomb_box_0": 14,
                            "Tolerance" : 0.00005,
                            "LambdaVDW" : LambdaVDWList,
@@ -429,8 +425,7 @@ for r in range(0, numReplicates, 1):
                            "CBMC_Dih" : 50,
                            "Rcut": 14,
                            "RcutLow": 0,
-                           "LRC": False,
-                           "Potential": "SWITCH",
+                           "LRC": True,
                            "RcutCoulomb_box_0": 14,
                            "Tolerance" : 0.00005,
                            "LambdaVDW" : LambdaVDWList,
