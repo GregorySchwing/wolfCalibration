@@ -192,6 +192,7 @@ print(replicatePaths)
 
 NVT_Eq_Prefix = Path("NVT_Eq")
 NPT_Eq_Prefix = Path("NPT_Eq")
+NVT_Prod_Ewald_Prefix = Path("Prod_Cal")
 NVT_Prod_Ewald_Prefix = Path("Prod_Ew")
 NPT_Prod_DSP_Prefix = Path("Prod_DSP")
 NPT_Prod_DSF_Prefix = Path("Prod_DSF")
@@ -200,6 +201,7 @@ for r in range(0, numReplicates, 1):
 
     NVT_Eq = replicatePaths[r] / NVT_Eq_Prefix
     NPT_Eq = replicatePaths[r] / NPT_Eq_Prefix
+    NVT_Calibration = replicatePaths[r] / NVT_Prod_Ewald_Prefix
     NVT_Prod_Ewald = replicatePaths[r] / NVT_Prod_Ewald_Prefix
     NPT_Prod_DSP = replicatePaths[r] / NPT_Prod_DSP_Prefix
     NPT_Prod_DSF = replicatePaths[r] / NPT_Prod_DSF_Prefix
@@ -209,6 +211,7 @@ for r in range(0, numReplicates, 1):
 
     NVT_Eq.mkdir(parents=True, exist_ok=True)
     NPT_Eq.mkdir(parents=True, exist_ok=True)
+    NVT_Calibration.mkdir(parents=True, exist_ok=True)
     NVT_Prod_Ewald.mkdir(parents=True, exist_ok=True)
     NPT_Prod_DSP.mkdir(parents=True, exist_ok=True)
     NPT_Prod_DSF.mkdir(parents=True, exist_ok=True)
@@ -216,11 +219,13 @@ for r in range(0, numReplicates, 1):
     prefix = "state_"
     NVT_Eq_conf_name = "NVT_Eq_water_ethanol_fe.conf"
     NPT_Eq_conf_name = "NPT_Eq_water_ethanol_fe.conf"
+    NVT_Cal_conf_name = "NVT_Cal_water_ethanol_fe.conf"
     NPT_Prod_conf_name = "NPT_Prod_water_ethanol_fe.conf"
     NVT_Prod_conf_name = "NVT_Prod_water_ethanol_fe.conf"
 
     NVT_Eq_OutputName = "NVT_Eq"
     NPT_Eq_OutputName = "NPT_Eq"
+    NVT_Cal_OutputName = "NVT_Cal"
     NPT_Prod_OutputName = "NPT_Prod"
     NVT_Prod_OutputName = "NVT_Prod"
     Restart_XSC_Suffix = "_BOX_0_restart.xsc"
@@ -234,12 +239,13 @@ for r in range(0, numReplicates, 1):
 
     NumNVTEqRunSteps = 5000000
     NumNPTEqRunSteps = 50000000
+    NumCalSteps = 100000
     NumProdRunSteps = NumNPTEqRunSteps
     Temp_in_K = 298
     Pressure_in_bar = 1.0
 
     ff_psf_pdb_file_directory_name = "../../../common"
-
+"""
     for x in range(0, len(LambdaVDWList)):
 
         stateName = prefix+str(x)
@@ -351,12 +357,56 @@ for r in range(0, numReplicates, 1):
                            "Exclude" : "1-4"
                            }
 
+"""
+    # Calibration of wolf paramter across all lambda windows, calibration tool will internally cycle through all wolf potentials and formulae
+    for x in range(0, len(LambdaVDWList)):
 
-        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NPT_Prod
+        stateName = prefix+str(x)
+        statePath = Path(stateName)
+
+        NVT_cal_state_path = NVT_Calibration / statePath
+        NVT_cal_state_path.mkdir(parents=True, exist_ok=True)
+
+        NPT_restart_files_state_path = RelPathToNPTEq / statePath 
+        NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
+        NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
+
+        input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
+                           "VDWGeometricSigma": True,
+                           "DisFreq": 0.50,
+                           "RotFreq": 0.20, 
+                           "RegrowthFreq": 0.20,
+                           "CrankShaftFreq": 0.10,
+                           "CBMC_First" : 10,
+                           "CBMC_Nth" : 10,
+                           "CBMC_Ang" : 100,
+                           "CBMC_Dih" : 50,
+                           "Rcut": 14,
+                           "RcutLow": 0,
+                           "LRC": True,
+                           "RcutCoulomb_box_0": 14,
+                           "Tolerance" : 0.00005,
+                           "LambdaVDW" : LambdaVDWList,
+                           "LambdaCoulomb" : LambdaCoulList,
+                           "FreeEnergyCalc" : [True, 5000],
+                           "PressureCalc" : [True, 5000],
+                           "MoleculeType" : [ethanol.name, 1],
+                           "ScaleAlpha" : 0.5,
+                           "ScalePower" : 2,
+                           "MinSigma" : 3,
+                           "InitialState" : x,
+                           "OutputName" : NVT_Cal_OutputName,
+                           "PRNG" : randomSeeds[r][x],
+                           "Exclude" : "1-4"
+                           }
+
+
+        gomc_control.write_gomc_control_file(charmm, NVT_Cal_conf_name, 'NVT', RunSteps=NumCalSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=True,input_variables_dict=input_variables_dict_NPT_Prod
                                             )
-        NVTProdConfPath = Path(NVT_Prod_conf_name)
-        NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
+        NVTCalConfPath = Path(NVT_Cal_conf_name)
+        NVT_cal_state_path.rename(NVT_cal_state_path / NVTCalConfPath)
 
+"""
     for x in range(0, len(LambdaVDWList)):
 
         stateName = prefix+str(x)
@@ -452,4 +502,4 @@ for r in range(0, numReplicates, 1):
         NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
 
 
-
+"""
