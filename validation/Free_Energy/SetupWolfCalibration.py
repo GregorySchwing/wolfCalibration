@@ -16,20 +16,28 @@ from pathlib import Path
 
 import os
 
-WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
+WolfCutoffBoxList = [0]
+
+WolfCutoffCoulombLowerBoundList = [10]
+WolfCutoffCoulombUpperBoundList = [15]
+WolfCutoffCoulombIntervalList = [0.5]
+
+WolfAlphaLowerBoundList = [0.0]
+WolfAlphabUpperBoundList = [0.5]
+WolfAlphaIntervalList = [0.01]
 
 for root, dirs, files in os.walk(".", topdown=False):
    for directory in dirs:
-      if("DSP" in directory):
-         print("DSP Directory" ,os.path.join(root, directory))
-      if("DSF" in directory):
-         print("DSF Directory" ,os.path.join(root, directory))
-"""
    for name in files:
-      if(name == "NVT_Prod_water_ethanol_fe.conf"):
-         print(os.path.join(root, name))
-         print("DSF :" ,"DSF" in root)
-         print("DSP :" ,"DSP" in root)
-"""
-
+      if(name == "NVT_Cal_water_ethanol_fe.conf"):
+         path2File = os.path.join(root, name)
+         with open(path2File, "a") as myfile:
+            myfile.write("WolfCalibration\tTrue")
+            for box, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval \
+            in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList \
+            WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
+               CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{int}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
+               myfile.write(CutoffLine)
+               alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
+               myfile.write(alphaLine)
 
