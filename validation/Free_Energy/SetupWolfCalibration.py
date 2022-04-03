@@ -27,16 +27,15 @@ WolfAlphabUpperBoundList = [0.5]
 WolfAlphaIntervalList = [0.01]
 
 for root, dirs, files in os.walk(".", topdown=False):
-   for directory in dirs:
    for name in files:
       if(name == "NVT_Cal_water_ethanol_fe.conf"):
          path2File = os.path.join(root, name)
          with open(path2File, "a") as myfile:
-            myfile.write("WolfCalibration\tTrue")
+            myfile.write("WolfCalibration\tTrue\n")
             for box, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval \
-            in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList \
+            in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
             WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
-               CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{int}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
+               CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
                myfile.write(CutoffLine)
                alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
                myfile.write(alphaLine)
