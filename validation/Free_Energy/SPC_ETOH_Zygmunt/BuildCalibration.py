@@ -195,8 +195,8 @@ for r in range(0, 1, 1):
     NPT_Eq = replicatePaths[r] / NPT_Eq_Prefix
     NVT_Calibration = Path(calibPathPrefix)
 
-    RelPathToNVTEq = Path("../") / NVT_Eq
-    RelPathToNPTEq = Path("../") / NPT_Eq
+    RelPathToNVTEq = Path("../../") / NVT_Eq
+    RelPathToNPTEq = Path("../../") / NPT_Eq
 
     NVT_Calibration.mkdir(parents=True, exist_ok=True)
 
@@ -249,6 +249,7 @@ for r in range(0, 1, 1):
                            "CBMC_Dih" : 50,
                            "Rcut": 14,
                            "RcutLow": 0,
+                           "Ewald": False,
                            "LRC": False,
                            "Potential": "SWITCH",
                            "RcutCoulomb_box_0": 14,

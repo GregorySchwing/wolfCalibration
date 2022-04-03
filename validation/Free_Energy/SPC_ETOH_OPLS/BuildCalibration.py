@@ -64,7 +64,7 @@ charmm = mf_charmm.Charmm(water_ethanol_box_liq,
                           ff_filename="NVT_water_ethanol_fe_FF",
                           forcefield_selection=FF_dict,
                           residues=residues_list,
-                          bead_to_atom_name_dict=Bead_to_atom_name_dict,
+                          bead_to_atom_name_dict=None,
                           fix_residue=None,
                           gomc_fix_bonds_angles=fix_bonds_angles_residues,
                           reorder_res_in_pdb_psf=True
@@ -193,8 +193,8 @@ for r in range(0, 1, 1):
     NPT_Eq = replicatePaths[r] / NPT_Eq_Prefix
     NVT_Calibration = Path(calibPathPrefix)
 
-    RelPathToNVTEq = Path("../") / NVT_Eq
-    RelPathToNPTEq = Path("../") / NPT_Eq
+    RelPathToNVTEq = Path("../../") / NVT_Eq
+    RelPathToNPTEq = Path("../../") / NPT_Eq
 
     NVT_Calibration.mkdir(parents=True, exist_ok=True)
 
@@ -248,6 +248,7 @@ for r in range(0, 1, 1):
                            "Rcut": 14,
                            "RcutLow": 0,
                            "LRC": True,
+                           "Ewald": False,
                            "RcutCoulomb_box_0": 14,
                            "Tolerance" : 0.00005,
                            "LambdaVDW" : LambdaVDWList,

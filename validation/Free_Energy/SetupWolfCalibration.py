@@ -15,6 +15,8 @@ import random
 from pathlib import Path
 
 import os
+import shutil
+
 
 WolfDefaultKind = "Cassandra"
 WolfDefaultPotential = "DSF"
@@ -30,9 +32,12 @@ WolfAlphaLowerBoundList = [0.0]
 WolfAlphabUpperBoundList = [0.5]
 WolfAlphaIntervalList = [0.01]
 
+shellFile = "cal.sh"
+
 for root, dirs, files in os.walk(".", topdown=False):
    for name in files:
       if(name == "NVT_Cal_water_ethanol_fe.conf"):
+         shutil.copy2(shellFile, root)
          path2File = os.path.join(root, name)
          with open(path2File, "a") as myfile:
             defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
