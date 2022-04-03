@@ -19,4 +19,4 @@
 #SBATCH -e errors_%j.err
 # Set maximum time limit
 #SBATCH -t 3-0:0:0
-/wsu/home/go/go24/go2432/GOMC2/GOMC/bin/GOMC_CPU_NPT +p8 NVT_Cal_water_ethanol_fe.conf > log
+/wsu/home/go/go24/go2432/GOMC2/GOMC/bin/GOMC_CPU_NVT +p8 NVT_Cal_water_ethanol_fe.conf > log
