@@ -16,6 +16,10 @@ from pathlib import Path
 
 import os
 
+WolfDefaultKind = "Cassandra"
+WolfDefaultPotential = "DSF"
+WolfDefaultAlpha = [0.21]
+
 WolfCutoffBoxList = [0]
 
 WolfCutoffCoulombLowerBoundList = [10]
@@ -31,12 +35,20 @@ for root, dirs, files in os.walk(".", topdown=False):
       if(name == "NVT_Cal_water_ethanol_fe.conf"):
          path2File = os.path.join(root, name)
          with open(path2File, "a") as myfile:
+            defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
+            myfile.write(defPotLine)
+            defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
+            myfile.write(defKindLine)
             myfile.write("WolfCalibration\tTrue\n")
-            for box, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval \
+            for box, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, defaultAlpha \
             in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
-            WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
+            WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
+               defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
+               myfile.write(defAlphaLine)
+
                CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
                myfile.write(CutoffLine)
+
                alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
                myfile.write(alphaLine)
 
