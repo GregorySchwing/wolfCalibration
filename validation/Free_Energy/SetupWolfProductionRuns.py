@@ -13,23 +13,47 @@ import shutil
 import pathlib
 import random
 from pathlib import Path
-
+import re
 import os
 
 WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
+potentials = ["DSP", "DSF"]
+
+p = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_(\w+?).dat")
+
+model2BestWolfAlphaRCut = dict()
 
 for root, dirs, files in os.walk(".", topdown=False):
-   for directory in dirs:
-      if("DSP" in directory):
-         print("DSP Directory" ,os.path.join(root, directory))
-      if("DSF" in directory):
-         print("DSF Directory" ,os.path.join(root, directory))
-"""
+   for direc in dirs:
+      if ("Calibration" == direc):
+         model = os.path.basename(root)
+         print("Model ", model)
+         if (model not  in model2BestWolfAlphaRCut):
+            model2BestWolfAlphaRCut[model] = dict()
+
+for root, dirs, files in os.walk(".", topdown=False):
    for name in files:
-      if(name == "NVT_Prod_water_ethanol_fe.conf"):
-         print(os.path.join(root, name))
-         print("DSF :" ,"DSF" in root)
-         print("DSP :" ,"DSP" in root)
+      if(p.match(name)):
+         groups = p.search(name)
+         wolfKind = groups.group(1)
+         potential = groups.group(2)
+         box = groups.group(3)
+         head_tail = os.path.split(root)
+         for direc in head_tail:
+             for key in model2BestWolfAlphaRCut.keys():
+                 if(key in direc):
+                    print ("model" , key)
+                    print ("wolf Kind" , wolfKind)
+                    print ("potential Kind" , potential)
+                    print ("box" , box)
+
+"""
+for root, dirs, files in os.walk(".", topdown=False):
+for name in files:
+  if(name == "NVT_Prod_water_ethanol_fe.conf"):
+     print(os.path.join(root, name))
+     print("DSF :" ,"DSF" in root)
+     print("DSP :" ,"DSP" in root)
 """
 
 

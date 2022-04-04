@@ -45,14 +45,14 @@ def main(argv):
             parsingInputs = False
     print('Input file path is', inputfile)
     print('Output file is ', outputfile)
-    p = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_NPT_Prod.dat")
+    p = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_(\w+?).dat")
 
     calibrationFiles = sorted(glob.glob(os.path.join(inputfile,'Wolf_Calibration_*.dat')), key=os.path.getmtime)
     print(calibrationFiles)
     for calFile in calibrationFiles:
         justFileName = os.path.basename(calFile)
         print(justFileName)
-        groups = p.search("Wolf_Calibration_VLUGT_COUL_DSP_BOX_0_NPT_Prod.dat")
+        groups = p.search(justFileName)
         wolfKind = groups.group(1)
         potential = groups.group(2)
         box = groups.group(3)
