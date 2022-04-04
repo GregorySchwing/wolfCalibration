@@ -34,6 +34,8 @@ WolfAlphaIntervalList = [0.01]
 
 shellFile = "cal.sh"
 
+wolfCalFreq = 100
+
 for root, dirs, files in os.walk(".", topdown=False):
    for name in files:
       if(name == "NVT_Cal_water_ethanol_fe.conf"):
@@ -45,6 +47,8 @@ for root, dirs, files in os.walk(".", topdown=False):
             defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
             myfile.write(defKindLine)
             myfile.write("WolfCalibration\tTrue\n")
+            defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
+            myfile.write(defPotLine)
             for box, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, defaultAlpha \
             in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
             WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
@@ -56,4 +60,6 @@ for root, dirs, files in os.walk(".", topdown=False):
 
                alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
                myfile.write(alphaLine)
+
+
 
