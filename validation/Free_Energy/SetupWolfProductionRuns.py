@@ -16,6 +16,8 @@ from pathlib import Path
 import re
 import os
 
+from Surface import find_minimum
+
 WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
 potentials = ["DSP", "DSF"]
 
@@ -46,6 +48,7 @@ for root, dirs, files in os.walk(".", topdown=False):
                     print ("wolf Kind" , wolfKind)
                     print ("potential Kind" , potential)
                     print ("box" , box)
+                    find_minimum(os.path.join(root, name), True)
 
 """
 for root, dirs, files in os.walk(".", topdown=False):

@@ -26,6 +26,63 @@ def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None
 		art3d.pathpatch_2d_to_3d(p, z=z0, zdir=a)
 		i = i + 1
 
+def find_minimum(path, plotSuface=False):
+    df = pd.read_csv(path,sep='\t',index_col=0)
+    df = df.iloc[: , :-1]
+    dfMean = df.mean()
+
+    points = dfMean.index.map(lambda x: x.strip('('))
+    points = points.map(lambda x: x.strip(')'))
+    pointsSplit = points.str.split(pat=", ", expand=False)
+
+    df3 = pd.DataFrame(pointsSplit.tolist(), columns=['rcut','alpha'], dtype=np.float64)
+    df4 = pd.DataFrame(dfMean.values, columns=['err'], dtype=np.float64)
+    print(df3)
+    print(df4)
+
+    minxy = df3.min()
+    maxxy = df3.max()
+
+    x = df3.iloc[:,0].to_numpy()
+    y = df3.iloc[:,1].to_numpy()
+    z = np.abs(df4.iloc[:,0].to_numpy())
+
+    x2 = np.linspace(minxy[0], maxxy[0], 6500)
+    y2 = np.linspace(minxy[1], minxy[1], 6500)
+    print((maxxy[0] - minxy[0]))
+    print((maxxy[1] - minxy[1]))
+    rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/650), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/650)
+    print(rranges)
+    X2, Y2 = np.meshgrid(x2, y2)
+
+    X2, Y2 = np.meshgrid(x2, y2)
+
+    F2 = interpolate.interp2d(x, y, z, kind='quintic')
+
+    Z2 = F2(x2, y2)
+    f = lambda x: np.abs(F2(*x))
+
+
+    bounds = [(minxy[0], maxxy[0]),(minxy[1], maxxy[1])]
+    bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
+    bfXY = np.array(bf[0])
+    print(bfXY[0])
+    print(bfXY[1])
+    x0 = (bfXY[0], bfXY[1])
+    gd = minimize(f, x0, method='SLSQP', bounds=bounds)
+    print(gd)
+    gdXY = np.array(gd.x)
+    print(gdXY[0])
+    print(gdXY[1])
+
+
+    ZBF = F2(bfXY[0], bfXY[1])
+    ZGD = F2(gdXY[0], gdXY[1])
+
+    print("ZBF : ", ZBF)
+    print("ZGD : ", ZGD)
+
+
 def main(argv):
     inputfile = ''
     outputfile = ''
