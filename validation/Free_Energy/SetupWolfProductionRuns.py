@@ -71,6 +71,8 @@ for root, dirs, files in os.walk(".", topdown=False):
                         print(os.path.join(root, name))
                         print(key, element[0], element[1], box)
                         print(model2BestWolfAlphaRCut[key][(element[0], element[1], box)])
+                        print("Alpha" , element[0])
+                        print("Cutoff" , element[1])
 
 
 

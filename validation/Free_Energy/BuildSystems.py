@@ -406,7 +406,7 @@ for r in range(0, numReplicates, 1):
         NVTCalConfPath = Path(NVT_Cal_conf_name)
         NVT_cal_state_path.rename(NVT_cal_state_path / NVTCalConfPath)
 
-"""
+
     for x in range(0, len(LambdaVDWList)):
 
         stateName = prefix+str(x)
@@ -502,4 +502,4 @@ for r in range(0, numReplicates, 1):
         NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
 
 
-"""
+

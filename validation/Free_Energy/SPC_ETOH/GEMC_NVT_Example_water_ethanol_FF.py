@@ -232,7 +232,7 @@ for r in range(0, numReplicates, 1):
     Pressure_in_bar = 1.0
 
     ff_psf_pdb_file_directory_name = "../../../common"
-
+    """
     for x in range(0, len(LambdaVDWList)):
 
         stateName = prefix+str(x)
@@ -346,7 +346,7 @@ for r in range(0, numReplicates, 1):
                                             )
         NVTProdConfPath = Path(NVT_Prod_conf_name)
         NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
-
+    """
 
     WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
     WolfPotentials = ["DSF", "DSP"]
@@ -382,8 +382,9 @@ for r in range(0, numReplicates, 1):
                                "CBMC_Dih" : 50,
                                "Rcut": 14,
                                "RcutLow": 0,
+                               "Ewald": False,
                                "LRC": True,
-                               "RcutCoulomb_box_0": 14,
+                               #"RcutCoulomb_box_0": 14,
                                "Tolerance" : 0.00005,
                                "LambdaVDW" : LambdaVDWList,
                                "LambdaCoulomb" : LambdaCoulList,
