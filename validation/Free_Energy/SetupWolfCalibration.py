@@ -49,7 +49,7 @@ for root, dirs, files in os.walk(".", topdown=False):
             myfile.write("WolfCalibration\tTrue\n")
             defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
             myfile.write(defPotLine)
-            for box, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, defaultAlpha \
+            for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \
             in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
             WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
