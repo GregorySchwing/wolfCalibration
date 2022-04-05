@@ -37,16 +37,17 @@ for root, dirs, files in os.walk(".", topdown=False):
          wolfKind = groups.group(1)
          potential = groups.group(2)
          box = groups.group(3)
-         head_tail = os.path.split(root)
+         head_tail = root.split(os.sep)
          for direc in head_tail:
              for key in model2BestWolfAlphaRCut.keys():
-                 if(key is direc):
+                 if(key == direc):
                     print ("model" , key)
                     print ("wolf Kind" , wolfKind)
                     print ("potential Kind" , potential)
                     print ("box" , box)
 
-                    tupleMin = find_minimum(os.path.join(root, name), True)
+#                    tupleMin = find_minimum(os.path.join(root, name), True)
+                    tupleMin = (0,1,2,3,4,5)
                     # Use smaller error, either BF or Grad Desc
                     if(tupleMin[2] < tupleMin[5]):
                        model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[0], tupleMin[1], tupleMin[2]]
@@ -54,7 +55,7 @@ for root, dirs, files in os.walk(".", topdown=False):
                        model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5]]
          print(model2BestWolfAlphaRCut)
 
-WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
+WolfMethods = ["VLUGT", "GROSS", "VLUGTWINTRACUTOFF"]
 WolfPotentials = ["DSF", "DSP"]
 box = 0
 import itertools
@@ -62,17 +63,26 @@ import itertools
 for root, dirs, files in os.walk(".", topdown=False):
    for name in files:
       if(name == "NVT_Prod_water_ethanol_fe.conf"):
-         head_tail = os.path.split(root)
+         head_tail = root.split(os.sep)
          for direc in head_tail:
             for key in model2BestWolfAlphaRCut.keys():
-               if(key is direc):
+               if(key == direc):
                   for element in itertools.product(WolfMethods, WolfPotentials):
-                     if(element in root):
-                        print(os.path.join(root, name))
+                     print(element, element[0]+"_"+element[1] in root)
+                     if(element[0]+"_"+element[1] in root):
+                        path2File = os.path.join(root, name)
+                        print(path2File)
                         print(key, element[0], element[1], box)
                         print(model2BestWolfAlphaRCut[key][(element[0], element[1], box)])
-                        print("Alpha" , element[0])
-                        print("Cutoff" , element[1])
-
+                        alphaRcutRelErrTuple = model2BestWolfAlphaRCut[key][(element[0], element[1], box)]
+                        print("Alpha" , alphaRcutRelErrTuple[0])
+                        print("Cutoff" , alphaRcutRelErrTuple[1])
+"""
+                        with open(path2File, "a") as myfile:
+                            defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
+                            myfile.write(defPotLine)
+                            defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
+                            myfile.write(defKindLine)
+"""
 
 
