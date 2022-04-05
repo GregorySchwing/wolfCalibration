@@ -18,7 +18,7 @@ import os
 import shutil
 
 
-WolfDefaultKind = "Cassandra"
+WolfDefaultKind = "VlugtWIntraCutoff"
 WolfDefaultPotential = "DSF"
 WolfDefaultAlpha = [0.21]
 
