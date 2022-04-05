@@ -18,9 +18,6 @@ import os
 
 from Surface import find_minimum
 
-WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
-potentials = ["DSP", "DSF"]
-
 p = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_(\w+?).dat")
 
 model2BestWolfAlphaRCut = dict()
@@ -43,7 +40,7 @@ for root, dirs, files in os.walk(".", topdown=False):
          head_tail = os.path.split(root)
          for direc in head_tail:
              for key in model2BestWolfAlphaRCut.keys():
-                 if(key in direc):
+                 if(key is direc):
                     print ("model" , key)
                     print ("wolf Kind" , wolfKind)
                     print ("potential Kind" , potential)
@@ -52,19 +49,28 @@ for root, dirs, files in os.walk(".", topdown=False):
                     tupleMin = find_minimum(os.path.join(root, name), True)
                     # Use smaller error, either BF or Grad Desc
                     if(tupleMin[2] < tupleMin[5]):
-                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[0], tupleMin[1]]
+                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[0], tupleMin[1], tupleMin[2]]
                     else:
-                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4]]
+                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5]]
          print(model2BestWolfAlphaRCut)
-         quit()
 
-"""
+WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
+WolfPotentials = ["DSF", "DSP"]
+box = 0
+import itertools
+
 for root, dirs, files in os.walk(".", topdown=False):
-for name in files:
-  if(name == "NVT_Prod_water_ethanol_fe.conf"):
-     print(os.path.join(root, name))
-     print("DSF :" ,"DSF" in root)
-     print("DSP :" ,"DSP" in root)
-"""
+   for name in files:
+      if(name == "NVT_Prod_water_ethanol_fe.conf"):
+         head_tail = os.path.split(root)
+         for direc in head_tail:
+            for key in model2BestWolfAlphaRCut.keys():
+               if(key is direc):
+                  for element in itertools.product(WolfMethods, WolfPotentials):
+                     if(element in root):
+                        print(os.path.join(root, name))
+                        print(key, element[0], element[1], box)
+                        print(model2BestWolfAlphaRCut[key][(element[0], element[1], box)])
+
 
 
