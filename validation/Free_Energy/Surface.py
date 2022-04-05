@@ -82,6 +82,8 @@ def find_minimum(path, plotSuface=False):
     print("ZBF : ", ZBF)
     print("ZGD : ", ZGD)
 
+    return (bfXY[0], bfXY[1], ZBF, gdXY[0], gdXY[1], ZGD)
+
 
 def main(argv):
     inputfile = ''

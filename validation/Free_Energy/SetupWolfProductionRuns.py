@@ -48,7 +48,15 @@ for root, dirs, files in os.walk(".", topdown=False):
                     print ("wolf Kind" , wolfKind)
                     print ("potential Kind" , potential)
                     print ("box" , box)
-                    find_minimum(os.path.join(root, name), True)
+
+                    tupleMin = find_minimum(os.path.join(root, name), True)
+                    # Use smaller error, either BF or Grad Desc
+                    if(tupleMin[2] < tupleMin[5]):
+                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[0], tupleMin[1]]
+                    else:
+                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4]]
+         print(model2BestWolfAlphaRCut)
+         quit()
 
 """
 for root, dirs, files in os.walk(".", topdown=False):
