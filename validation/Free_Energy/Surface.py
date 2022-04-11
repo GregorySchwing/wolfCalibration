@@ -29,7 +29,7 @@ def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None
 		art3d.pathpatch_2d_to_3d(p, z=z0, zdir=a)
 		i = i + 1
 
-def find_minimum(path, plotSuface=False):
+def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df = pd.read_csv(path,sep='\t',index_col=0)
     df = df.iloc[: , :-1]
     dfMean = df.mean()
@@ -88,7 +88,7 @@ def find_minimum(path, plotSuface=False):
     if(plotSuface):
         ax = plt.axes(projection='3d')
         ax.plot_trisurf(x, y, z, cmap='viridis', edgecolor='none');
-        title = wolfKind+"_"+potential+"_Box_"+box
+        title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
         ax.set_title(title, fontsize=20)
         ax.set_xlabel('Alpha', fontsize=20, labelpad=20)
         ax.set_ylabel('RCut', fontsize=20, labelpad=20)

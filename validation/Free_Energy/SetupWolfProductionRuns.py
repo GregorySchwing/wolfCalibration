@@ -46,7 +46,7 @@ for root, dirs, files in os.walk(".", topdown=False):
                     print ("potential Kind" , potential)
                     print ("box" , box)
 
-                    tupleMin = find_minimum(os.path.join(root, name), True)
+                    tupleMin = find_minimum(os.path.join(root, name), key, wolfKind, potential, box, True)
 #                    tupleMin = (0,1,2,3,4,5)
                     # Use smaller error, either BF or Grad Desc
                     if(tupleMin[2] < tupleMin[5]):
