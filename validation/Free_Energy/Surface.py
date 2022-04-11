@@ -13,6 +13,9 @@ from scipy import interpolate, optimize
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from matplotlib.patches import Circle, Ellipse
 
+import pickle
+import plotly.io as pio 
+
 def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None):
 	xy_len, z_len = ax.get_figure().get_size_inches()
 	axis_length = [x[1] - x[0] for x in [ax.get_xbound(), ax.get_ybound(), ax.get_zbound()]]
@@ -81,6 +84,30 @@ def find_minimum(path, plotSuface=False):
 
     print("ZBF : ", ZBF)
     print("ZGD : ", ZGD)
+
+    if(plotSuface):
+        ax = plt.axes(projection='3d')
+        ax.plot_trisurf(x, y, z, cmap='viridis', edgecolor='none');
+        title = wolfKind+"_"+potential+"_Box_"+box
+        ax.set_title(title, fontsize=20)
+        ax.set_xlabel('Alpha', fontsize=20, labelpad=20)
+        ax.set_ylabel('RCut', fontsize=20, labelpad=20)
+        ax.set_zlabel('Relative Error', fontsize=20, labelpad=20)
+
+        add_point(ax, gdXY[0], gdXY[1], gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01, labelArg = "Gradient Descent")
+        add_point(ax, gdXY[0], gdXY[1], 10*gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01)
+        add_point(ax, gdXY[0], gdXY[1], 20*gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01)
+        xbf,ybf = bf[0]
+        add_point(ax, bfXY[0], bfXY[1], bf[1], fc = 'r', ec = 'r', radius=0.01, labelArg = "Brute Force")
+        add_point(ax, bfXY[0], bfXY[1], 10*bf[1], fc = 'r', ec = 'r', radius=0.01)
+        add_point(ax, bfXY[0], bfXY[1], 20*bf[1], fc = 'r', ec = 'r', radius=0.01)
+        ax.legend(loc='best')
+
+        prefix = os.split(path)
+        plotPath = os.path.join(prefix, title)
+        pickle.dump(ax, file(plotPath+".pickle", 'w'))
+        pio.write_html(ax, file=plotPath+".html", auto_open=False)
+        ax.savefig(file=plotPath+".png")
 
     return (bfXY[0], bfXY[1], ZBF, gdXY[0], gdXY[1], ZGD)
 
