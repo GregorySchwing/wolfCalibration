@@ -72,7 +72,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     gdXY = np.array(gd.x)
     print(gdXY[0])
     print(gdXY[1])
-
+    gdJacXY = np.array(gd.jac)
+    print(gdJacXY[0])
+    print(gdJacXY[1])
 
     ZBF = F2(bfXY[0], bfXY[1])
     ZGD = F2(gdXY[0], gdXY[1])
@@ -84,6 +86,15 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     print("ZBF : ", ZBF)
     print("ZGD : ", ZGD)
+
+    # Get error of area of 100 jacobian steps in x and y
+    xi_flat = np.linspace(gdXY[0]-gdJacXY[0]*100, gdXY[0]+gdJacXY[0]*100, 100)
+    yi_flat = np.linspace(gdXY[1]-gdJacXY[1]*100, gdXY[1]+gdJacXY[1]*100, 100)
+
+    Z2_flat = F2(xi_flat, yi_flat)
+    flatnessScore = np.sum(Z2_flat)
+
+
 
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
@@ -99,7 +110,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         iteractivefig = go.Figure()
         iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=False, width=500, height=500, 
-        margin=dict(l=65, r=50, b=65, t=90))
+        margin=dict(l=65, r=65, b=65, t=65))
         iteractivefig.update_layout(layout)
         iteractivefig.update_layout(scene = dict(
                     xaxis_title='Alpha',
@@ -112,7 +123,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
-    return (bfXY[0], bfXY[1], ZBF, gdXY[0], gdXY[1], ZGD)
+    return (bfXY[0], bfXY[1], ZBF, gdXY[0], gdXY[1], ZGD, gdJacXY[0], gdJacXY[1], flatnessScore)
 
 
 def main(argv):
