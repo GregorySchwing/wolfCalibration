@@ -1,0 +1,452 @@
+Info: GOMC Version 2.70
+Info: Start Time: Tue Apr 12 12:56:08 2022
+Info: Host Name: wsu189
+CPU information:
+Info: Total number of CPUs: 12
+Info: Total number of CPUs available: 12
+Info: Model name: Intel(R) Xeon(R) CPU           X5650  @ 2.67GHz
+Info: System name: Linux
+Info: Release: 3.10.0-1160.49.1.el7.x86_64
+Info: Version: #1 SMP Tue Nov 30 15:51:32 UTC 2021
+Info: Kernel Architecture: x86_64
+Info: Total Ram: 96506.1MB
+Info: Used Ram: 63875.8MB
+Info: Working in the current directory: /wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/SPC_ETOH_OPLS/Calibration/state_0
+Info: GOMC COMPILED TO RUN CANONICAL (NVT) ENSEMBLE.
+Info: Number of threads                  8 
+Info: Compiled with OpenMP Version       4.5
+
+Reading Input File:                      NVT_Cal_water_ethanol_fe.conf
+Info: Restart simulation                 Active 
+Warning: Unknown input RestartCheckpoint!
+Info: Expert Mode                        Inactive 
+Info: Constant seed                      Active 
+Info: PARAMETER file                     CHARMM format! 
+Info: Input Temperature                  298.0000 K
+Info: Non-truncated potential            Active 
+Info: Long Range Correction              Active 
+Warning: Unknown input IPC!
+Info: Cutoff                             14.0000 A
+Info: Short Range Cutoff                 0.0000 A
+Info: Exclude                            ONE-FOUR 
+Info: Geometric mean to combine LJ sigma Active A
+Info: Electrostatic                      Active 
+Info: Cache Ewald Fourier                Inactive 
+Info: Ewald Summation Tolerance          5.000E-05 
+Info: Box  0  CutoffCoulomb              14.0000 A
+Info: Pressure calculation frequency     5000 
+Info: Total number of steps              1000 
+Info: Number of equilibration steps      100 
+Info: Move adjustment frequency          100 
+Info: Displacement move frequency        0.5000 
+Info: Rotation move frequency            0.2000 
+Info: Regrowth move frequency            0.2000 
+Info: Crank-Shaft move frequency         0.1000 
+Info: Free Energy Calculation            Inactive 
+Info: Free Energy Calc for Molecule      1 in ETO 
+Info: Free Energy Calc Lambda state      0 
+Info: Soft-core scaling power(p)         2    
+Info: Soft-core softness(alpha)          0.5000 
+Info: Soft-core minimum sigma            3.0000 
+Info: Soft-core for Coulombic interaction Inactive 
+Info: Lambda VDW                         0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.200 0.400 0.600 0.700 0.800 0.900 1.000 
+Info: Lambda Coulomb                     0.000 0.050 0.100 0.150 0.200 0.250 0.300 0.350 0.400 0.450 0.500 0.600 0.700 0.800 0.900 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 
+Info: CBMC First atom trials             10   
+Info: CBMC Secondary atom trials         10   
+Info: CBMC Angle trials                  100  
+Info: CBMC Dihedral trials               50   
+Info: Output name                        NVT_Cal 
+Info: Restart frequency                  100 
+Warning: Unknown input CheckpointFreq!
+Info: Coordinate frequency               100 
+Info: Console output frequency           100 
+Info: Average output frequency           100 
+Warning: Unknown input HistogramFreq!
+Warning: Unknown input DistName!
+Warning: Unknown input HistName!
+Warning: Unknown input RunNumber!
+Warning: Unknown input RunLetter!
+Warning: Unknown input SampleFreq!
+Warning: Unknown input OutVolume!
+Info: Wolf Electrostatic                 Active 
+Info: Wolf Dampened Shifted Force        Active 
+Info: Wolf Vlugt With Intramolecular Coulombic Cutoff Implementation Active 
+Info: Wolf Calibration output frequency  100 
+Info: Wolf Alpha Box 0                   2.100E-01 
+Info: Wolf Cutoff Coulomb Range Box      0 START    1.000E+01 END      1.500E+01 DELTA    5.000E-01
+Info: Wolf Alpha Range Box               0 START    0.000E+00 END      5.000E-01 DELTA    1.000E-02
+Default: Intra-Swap move frequency       0.0000 
+Default: Multi-Particle move frequency   0.0000 
+Default: Multi-Particle Brownian move frequency 0.0000 
+Default: Intra-MEMC move frequency       0.0000 
+Default: Targeted-Swap move frequency    0.0000 
+Warning: Electrostatic calculation with Ewald method Inactive 
+Warning: Cell dimension set, but will be ignored in restart mode.
+Finished Reading Input File:             NVT_Cal_water_ethanol_fe.conf
+
+Reading from CHARMM-Style parameter file:  	../../common/NVT_water_ethanol_fe_FF.inp
+Reading BONDS parameters.
+Reading ANGLES parameters.
+Reading DIHEDRALS parameters.
+Reading NONBONDED parameters.
+Reading from system PDB coordinate file:  	../../common/NVT_water_ethanol_fe.pdb
+Finished reading:                       	../../common/NVT_water_ethanol_fe.pdb
+Random number seed: 878515
+
+Molecules in PSF:
+Molecule Kind: ETO
+Idx	name	type	charge	mass
+0	C1	C	-0.1800	12.0108
+1	C2	G	0.1450	12.0108
+2	O1	E	-0.6830	15.9994
+3	H1	D	0.0600	1.0079
+4	H2	D	0.0600	1.0079
+5	H3	D	0.0600	1.0079
+6	H4	D	0.0600	1.0079
+7	H5	D	0.0600	1.0079
+8	H6	F	0.4180	1.0079
+
+Bonds:
+[2 8] [1 2] [1 6] [1 7] [0 1] [0 3] [0 4] [0 5] 
+
+Angles:
+[0 1 2] [0 1 6] [0 1 7] [1 0 3] [1 0 4] [1 0 5] [1 2 8] 
+[2 1 6] [2 1 7] [3 0 4] [3 0 5] [4 0 5] [6 1 7] 
+
+Dihedrals:
+[0 1 2 8] [2 1 0 3] [2 1 0 4] [2 1 0 5] [3 0 1 6] 
+[3 0 1 7] [4 0 1 6] [4 0 1 7] [5 0 1 6] [5 0 1 7] 
+[6 1 2 8] [7 1 2 8] 
+
+Impropers:
+
+Molecule Kind: H2O
+Idx	name	type	charge	mass
+0	O1	B	-0.8200	15.9994
+1	H1	A	0.4100	1.0079
+2	H2	A	0.4100	1.0079
+
+Bonds:
+[0 1] [0 2] 
+
+Angles:
+[1 0 2] 
+
+Dihedrals:
+
+Impropers:
+
+Bonds parameter:
+Atom Types                             Kb(K)           b0(A) 
+E	F	                 278280.4382           0.9450 
+G	E	                 161030.2717           1.4100 
+G	D	                 171094.6637           1.0900 
+C	G	                 134862.8525           1.5290 
+C	D	                 171094.6637           1.0900 
+
+B	A	                         FIX           1.0000 
+
+Angles parameter:
+Atom Types                         Ktheta(K)         theta0(degree) 
+C	G	E	          25160.9799         109.5000 
+C	G	D	          18870.7350         110.7000 
+G	C	D	          18870.7350         110.7000 
+G	E	F	          27677.0779         108.5000 
+E	G	D	          17612.6860         109.5000 
+D	C	D	          16606.2468         107.8000 
+D	G	D	          16606.2468         107.8000 
+
+A	B	A	                 FIX         109.4700 
+
+Dihedrals parameter:
+Atom Types                           Kchi(K)    n    delta(degree) 
+C	G	E	F	    -19.1234    0     90.0000 
+C	G	E	F	     89.5746    1    180.0000 
+C	G	E	F	     43.7796    2      0.0000 
+C	G	E	F	   -123.7920    3    180.0000 
+C	G	E	F	      0.0000    4      0.0000 
+C	G	E	F	      0.0000    5    180.0000 
+E	G	C	D	    235.5068    0     90.0000 
+E	G	C	D	     -0.0005    1    180.0000 
+E	G	C	D	      0.0000    2      0.0000 
+E	G	C	D	   -117.7534    3    180.0000 
+E	G	C	D	      0.0000    4      0.0000 
+E	G	C	D	      0.0000    5    180.0000 
+D	C	G	D	    150.9659    0     90.0000 
+D	C	G	D	      0.0000    1    180.0000 
+D	C	G	D	      0.0000    2      0.0000 
+D	C	G	D	    -75.4829    3    180.0000 
+D	C	G	D	      0.0000    4      0.0000 
+D	C	G	D	      0.0000    5    180.0000 
+D	G	E	F	    226.4488    0     90.0000 
+D	G	E	F	      0.0000    1    180.0000 
+D	G	E	F	      0.0000    2      0.0000 
+D	G	E	F	   -113.2244    3    180.0000 
+D	G	E	F	      0.0000    4      0.0000 
+D	G	E	F	      0.0000    5    180.0000 
+
+Warning: Charge detected in ETO but Ewald Summation method is disabled!
+
+Warning: Charge detected in H2O but Ewald Summation method is disabled!
+
+NonBonded 1-4 parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+C      C                    16.6062      3.5000   12.00 
+C      G                    16.6062      3.5000   12.00 
+C      E                    26.6516      3.3045   12.00 
+C      D                    11.1959      2.9580   12.00 
+C      F                     0.0000      5.9161   12.00 
+C      B                     0.0000      3.3293   12.00 
+C      A                     0.0000      0.0000   12.00 
+G      G                    16.6062      3.5000   12.00 
+G      E                    26.6516      3.3045   12.00 
+G      D                    11.1959      2.9580   12.00 
+G      F                     0.0000      5.9161   12.00 
+G      B                     0.0000      3.3293   12.00 
+G      A                     0.0000      0.0000   12.00 
+E      E                    42.7737      3.1200   12.00 
+E      D                    17.9685      2.7928   12.00 
+E      F                     0.0000      5.5857   12.00 
+E      B                     0.0000      3.1434   12.00 
+E      A                     0.0000      0.0000   12.00 
+D      D                     7.5483      2.5000   12.00 
+D      F                     0.0000      5.0000   12.00 
+D      B                     0.0000      2.8138   12.00 
+D      A                     0.0000      0.0000   12.00 
+F      F                     0.0000     10.0000   12.00 
+F      B                     0.0000      5.6276   12.00 
+F      A                     0.0000      0.0000   12.00 
+B      B                     0.0000      3.1670   12.00 
+B      A                     0.0000      0.0000   12.00 
+A      A                     0.0000      0.0000   12.00 
+
+NonBonded parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+C      C                    33.2125      3.5000   12.00 
+C      G                    33.2125      3.5000   12.00 
+C      E                    53.3033      3.3045   12.00 
+C      D                    22.3919      2.9580   12.00 
+C      F                     0.0000      5.9161   12.00 
+C      B                   104.2504      3.3293   12.00 
+C      A                     0.0000      0.0000   12.00 
+G      G                    33.2125      3.5000   12.00 
+G      E                    53.3033      3.3045   12.00 
+G      D                    22.3919      2.9580   12.00 
+G      F                     0.0000      5.9161   12.00 
+G      B                   104.2504      3.3293   12.00 
+G      A                     0.0000      0.0000   12.00 
+E      E                    85.5473      3.1200   12.00 
+E      D                    35.9371      2.7928   12.00 
+E      F                     0.0000      5.5857   12.00 
+E      B                   167.3132      3.1434   12.00 
+E      A                     0.0000      0.0000   12.00 
+D      D                    15.0966      2.5000   12.00 
+D      F                     0.0000      5.0000   12.00 
+D      B                    70.2856      2.8138   12.00 
+D      A                     0.0000      0.0000   12.00 
+F      F                     0.0000     10.0000   12.00 
+F      B                     0.0000      5.6276   12.00 
+F      A                     0.0000      0.0000   12.00 
+B      B                   327.2307      3.1670   12.00 
+B      A                     0.0000      0.0000   12.00 
+A      A                     0.0000      0.0000   12.00 
+
+Info: Reading extended system file ../../TI_0/NPT_Eq/state_0/NPT_Eq_BOX_0_restart.xsc 
+
+Info: Finished reading extended system file ../../TI_0/NPT_Eq/state_0/NPT_Eq_BOX_0_restart.xsc 
+
+Info: Reading from binary file ../../TI_0/NPT_Eq/state_0/NPT_Eq_BOX_0_restart.coor
+
+Info: Finished reading from binary file ../../TI_0/NPT_Eq/state_0/NPT_Eq_BOX_0_restart.coor
+
+Info: Box  0:  Periodic Cell Basis 1     31.565   0.000   0.000 
+Info: Box  0:  Periodic Cell Basis 2      0.000  31.565   0.000 
+Info: Box  0:  Periodic Cell Basis 3      0.000   0.000  31.565 
+
+Minimum coordinates in box 0: x =   -0.707, y =   -0.650, z =   -0.575
+Maximum coordinates in box 0: x =   32.201, y =   32.234, z =   32.285
+Wrapping molecules inside the simulation box 0:
+
+################################################################################
+########################## INITIAL SIMULATION ENERGY ###########################
+
+                        ETITLE:     STEP                                   TOTAL                                INTRA(B)                               INTRA(NB)                               INTER(LJ)                                     LRC                             TOTAL_ELECT                                    REAL                                   RECIP                                    SELF                                    CORR                                ENTHALPY
+
+ENER_0:                                0                -5.37670224819560722e+06                 2.70894597991733872e+03                 3.42359637600901078e+03                -1.75501748965908214e+06                -3.21721088331778483e+04                -3.59564519205927476e+06                -3.43008370829860773e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239864985095784e+07                -6.51136485412777546e+01
+
+                        STITLE:     STEP                                PRESSURE                         COMPRESSIBILITY                                TOTALMOL                             MOLFRAC_ETO                             MOLFRAC_H2O                             MOLDENS_ETO                             MOLDENS_H2O                             TOT_DENSITY
+
+STAT_0:                                0                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+################################################################################
+############################# STARTING SIMULATION ##############################
+
+                        MTITLE:     STEP                                  DISTRY                               DISACCEPT                              DISACCEPT%                                  DISMAX                                  ROTATE                               ROTACCEPT                              ROTACCEPT%                                  ROTMAX                                REGROWTH                            REGROWACCEPT                           REGROWACCEPT%                              CRANKSHAFT                          CRKSHAFTACCEPT                         CRKSHAFTACCEPT%
+
+                        ETITLE:     STEP                                   TOTAL                                INTRA(B)                               INTRA(NB)                               INTER(LJ)                                     LRC                             TOTAL_ELECT                                    REAL                                   RECIP                                    SELF                                    CORR                                ENTHALPY
+
+                        STITLE:     STEP                                PRESSURE                         COMPRESSIBILITY                                TOTALMOL                             MOLFRAC_ETO                             MOLFRAC_H2O                             MOLDENS_ETO                             MOLDENS_H2O                             TOT_DENSITY
+
+Printed combined psf to file NVT_Cal_merged.psf
+MOVE_0:                              100                                      48                                      48                 1.00000000000000000e+02                 1.00000000000000004e-10                                      22                                       4                 1.81818181818181834e+01                 2.21339482412008154e-01                                      19                                       2                 1.05263157894736832e+01                                      11                                       2                 1.81818181818181834e+01
+
+ENER_0:                              100                -5.37512073266398534e+06                 3.15783193133681698e+03                 3.41172096996970822e+03                -1.75479071741773630e+06                -3.21721088331778483e+04                -3.59472745931437984e+06                -3.42916800739635061e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239885303522162e+07                -6.51005122268021381e+01
+
+STAT_0:                              100                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              100                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 100 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 100 
+Writing checkpoint to file NVT_Cal_restart.chk at step 100
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.219, Simulation ends in:   0 d:   1 h:   9 m 
+
+MOVE_0:                              200                                      90                                      90                 1.00000000000000000e+02                 2.00000000000000007e-10                                      45                                      19                 4.22222222222222214e+01                 2.40209438285842958e-01                                      40                                       6                 1.50000000000000000e+01                                      25                                       8                 3.20000000000000000e+01
+
+ENER_0:                              200                -5.37710189693089202e+06                 2.46286265053843726e+03                 3.48588034715747153e+03                -1.75486124616497662e+06                -3.21721088331778483e+04                -3.59601728493043408e+06                -3.43047702369878022e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12240077210385911e+07                -6.51169680859559463e+01
+
+STAT_0:                              200                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              200                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 200 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 200 
+Writing checkpoint to file NVT_Cal_restart.chk at step 200
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.209, Simulation ends in:   0 d:   1 h:   3 m 
+
+MOVE_0:                              300                                     146                                     146                 1.00000000000000000e+02                 4.00000000000000015e-10                                      66                                      36                 5.45454545454545396e+01                 3.93069989922288476e-01                                      49                                       8                 1.63265306122448983e+01                                      39                                      14                 3.58974358974358978e+01
+
+ENER_0:                              300                -5.37718869477750361e+06                 2.61224134149067368e+03                 3.45958496155371085e+03                -1.75488600026272261e+06                -3.21721088331778483e+04                -3.59620241198464856e+06                -3.43065133418713091e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239969044727273e+07                -6.51176890423968331e+01
+
+STAT_0:                              300                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              300                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 300 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 300 
+Writing checkpoint to file NVT_Cal_restart.chk at step 300
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.214, Simulation ends in:   0 d:   0 h:  55 m 
+
+MOVE_0:                              400                                     201                                     201                 1.00000000000000000e+02                 8.00000000000000029e-10                                      92                                      44                 4.78260869565217419e+01                 2.56622127178564141e-01                                      63                                       9                 1.42857142857142847e+01                                      44                                      16                 3.63636363636363669e+01
+
+ENER_0:                              400                -5.37930643304785714e+06                 1.12877926402174876e+03                 3.30204408144091303e+03                -1.75395169012438250e+06                -3.21721088331778483e+04                -3.59761345743576065e+06                -3.43206444617032679e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239989710048102e+07                -6.51352793065075275e+01
+
+STAT_0:                              400                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              400                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 400 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 400 
+Writing checkpoint to file NVT_Cal_restart.chk at step 400
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.219, Simulation ends in:   0 d:   0 h:  47 m 
+
+MOVE_0:                              500                                     251                                     251                 1.00000000000000000e+02                 1.60000000000000006e-09                                     111                                      53                 4.77477477477477521e+01                 2.29916735081933110e-01                                      82                                      11                 1.34146341463414647e+01                                      56                                      18                 3.21428571428571459e+01
+
+ENER_0:                              500                -5.37973760660124943e+06                 1.36506292980544890e+03                 3.33861092957025767e+03                -1.75438192566033127e+06                -3.21721088331778483e+04                -3.59788724596711621e+06                -3.43232672472996125e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239874610330909e+07                -6.51388607012378742e+01
+
+STAT_0:                              500                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              500                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 500 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 500 
+Writing checkpoint to file NVT_Cal_restart.chk at step 500
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.210, Simulation ends in:   0 d:   0 h:  39 m 
+
+MOVE_0:                              600                                     301                                     301                 1.00000000000000000e+02                 3.20000000000000012e-09                                     137                                      71                 5.18248175182481816e+01                 3.24359241506998131e-01                                     100                                      13                 1.30000000000000000e+01                                      62                                      19                 3.06451612903225801e+01
+
+ENER_0:                              600                -5.37881629606485739e+06                 1.52482503558805365e+03                 3.35215652643635940e+03                -1.75400047617908940e+06                -3.21721088331778483e+04                -3.59752069261461496e+06                -3.43196948931744928e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239967789730802e+07                -6.51312081523417419e+01
+
+STAT_0:                              600                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              600                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 600 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 600 
+Writing checkpoint to file NVT_Cal_restart.chk at step 600
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.204, Simulation ends in:   0 d:   0 h:  32 m 
+
+MOVE_0:                              700                                     352                                     352                 1.00000000000000000e+02                 6.40000000000000023e-09                                     152                                      81                 5.32894736842105345e+01                 4.42029875432778774e-01                                     121                                      14                 1.15702479338842981e+01                                      75                                      27                 3.60000000000000000e+01
+
+ENER_0:                              700                -5.37881632541036606e+06                 1.66915706851894311e+03                 3.32224151532927863e+03                -1.75451077578508295e+06                -3.21721088331778483e+04                -3.59712483937595412e+06                -3.43158005399027746e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12240031968845688e+07                -6.51312083960901163e+01
+
+STAT_0:                              700                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              700                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 700 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 700 
+Writing checkpoint to file NVT_Cal_restart.chk at step 700
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.199, Simulation ends in:   0 d:   0 h:  24 m 
+
+MOVE_0:                              800                                     402                                     402                 1.00000000000000000e+02                 1.28000000000000005e-08                                     171                                      87                 5.08771929824561440e+01                 2.71059729780805281e-01                                     145                                      19                 1.31034482758620694e+01                                      82                                      30                 3.65853658536585371e+01
+
+ENER_0:                              800                -5.38012736663940549e+06                 1.21460013336550810e+03                 3.31983721223651446e+03                -1.75434297075213934e+06                -3.21721088331778483e+04                -3.59814672439968958e+06                -3.43259560848208563e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239968663526401e+07                -6.51420981088566293e+01
+
+STAT_0:                              800                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              800                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 800 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 800 
+Writing checkpoint to file NVT_Cal_restart.chk at step 800
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.209, Simulation ends in:   0 d:   0 h:  16 m 
+
+MOVE_0:                              900                                     454                                     454                 1.00000000000000000e+02                 2.56000000000000009e-08                                     187                                      97                 5.18716577540106911e+01                 3.38824662226006601e-01                                     166                                      23                 1.38554216867469879e+01                                      93                                      36                 3.87096774193548399e+01
+
+ENER_0:                              900                -5.37974512230230123e+06                 2.09820766836345911e+03                 3.38514385368453895e+03                -1.75329572497013491e+06                -3.21721088331778483e+04                -3.59976064002103731e+06                -3.43420782845962187e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239951707088277e+07                -6.51389231278220961e+01
+
+STAT_0:                              900                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                              900                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 900 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 900 
+Writing checkpoint to file NVT_Cal_restart.chk at step 900
+Checkpoint saved to NVT_Cal_restart.chk
+Steps/sec:   0.208, Simulation ends in:   0 d:   0 h:   8 m 
+
+MOVE_0:                             1000                                     501                                     501                 1.00000000000000000e+02                 5.12000000000000019e-08                                     204                                     108                 5.29411764705882391e+01                 4.35075346240947736e-01                                     191                                      27                 1.41361256544502627e+01                                     104                                      43                 4.13461538461538467e+01
+
+ENER_0:                             1000                -5.38019680442726612e+06                 1.11912244725722576e+03                 3.43527272488030076e+03                -1.75310991523331287e+06                -3.21721088331778483e+04                -3.59946917553291470e+06                -3.43391731555739418e+06                 0.00000000000000000e+00                -2.13895479822702445e+07                 2.12239961222947240e+07                -6.51426748699440736e+01
+
+STAT_0:                             1000                -7.83014098997233106e+01                -5.97919738281863233e-02                                    1001                 9.99000999000999000e-04                 9.99000999000999035e-01                 3.17975066936828751e-05                 3.17975066936828782e-02                 9.53653191285617595e+02
+
+PRES_0:                             1000                -1.38467842660660699e+03                -1.29186034495630815e+03                -6.39658557411315087e+02
+
+Writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 1000 
+Finished writing binary restart coordinate to file NVT_Cal_BOX_0_restart.coor at step 1000 
+Writing checkpoint to file NVT_Cal_restart.chk at step 1000
+Checkpoint saved to NVT_Cal_restart.chk
+Simulation Time (total): 4.77717404484748840e+03 sec.
+
+Move Type                Mol. Kind      BOX_0      
+% Accepted Displacement        ETO    100.00000 
+% Accepted Displacement        H2O    100.00000 
+% Accepted Rotation            ETO     53.92157 
+% Accepted Rotation            H2O     51.96078 
+% Accepted Regrowth            ETO     11.34021 
+% Accepted Regrowth            H2O     17.02128 
+% Accepted Crank-Shaft         ETO     80.43478 
+% Accepted Crank-Shaft         H2O     10.34483 
+
+Displacement:                            0.4940    sec.
+Rotation:                                0.2039    sec.
+MultiParticle:                           0.0000    sec.
+MultiParticle-Brownian:                  0.0000    sec.
+Intra-Swap:                              0.0000    sec.
+Regrowth:                                1.8698    sec.
+Intra-MEMC:                              0.0000    sec.
+Crank-Shaft:                             0.7944    sec.
+
+Info: GOMC Version 2.70
+Info: Completed at: Tue Apr 12 14:15:46 2022
+Info: On hostname: wsu189
