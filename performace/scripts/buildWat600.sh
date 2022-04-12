@@ -3,9 +3,11 @@
 #
 # Project/Account
 #SBATCH --qos=primary
-#
 # Number of cores
-#SBATCH -c 4 -w, 
+# Request one node
+#SBATCH -N 1
+# Total number of cores, in this example it will 1 node with 1 core each.
+#SBATCH -n 8
 #SBATCH --mem=200G
 #
 # Runtime of this jobs is less then 12 hours.
