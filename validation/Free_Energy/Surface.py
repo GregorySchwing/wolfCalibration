@@ -87,19 +87,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("ZBF : ", ZBF)
     print("ZGD : ", ZGD)
 
-    # Get error of area of 100 jacobian steps in x and y
-    xi_flat = np.linspace(gdXY[0]-gdJacXY[0]*100, gdXY[0]+gdJacXY[0]*100, 100)
-    yi_flat = np.linspace(gdXY[1]-gdJacXY[1]*100, gdXY[1]+gdJacXY[1]*100, 100)
-
-    Z2_flat = F2(xi_flat, yi_flat)
-    flatnessScore = np.sum(Z2_flat)
-
-
-
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
-        xi_forplotting = np.linspace(x.min(), x.max(), 100)
-        yi_forplotting = np.linspace(y.min(), y.max(), 100)
+        xi_forplotting = np.linspace(x.min(), x.max(), 1000)
+        yi_forplotting = np.linspace(y.min(), y.max(), 1000)
 
         Z2_forplotting = F2(xi_forplotting, yi_forplotting)
 
@@ -123,7 +114,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
-    return (bfXY[0], bfXY[1], ZBF, gdXY[0], gdXY[1], ZGD, gdJacXY[0], gdJacXY[1], flatnessScore)
+    return (bfXY[0], bfXY[1], ZBF, gdXY[0], gdXY[1], ZGD, gdJacXY[0], gdJacXY[1])
 
 
 def main(argv):

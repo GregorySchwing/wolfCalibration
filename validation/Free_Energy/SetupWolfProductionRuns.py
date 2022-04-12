@@ -51,7 +51,7 @@ if (not exists(bestValueFileName+".pickle")):
 
                         tupleMin = find_minimum(os.path.join(root, name), key, wolfKind, potential, box, True)
                         # Use smaller error, either BF or Grad Desc
-                        model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5], tupleMin[6], tupleMin[7], tupleMin[8]]
+                        model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5], tupleMin[6], tupleMin[7]]
              print(model2BestWolfAlphaRCut)
 
 
