@@ -94,8 +94,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
-        with open(plotPath+".pickle", 'wb') as handle:
-            pickle.dump(fig, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         #fig.savefig(fname=plotPath+".png")
         iteractivefig = go.Figure()
