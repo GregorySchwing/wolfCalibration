@@ -17,8 +17,6 @@
 
 #SBATCH -e errors_%j.err
 
-mkdir -p 300_a
-cd 300_a
 vmd < 300_a.tcl 
 cd ..
 # Production MD
