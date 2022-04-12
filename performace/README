@@ -1,3 +1,0 @@
-### Build Systems
-cd scripts
-sbatch buildAllWater.sh
