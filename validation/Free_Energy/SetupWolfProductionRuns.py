@@ -15,49 +15,59 @@ import random
 from pathlib import Path
 import re
 import os
-
+from os.path import exists
 from Surface import find_minimum
-
+import pickle as pickle
 p = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_(\w+?).dat")
 
-model2BestWolfAlphaRCut = dict()
 
-for root, dirs, files in os.walk(".", topdown=False):
-   for direc in dirs:
-      if ("Calibration" == direc):
-         model = os.path.basename(root)
-         print("Model ", model)
-         if (model not  in model2BestWolfAlphaRCut):
-            model2BestWolfAlphaRCut[model] = dict()
 
-for root, dirs, files in os.walk(".", topdown=False):
-   for name in files:
-      if(p.match(name)):
-         groups = p.search(name)
-         wolfKind = groups.group(1)
-         potential = groups.group(2)
-         box = groups.group(3)
-         head_tail = root.split(os.sep)
-         for direc in head_tail:
-             for key in model2BestWolfAlphaRCut.keys():
-                 if(key == direc):
-                    print ("model" , key)
-                    print ("wolf Kind" , wolfKind)
-                    print ("potential Kind" , potential)
-                    print ("box" , box)
 
-                    tupleMin = find_minimum(os.path.join(root, name), key, wolfKind, potential, box, True)
-#                    tupleMin = (0,1,2,3,4,5)
-                    # Use smaller error, either BF or Grad Desc
-                    if(tupleMin[2] < tupleMin[5]):
-                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[0], tupleMin[1], tupleMin[2]]
-                    else:
-                       model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5]]
-         print(model2BestWolfAlphaRCut)
+bestValueFileName = "bestWolfParameters"
+if (not exists(bestValueFileName+".pickle")):
+    model2BestWolfAlphaRCut = dict()
+    for root, dirs, files in os.walk(".", topdown=False):
+       for direc in dirs:
+          if ("Calibration" == direc):
+             model = os.path.basename(root)
+             print("Model ", model)
+             if (model not  in model2BestWolfAlphaRCut):
+                model2BestWolfAlphaRCut[model] = dict()
+    for root, dirs, files in os.walk(".", topdown=False):
+       for name in files:
+          if(p.match(name)):
+             groups = p.search(name)
+             wolfKind = groups.group(1)
+             potential = groups.group(2)
+             box = groups.group(3)
+             head_tail = root.split(os.sep)
+             for direc in head_tail:
+                 for key in model2BestWolfAlphaRCut.keys():
+                     if(key == direc):
+                        print ("model" , key)
+                        print ("wolf Kind" , wolfKind)
+                        print ("potential Kind" , potential)
+                        print ("box" , box)
+
+                        tupleMin = find_minimum(os.path.join(root, name), key, wolfKind, potential, box, True)
+                        # Use smaller error, either BF or Grad Desc
+                        if(tupleMin[2] < tupleMin[5]):
+                           model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[0], tupleMin[1], tupleMin[2]]
+                        else:
+                           model2BestWolfAlphaRCut[key][(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5]]
+             print(model2BestWolfAlphaRCut)
+
+
+       with open(bestValueFileName+".pickle", 'wb') as handle:
+          pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+else:
+   with open(bestValueFileName+".pickle", 'rb') as handle:
+      model2BestWolfAlphaRCut = pickle.load(handle)
 
 WolfMethods = ["VLUGT", "GROSS", "VLUGTWINTRACUTOFF"]
 WolfPotentials = ["DSF", "DSP"]
-box = 0
+box = str(0)
 import itertools
 
 for root, dirs, files in os.walk(".", topdown=False):
@@ -68,15 +78,14 @@ for root, dirs, files in os.walk(".", topdown=False):
             for key in model2BestWolfAlphaRCut.keys():
                if(key == direc):
                   for element in itertools.product(WolfMethods, WolfPotentials):
-                     print(element, element[0]+"_"+element[1] in root)
                      if(element[0]+"_"+element[1] in root):
                         path2File = os.path.join(root, name)
                         print(path2File)
                         print(key, element[0], element[1], box)
                         print(model2BestWolfAlphaRCut[key][(element[0], element[1], box)])
                         alphaRcutRelErrTuple = model2BestWolfAlphaRCut[key][(element[0], element[1], box)]
-                        print("Alpha" , alphaRcutRelErrTuple[0])
-                        print("Cutoff" , alphaRcutRelErrTuple[1])
+                        print("Cutoff" , alphaRcutRelErrTuple[0])
+                        print("Alpha" , alphaRcutRelErrTuple[1])
 """
                         with open(path2File, "a") as myfile:
                             defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)

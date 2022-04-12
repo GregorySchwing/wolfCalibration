@@ -12,10 +12,11 @@ from scipy.optimize import minimize, brute
 from scipy import interpolate, optimize
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from matplotlib.patches import Circle, Ellipse
-
+from shapely.geometry import Point, Polygon
 import pickle
 import plotly.io as pio 
-
+import plotly.graph_objects as go
+from scipy.interpolate import griddata
 def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None):
 	xy_len, z_len = ax.get_figure().get_size_inches()
 	axis_length = [x[1] - x[0] for x in [ax.get_xbound(), ax.get_ybound(), ax.get_zbound()]]
@@ -40,33 +41,27 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     df3 = pd.DataFrame(pointsSplit.tolist(), columns=['rcut','alpha'], dtype=np.float64)
     df4 = pd.DataFrame(dfMean.values, columns=['err'], dtype=np.float64)
-    print(df3)
-    print(df4)
-
-    minxy = df3.min()
-    maxxy = df3.max()
 
     x = df3.iloc[:,0].to_numpy()
     y = df3.iloc[:,1].to_numpy()
     z = np.abs(df4.iloc[:,0].to_numpy())
 
-    x2 = np.linspace(minxy[0], maxxy[0], 6500)
-    y2 = np.linspace(minxy[1], minxy[1], 6500)
-    print((maxxy[0] - minxy[0]))
-    print((maxxy[1] - minxy[1]))
-    rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/650), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/650)
-    print(rranges)
-    X2, Y2 = np.meshgrid(x2, y2)
-
-    X2, Y2 = np.meshgrid(x2, y2)
+    rranges = slice(x.min(), x.max(), (x.max() - x.min())/65), slice(y.min(), y.max(), (y.max() - y.min())/65)
 
     F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
-    Z2 = F2(x2, y2)
+    xi = np.linspace(x.min(), x.max(), 100)
+    yi = np.linspace(y.min(), y.max(), 100)
+
+
+    X,Y = np.meshgrid(xi,yi)
+
+    Z2 = F2(xi, yi)
+
     f = lambda x: np.abs(F2(*x))
 
 
-    bounds = [(minxy[0], maxxy[0]),(minxy[1], maxxy[1])]
+    bounds = [(x.min(), x.max()),(y.min(), y.max())]
     bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
     bfXY = np.array(bf[0])
     print(bfXY[0])
@@ -82,11 +77,17 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     ZBF = F2(bfXY[0], bfXY[1])
     ZGD = F2(gdXY[0], gdXY[1])
 
+    d = {'x': [gdXY[0]], 'y': [gdXY[1]], 'z':[ZGD]}
+
+    dfGD = pd.DataFrame(data=d)
+
+
     print("ZBF : ", ZBF)
     print("ZGD : ", ZGD)
 
     if(plotSuface):
-        ax = plt.axes(projection='3d')
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
         ax.plot_trisurf(x, y, z, cmap='viridis', edgecolor='none');
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
         ax.set_title(title, fontsize=20)
@@ -94,20 +95,36 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         ax.set_ylabel('RCut', fontsize=20, labelpad=20)
         ax.set_zlabel('Relative Error', fontsize=20, labelpad=20)
 
-        add_point(ax, gdXY[0], gdXY[1], gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01, labelArg = "Gradient Descent")
-        add_point(ax, gdXY[0], gdXY[1], 10*gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01)
-        add_point(ax, gdXY[0], gdXY[1], 20*gd.fun[0], fc = 'orange', ec = 'orange', radius=0.01)
+        add_point(ax, gdXY[0], gdXY[1], gd.fun, fc = 'orange', ec = 'orange', radius=0.01, labelArg = "Gradient Descent")
+        add_point(ax, gdXY[0], gdXY[1], 10*gd.fun, fc = 'orange', ec = 'orange', radius=0.01)
+        add_point(ax, gdXY[0], gdXY[1], 20*gd.fun, fc = 'orange', ec = 'orange', radius=0.01)
         xbf,ybf = bf[0]
         add_point(ax, bfXY[0], bfXY[1], bf[1], fc = 'r', ec = 'r', radius=0.01, labelArg = "Brute Force")
         add_point(ax, bfXY[0], bfXY[1], 10*bf[1], fc = 'r', ec = 'r', radius=0.01)
         add_point(ax, bfXY[0], bfXY[1], 20*bf[1], fc = 'r', ec = 'r', radius=0.01)
         ax.legend(loc='best')
 
-        prefix = os.split(path)
-        plotPath = os.path.join(prefix, title)
-        pickle.dump(ax, file(plotPath+".pickle", 'w'))
-        pio.write_html(ax, file=plotPath+".html", auto_open=False)
-        ax.savefig(file=plotPath+".png")
+        prefix = os.path.split(path)
+        plotPath = os.path.join(prefix[0], title)
+        with open(plotPath+".pickle", 'wb') as handle:
+            pickle.dump(fig, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        #fig.savefig(fname=plotPath+".png")
+        iteractivefig = go.Figure()
+        iteractivefig.add_surface(x=xi,y=yi,z=Z2)
+        layout = go.Layout(title=title,autosize=False, width=500, height=500, 
+        margin=dict(l=65, r=50, b=65, t=90))
+        iteractivefig.update_layout(layout)
+        iteractivefig.update_layout(scene = dict(
+                    xaxis_title='Alpha',
+                    yaxis_title='RCut',
+                    zaxis_title='Relative Error'),
+                    width=700,
+                    margin=dict(r=20, b=10, l=10, t=10))
+        iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
+                                  highlightcolor="limegreen", project_z=True))
+
+        pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     return (bfXY[0], bfXY[1], ZBF, gdXY[0], gdXY[1], ZGD)
 
@@ -166,11 +183,11 @@ def main(argv):
         y = df3.iloc[:,1].to_numpy()
         z = np.abs(df4.iloc[:,0].to_numpy())
 
-        x2 = np.linspace(minxy[0], maxxy[0], 6500)
-        y2 = np.linspace(minxy[1], minxy[1], 6500)
+        x2 = np.linspace(minxy[0], maxxy[0], 100)
+        y2 = np.linspace(minxy[1], minxy[1], 100)
         print((maxxy[0] - minxy[0]))
         print((maxxy[1] - minxy[1]))
-        rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/650), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/650)
+        rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/100), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/100)
         print(rranges)
         X2, Y2 = np.meshgrid(x2, y2)
 
@@ -179,6 +196,7 @@ def main(argv):
         F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
         Z2 = F2(x2, y2)
+
         f = lambda x: np.abs(F2(*x))
 
 
