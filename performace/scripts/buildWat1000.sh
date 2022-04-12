@@ -6,7 +6,6 @@
 #
 # Number of cores
 #SBATCH -c 4 -w, 
-#SBATCH --nodelist=wsu205
 #SBATCH --mem=200G
 #
 # Runtime of this jobs is less then 12 hours.
