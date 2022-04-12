@@ -46,12 +46,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     y = df3.iloc[:,1].to_numpy()
     z = np.abs(df4.iloc[:,0].to_numpy())
 
-    rranges = slice(x.min(), x.max(), (x.max() - x.min())/65), slice(y.min(), y.max(), (y.max() - y.min())/65)
+    rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
 
     F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
-    xi = np.linspace(x.min(), x.max(), 100)
-    yi = np.linspace(y.min(), y.max(), 100)
+    xi = np.linspace(x.min(), x.max(), 6500)
+    yi = np.linspace(y.min(), y.max(), 6500)
 
 
     X,Y = np.meshgrid(xi,yi)
@@ -183,11 +183,11 @@ def main(argv):
         y = df3.iloc[:,1].to_numpy()
         z = np.abs(df4.iloc[:,0].to_numpy())
 
-        x2 = np.linspace(minxy[0], maxxy[0], 100)
-        y2 = np.linspace(minxy[1], minxy[1], 100)
+        x2 = np.linspace(minxy[0], maxxy[0], 6500)
+        y2 = np.linspace(minxy[1], minxy[1], 6500)
         print((maxxy[0] - minxy[0]))
         print((maxxy[1] - minxy[1]))
-        rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/100), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/100)
+        rranges = slice(minxy[0], maxxy[0], (maxxy[0] - minxy[0])/650), slice(minxy[1], maxxy[1], (maxxy[1] - minxy[1])/650)
         print(rranges)
         X2, Y2 = np.meshgrid(x2, y2)
 
