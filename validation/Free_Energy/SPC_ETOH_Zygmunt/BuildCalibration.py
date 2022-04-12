@@ -216,7 +216,7 @@ for r in range(0, 1, 1):
     NVT_Restart_COOR_path = Path(NVT_Eq_OutputName + Restart_COOR_Suffix)
     NPT_Restart_COOR_path = Path(NPT_Eq_OutputName + Restart_COOR_Suffix)
 
-    NumCalSteps = 100000
+    NumCalSteps = 1000
     Temp_in_K = 298
     Pressure_in_bar = 1.0
 
