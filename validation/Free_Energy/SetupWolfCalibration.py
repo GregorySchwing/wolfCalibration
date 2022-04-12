@@ -46,7 +46,6 @@ for root, dirs, files in os.walk(".", topdown=False):
             myfile.write(defPotLine)
             defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
             myfile.write(defKindLine)
-            myfile.write("WolfCalibration\tTrue\n")
             defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
             myfile.write(defPotLine)
             for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \

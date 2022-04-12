@@ -239,8 +239,9 @@ for r in range(0, 1, 1):
 
         input_variables_dict_NPT_Prod={"Pressure" : Pressure_in_bar,
                            "VDWGeometricSigma": True,
-                           "DisFreq": 0.50,
-                           "RotFreq": 0.20, 
+                           "DisFreq": 0.01,
+                           "RotFreq": 0.01,
+                           "MultiparticleFreq": 0.68,  
                            "RegrowthFreq": 0.20,
                            "CrankShaftFreq": 0.10,
                            "CBMC_First" : 10,
