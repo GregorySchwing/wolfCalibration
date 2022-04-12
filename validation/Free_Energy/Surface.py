@@ -86,23 +86,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("ZGD : ", ZGD)
 
     if(plotSuface):
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        ax.plot_trisurf(x, y, z, cmap='viridis', edgecolor='none');
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
-        ax.set_title(title, fontsize=20)
-        ax.set_xlabel('Alpha', fontsize=20, labelpad=20)
-        ax.set_ylabel('RCut', fontsize=20, labelpad=20)
-        ax.set_zlabel('Relative Error', fontsize=20, labelpad=20)
+        xi_forplotting = np.linspace(x.min(), x.max(), 100)
+        yi_forplotting = np.linspace(y.min(), y.max(), 100)
 
-        add_point(ax, gdXY[0], gdXY[1], gd.fun, fc = 'orange', ec = 'orange', radius=0.01, labelArg = "Gradient Descent")
-        add_point(ax, gdXY[0], gdXY[1], 10*gd.fun, fc = 'orange', ec = 'orange', radius=0.01)
-        add_point(ax, gdXY[0], gdXY[1], 20*gd.fun, fc = 'orange', ec = 'orange', radius=0.01)
-        xbf,ybf = bf[0]
-        add_point(ax, bfXY[0], bfXY[1], bf[1], fc = 'r', ec = 'r', radius=0.01, labelArg = "Brute Force")
-        add_point(ax, bfXY[0], bfXY[1], 10*bf[1], fc = 'r', ec = 'r', radius=0.01)
-        add_point(ax, bfXY[0], bfXY[1], 20*bf[1], fc = 'r', ec = 'r', radius=0.01)
-        ax.legend(loc='best')
+        Z2_forplotting = F2(xi_forplotting, yi_forplotting)
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
@@ -111,7 +99,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         #fig.savefig(fname=plotPath+".png")
         iteractivefig = go.Figure()
-        iteractivefig.add_surface(x=xi,y=yi,z=Z2)
+        iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=False, width=500, height=500, 
         margin=dict(l=65, r=50, b=65, t=90))
         iteractivefig.update_layout(layout)
