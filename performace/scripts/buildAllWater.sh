@@ -16,9 +16,13 @@
 #SBATCH -o output_%j.out
 
 #SBATCH -e errors_%j.err
-
+mkdir -p ../systems
 for r in {1..10..1}
  do
+    mkdir -p ../systems/${r}00_a
+    cp buildWat${r}00.sh ../systems/${r}00_a
+    cd ../systems/${r}00_a
     sbatch buildWat${r}00.sh
+    cd ../../scripts
  done
 
