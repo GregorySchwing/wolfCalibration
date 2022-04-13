@@ -17,7 +17,7 @@ import shutil
 import pathlib
 import random
 from pathlib import Path
-
+import itertools
 #Trappe SPCE
 FF_file_water = 'xml/tip3p.xml'
 water = mb.load('O', smiles=True)
@@ -62,24 +62,19 @@ for boxLength in range(1, 11):
 numSystems = len(systems)
 
 random.seed(123)
-randomSeeds = []
-
-for r in range(0, numSystems, 1):
-    randomSeeds.append(random.randint(0,9999999))
+seed = random.randint(0,9999999)
 
 
-print("Random Seeds:")
-print(randomSeeds)
+print("Random seed:")
+print(seed)
 
 calibPathSuffix = "_a"
 
-systemPaths = []
-for system in systems:
-    systemPaths.append(Path(str(system) + "_a"))
-print(systemPaths)
+methods = ["wolf", "ewald"]
 
 #for r in range(0, numReplicates, 1):
-for seed, boxLength, path in zip(randomSeeds, systems, systemPaths):
+
+for boxLength, method in itertools.product(systems, methods):
 
     liquid_box_length_Ang = boxLength
     # Build the main simulation liquid box (box 0) [1, 2, 13-17]
@@ -105,6 +100,8 @@ for seed, boxLength, path in zip(randomSeeds, systems, systemPaths):
                               reorder_res_in_pdb_psf=True
                               )
 
+    path = Path(str(boxLength) + "_a_" + method)
+
     path.mkdir(parents=True, exist_ok=True)
 
     NVT_conf_name = "NVT_water.conf"
@@ -129,15 +126,25 @@ for seed, boxLength, path in zip(randomSeeds, systems, systemPaths):
                        "RcutCoulomb_box_0": 14,
                        "Tolerance" : 0.00005,
                        "OutputName" : OutputName,
-                       "PRNG" : seed
+                       "PRNG" : seed,
+                       "RestartFreq" : [False,1],
+                       "CheckpointFreq" : [False,1],
+                       "CoordinatesFreq" : [False,1],
+                       "ConsoleFreq" : [False,1],
+                       "BlockAverageFreq" : [False,1],
+                       "HistogramFreq" : [False,1]
                        }
 
     orig_ff_file_path = Path("toppar_water_ions.str")
     renamed_ff_file_path = Path("NVT_water_FF.inp")
     top = Path("top")
-    shutil.copy((top / orig_ff_file_path), (path / renamed_ff_file_path))  # For Python 3.8+.
+    sysdir = Path(str(boxLength) + "_a")
 
-    gomc_control.write_gomc_control_file(charmm, NVT_conf_name, 'NVT', RunSteps=NumSteps, Temperature=Temp_in_K, Restart=False, check_input_files_exist=False,input_variables_dict=input_variables_dict_val)
+    sysdir.mkdir(parents=True, exist_ok=True)
+
+    shutil.copy((top / orig_ff_file_path), (sysdir / renamed_ff_file_path))  # For Python 3.8+.
+
+    gomc_control.write_gomc_control_file(charmm, NVT_conf_name, 'NVT', RunSteps=NumSteps, Temperature=Temp_in_K, Restart=False, check_input_files_exist=False, ff_psf_pdb_file_directory="../"+ str(boxLength) + "_a", input_variables_dict=input_variables_dict_val)
 
     pathConf = Path(NVT_conf_name)
     pathConf.rename(path / pathConf)
