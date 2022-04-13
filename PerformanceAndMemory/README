@@ -1,0 +1,6 @@
+#Build Systems
+cd scripts
+sbatch buildAllWater.sh
+
+#Build Config Files
+python WriteConfs.py
