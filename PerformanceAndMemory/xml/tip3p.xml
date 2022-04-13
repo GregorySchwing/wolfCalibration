@@ -1,0 +1,17 @@
+<ForceField version="0.0.1" name="CHARMM TIP3P water" >
+ <AtomTypes>
+   <Type name="OW" class="OW" element="O" mass="15.99940" def="[O;X2](H)(H)" desc="O in CHARMM_TIP3P " doi="" />
+   <Type name="HW" class="HW" element="H" mass="1.00800" def="[H;X1][O;X2](H)" desc="H in CHARMM_TIP3P" doi="" />
+ </AtomTypes>
+ <HarmonicBondForce>
+   <Bond class1="OW" class2="HW" length="0.09572" k="188280"/>
+ </HarmonicBondForce>
+ <HarmonicAngleForce>
+   <Angle class1="HW" class2="OW" class3="HW" angle="1.8242181342" k="230.12"/>
+ </HarmonicAngleForce>
+ <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+   <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
+  <Atom type="OW" charge="-0.834" sigma="0.3150574227" epsilon="-0.6363864"/>
+  <Atom type="HW" charge="0.417" sigma="0.0400013524" epsilon="-0.192464"/>
+ </NonbondedForce>
+</ForceField>
