@@ -18,4 +18,4 @@
 #SBATCH -e errors_%j.err
 
 
-valgrind --tool=massif /wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT NVT_water.conf > log
+valgrind --tool=massif --log-file="massif.log" /wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT NVT_water.conf > log
