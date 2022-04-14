@@ -190,8 +190,7 @@ for boxLength, method in itertools.product(systems, methods):
     bash.rename(path / bash)
     cwd = os.getcwd()
     os.chdir( path )
-    #bashCommand = "sbatch perfAndMem.sh"
-    bashCommand = "echo $PATH > test"
+    bashCommand = "sbatch perfAndMem.sh"
     process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
     output, error = process.communicate()
     os.chdir(cwd)
