@@ -6,7 +6,7 @@
 #SBATCH -N 1
 # Total number of cores, in this example it will 1 node with 1 core each.
 #SBATCH -n 8
-#SBATCH --mem=1500G
+#SBATCH --mem=XXXG
 #
 # Runtime of this jobs is less then 12 hours.
 #SBATCH --time=24:00:00
