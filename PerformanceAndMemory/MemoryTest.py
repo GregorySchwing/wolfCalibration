@@ -74,7 +74,7 @@ calibPathSuffix = "_a"
 
 methods = ["Wolf", "Ewald"]
 
-runsdir = Path("runs")
+runsdir = Path("memoryRuns")
 sysdir = Path("systems")
 runsdir.mkdir(parents=True, exist_ok=True)
 
@@ -119,7 +119,7 @@ for boxLength, method in itertools.product(systems, methods):
     NVT_conf_name = "NVT_water.conf"
     OutputName = "NVT_water"
 
-    NumSteps = 1000
+    NumSteps = 3
     Temp_in_K = 298
     Pressure_in_bar = 1.0
 
@@ -174,7 +174,7 @@ for boxLength, method in itertools.product(systems, methods):
     pathConf.rename(path / pathConf)
 
     # Read in the file
-    with open('perfAndMemTemplate.sh', 'r') as file :
+    with open('memTemplate.sh', 'r') as file :
       filedata = file.read()
 
     # Replace the target string
@@ -183,14 +183,14 @@ for boxLength, method in itertools.product(systems, methods):
     else: 
         filedata = filedata.replace('XXX', str(int(boxLength/10)))
     # Write the file out again
-    with open('perfAndMem.sh', 'w') as file:
+    with open('mem.sh', 'w') as file:
       file.write(filedata)
 
-    bash = Path('perfAndMem.sh')
+    bash = Path('mem.sh')
     bash.rename(path / bash)
     cwd = os.getcwd()
     os.chdir( path )
-    bashCommand = "sbatch perfAndMem.sh"
+    bashCommand = "sbatch mem.sh"
     process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
     output, error = process.communicate()
     os.chdir(cwd)
