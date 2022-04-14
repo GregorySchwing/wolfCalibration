@@ -8,7 +8,8 @@
 # Note: For GOMC, the residue names are treated as molecules, so the residue names must be unique for each different molecule. [1, 2, 13-17]
 
 # Note: Each residue can be set to a different FF, which is done by setting the residue name to a FF in a dictionary (FF_Dict).  The FF selection can be a FF name (set from foyer FF repositor) or a specified FF xml file. [1, 2, 13-17]
-
+import subprocess
+import shlex
 import mbuild as mb
 from foyer import Forcefield
 import mbuild.formats.charmm_writer as mf_charmm
@@ -18,6 +19,7 @@ import pathlib
 import random
 from pathlib import Path
 import itertools
+import os
 #Trappe SPCE
 FF_file_water = 'xml/tip3p.xml'
 water = mb.load('O', smiles=True)
@@ -148,4 +150,26 @@ for boxLength, method in itertools.product(systems, methods):
 
     pathConf = Path(NVT_conf_name)
     pathConf.rename(path / pathConf)
+
+    # Read in the file
+    with open('perfAndMemTemplate.sh', 'r') as file :
+      filedata = file.read()
+
+    # Replace the target string
+    filedata = filedata.replace('XXX', str(boxLength))
+
+    # Write the file out again
+    with open('perfAndMem.sh', 'w') as file:
+      file.write(filedata)
+
+    bash = Path('perfAndMem.sh')
+    bash.rename(path / bash)
+
+    os.chdir( path )
+    #bashCommand = "sbatch perfAndMem.sh"
+    bashCommand = "echo $PATH > test"
+    process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
+    output, error = process.communicate()
+    os.chdir( ".." )
+
 
