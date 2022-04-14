@@ -57,7 +57,7 @@ Molecule_Num_List = [1000]
 # So we write them at this location then move the folder
 #this into the cwd
 
-systems = []
+systems = [25, 35, 50]
 for boxLength in range(1, 11):
     systems.append(boxLength*100)
 
