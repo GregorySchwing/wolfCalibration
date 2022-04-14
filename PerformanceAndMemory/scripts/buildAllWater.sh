@@ -18,6 +18,21 @@
 
 #SBATCH -e errors_%j.err
 mkdir -p ../systems
+
+declare -a SMALL_SYS=(25 35 50)
+
+
+for r in "${SMALL_SYS[@]}"
+ do
+    mkdir -p ../systems/${r}_a
+    cp buildWat${r}.sh ../systems/${r}_a
+    cp ${r}_a.tcl ../systems/${r}_a
+    cd ../systems/${r}_a
+    sbatch buildWat${r}.sh
+    cd ../../scripts
+ done
+
+
 for r in {1..10..1}
  do
     mkdir -p ../systems/${r}00_a
