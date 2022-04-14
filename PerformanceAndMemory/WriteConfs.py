@@ -148,7 +148,7 @@ for boxLength, method in itertools.product(systems, methods):
                        "HistogramFreq" : [False,1]
                        }
 
-    orig_ff_file_path = Path("toppar_water_ions.str")
+    orig_ff_file_path = Path("GOMC_toppar_water_ions_namd.str")
     renamed_ff_file_path = Path("NVT_water_FF.inp")
     top = Path("top")
 
