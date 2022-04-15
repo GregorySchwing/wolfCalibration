@@ -33,13 +33,3 @@ for r in "${SMALL_SYS[@]}"
  done
 
 
-for r in {1..10..1}
- do
-    mkdir -p ../systems/${r}00_a
-    cp buildWat${r}00.sh ../systems/${r}00_a
-    cp ${r}00_a.tcl ../systems/${r}00_a
-    cd ../systems/${r}00_a
-    sbatch buildWat${r}00.sh
-    cd ../../scripts
- done
-
