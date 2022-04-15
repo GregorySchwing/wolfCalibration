@@ -9,7 +9,7 @@
 #SBATCH --mem=XXXG
 #
 # Runtime of this jobs is less then 12 hours.
-#SBATCH --time=2-0:00:00
+#SBATCH --time=14-0:00:00
 #
 #SBATCH --mail-user=go2432@wayne.edu
 
