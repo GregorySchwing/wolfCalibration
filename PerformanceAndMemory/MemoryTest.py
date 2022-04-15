@@ -119,7 +119,7 @@ for boxLength, method in itertools.product(systems, methods):
     NVT_conf_name = "NVT_water.conf"
     OutputName = "NVT_water"
 
-    NumSteps = 3
+    NumSteps = 100
     Temp_in_K = 298
     Pressure_in_bar = 1.0
 
