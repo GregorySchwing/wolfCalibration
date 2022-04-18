@@ -143,7 +143,7 @@ for boxLength, method in itertools.product(systems, methods):
                        "RestartFreq" : [False,1],
                        "CheckpointFreq" : [False,1],
                        "CoordinatesFreq" : [False,1],
-                       "ConsoleFreq" : [False,1],
+                       "ConsoleFreq" : [True,1],
                        "BlockAverageFreq" : [False,1],
                        "HistogramFreq" : [False,1]
                        }
