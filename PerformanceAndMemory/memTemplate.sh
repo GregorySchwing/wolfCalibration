@@ -18,4 +18,4 @@
 #SBATCH -e errors_%j.err
 
 module swap gnu7 intel/2019
-/wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT NVT_water.conf > log.txt
+/wsu/home/go/go24/go2432/wolfCalibration/PerformanceAndMemory/GOMC_CPU_NVT NVT_water.conf > log.txt
