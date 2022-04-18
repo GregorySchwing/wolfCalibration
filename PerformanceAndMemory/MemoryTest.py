@@ -179,9 +179,9 @@ for boxLength, method in itertools.product(systems, methods):
 
     # Replace the target string
     if(method == "Ewald"):
-        filedata = filedata.replace('XXX', str(boxLength))
+        filedata = filedata.replace('XXX', str(1000))
     else: 
-        filedata = filedata.replace('XXX', str(int(boxLength/10)))
+        filedata = filedata.replace('XXX', str(1000))
     # Write the file out again
     with open('mem.sh', 'w') as file:
       file.write(filedata)
