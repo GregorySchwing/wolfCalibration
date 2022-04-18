@@ -63,8 +63,8 @@ for boxLength in range(1, 11):
 
 numSystems = len(systems)
 
-random.seed(123)
-seed = random.randint(0,9999999)
+
+seed = 878515
 
 
 print("Random seed:")
