@@ -61,14 +61,18 @@ systems = [25, 35, 50]
 for boxLength in range(1, 11):
     systems.append(boxLength*100)
 
+system2Mem = dict()
+for sys in systems:
+    if(sys < 200):
+        system2Mem[sys] = 1
+    elif(sys == 300):
+        system2Mem[sys] = 3
+    elif(sys == 400):
+        system2Mem[sys] = 7
+    elif(sys == 500):
+        system2Mem[sys] = 15
+
 numSystems = len(systems)
-
-
-seed = 878515
-
-
-print("Random seed:")
-print(seed)
 
 calibPathSuffix = "_a"
 
@@ -84,115 +88,129 @@ WolfDefaultPotential = "DSP"
 defaultAlpha = "0.21"
 #for r in range(0, numReplicates, 1):
 
+numReplicates = 5
+
+random.seed(123)
+randomSeeds = []
+
+for r in range(0, numReplicates, 1):
+    randomSeeds.append(random.randint(0,9999999))
+
+
+replicatePathPrefix = "TI_"
+replicatePaths = []
+for r in range(0, numReplicates, 1):
+    replicatePaths.append(Path(replicatePathPrefix + str(r)))
+print(replicatePaths)
+
+
 for boxLength, method in itertools.product(systems, methods):
 
-    path2System ="../../systems/" + str(boxLength) + "_a"
+        path2System ="../../../systems/" + str(boxLength) + "_a"
 
-    liquid_box_length_Ang = boxLength
-    # Build the main simulation liquid box (box 0) [1, 2, 13-17]
-    water_ethanol_box_liq = mb.fill_box(compound=Molecule_Type_List,
-                                        n_compounds=Molecule_Num_List,
-                                        box=[liquid_box_length_Ang / 10,
-                                             liquid_box_length_Ang / 10,
-                                             liquid_box_length_Ang / 10])
+        liquid_box_length_Ang = boxLength
+        # Build the main simulation liquid box (box 0) [1, 2, 13-17]
+        water_ethanol_box_liq = mb.fill_box(compound=Molecule_Type_List,
+                                            n_compounds=Molecule_Num_List,
+                                            box=[liquid_box_length_Ang / 10,
+                                                 liquid_box_length_Ang / 10,
+                                                 liquid_box_length_Ang / 10])
 
-    ## Build the Charmm object, which is required to write the FF (.inp), psf, pdb, and GOMC control files [1, 2, 5-10, 13-17]
+        ## Build the Charmm object, which is required to write the FF (.inp), psf, pdb, and GOMC control files [1, 2, 5-10, 13-17]
 
-    ## The reorder_res_in_pdb_psf command reorders the psf and pdb to the order residues variable (i.e., the residues_list in this case) [1, 2, 13-17].  
+        ## The reorder_res_in_pdb_psf command reorders the psf and pdb to the order residues variable (i.e., the residues_list in this case) [1, 2, 13-17].  
 
-    ## The fix_res_bonds_angles command fixes the angles and bonds for water in the Charmm FF file.  Note: This is specific to GOMC, as it sets the bond and angle k-values to 999999999999 [1, 2, 5-10, 13-17].
-    charmm = mf_charmm.Charmm(water_ethanol_box_liq,
-                              str(boxLength)+"_a",
-                              ff_filename="NVT_water_FF",
-                              forcefield_selection=FF_dict,
-                              residues=residues_list,
-                              bead_to_atom_name_dict=None,
-                              fix_residue=None,
-                              gomc_fix_bonds_angles=fix_bonds_angles_residues,
-                              reorder_res_in_pdb_psf=True
-                              )
+        ## The fix_res_bonds_angles command fixes the angles and bonds for water in the Charmm FF file.  Note: This is specific to GOMC, as it sets the bond and angle k-values to 999999999999 [1, 2, 5-10, 13-17].
+        charmm = mf_charmm.Charmm(water_ethanol_box_liq,
+                                  str(boxLength)+"_a",
+                                  ff_filename="NVT_water_FF",
+                                  forcefield_selection=FF_dict,
+                                  residues=residues_list,
+                                  bead_to_atom_name_dict=None,
+                                  fix_residue=None,
+                                  gomc_fix_bonds_angles=fix_bonds_angles_residues,
+                                  reorder_res_in_pdb_psf=True
+                                  )
 
-    path = runsdir / Path(str(boxLength) + "_a_" + method)
+    for r in range(0, numReplicates, 1):
+        path = runsdir / replicatePaths[r] / Path(str(boxLength) + "_a_" + method)
 
-    path.mkdir(parents=True, exist_ok=True)
+        path.mkdir(parents=True, exist_ok=True)
 
-    NVT_conf_name = "NVT_water.conf"
-    OutputName = "NVT_water"
+        NVT_conf_name = "NVT_water.conf"
+        OutputName = "NVT_water"
 
-    NumSteps = 100
-    Temp_in_K = 298
-    Pressure_in_bar = 1.0
+        NumSteps = 100
+        Temp_in_K = 298
+        Pressure_in_bar = 1.0
 
-    input_variables_dict_val={"VDWGeometricSigma": True,
-                       "DisFreq": 0.50,
-                       "RotFreq": 0.20, 
-                       "RegrowthFreq": 0.20,
-                       "CrankShaftFreq": 0.10,
-                       "CBMC_First" : 10,
-                       "CBMC_Nth" : 10,
-                       "CBMC_Ang" : 100,
-                       "CBMC_Dih" : 50,
-                       "Rcut": 12,
-                       "RcutLow": 0,
-                       "Ewald": method == "Ewald",
-                       "LRC": True,
-                       "RcutCoulomb_box_0": 12,
-                       "Tolerance" : 0.00005,
-                       "OutputName" : OutputName,
-                       "PRNG" : seed,
-                       "RestartFreq" : [False,1],
-                       "CheckpointFreq" : [False,1],
-                       "CoordinatesFreq" : [False,1],
-                       "ConsoleFreq" : [True,1],
-                       "BlockAverageFreq" : [False,1],
-                       "HistogramFreq" : [False,1]
-                       }
+        input_variables_dict_val={"VDWGeometricSigma": True,
+                           "DisFreq": 0.50,
+                           "RotFreq": 0.20, 
+                           "RegrowthFreq": 0.20,
+                           "CrankShaftFreq": 0.10,
+                           "CBMC_First" : 10,
+                           "CBMC_Nth" : 10,
+                           "CBMC_Ang" : 100,
+                           "CBMC_Dih" : 50,
+                           "Rcut": 12,
+                           "RcutLow": 0,
+                           "Ewald": method == "Ewald",
+                           "LRC": True,
+                           "RcutCoulomb_box_0": 12,
+                           "Tolerance" : 0.00005,
+                           "OutputName" : OutputName,
+                           "PRNG" : randomSeeds[r],
+                           "RestartFreq" : [False,1],
+                           "CheckpointFreq" : [False,1],
+                           "CoordinatesFreq" : [False,1],
+                           "ConsoleFreq" : [True,1],
+                           "BlockAverageFreq" : [False,1],
+                           "HistogramFreq" : [False,1]
+                           }
 
-    orig_ff_file_path = Path("GOMC_toppar_water_ions_namd.str")
-    renamed_ff_file_path = Path("NVT_water_FF.inp")
-    top = Path("top")
+        orig_ff_file_path = Path("GOMC_toppar_water_ions_namd.str")
+        renamed_ff_file_path = Path("NVT_water_FF.inp")
+        top = Path("top")
 
-    boxpath = sysdir / Path(str(boxLength) + "_a")
+        boxpath = sysdir / Path(str(boxLength) + "_a")
 
-    # make optional
-    boxpath.mkdir(parents=True, exist_ok=True)
+        # make optional
+        boxpath.mkdir(parents=True, exist_ok=True)
 
-    shutil.copy((top / orig_ff_file_path), (boxpath / renamed_ff_file_path))  # For Python 3.8+.
+        shutil.copy((top / orig_ff_file_path), (boxpath / renamed_ff_file_path))  # For Python 3.8+.
 
-    gomc_control.write_gomc_control_file(charmm, NVT_conf_name, 'NVT', RunSteps=NumSteps, Temperature=Temp_in_K, Restart=False, check_input_files_exist=False, ff_psf_pdb_file_directory=path2System, input_variables_dict=input_variables_dict_val)
+        gomc_control.write_gomc_control_file(charmm, NVT_conf_name, 'NVT', RunSteps=NumSteps, Temperature=Temp_in_K, Restart=False, check_input_files_exist=False, ff_psf_pdb_file_directory=path2System, input_variables_dict=input_variables_dict_val)
 
-    if(method != "Ewald"):
-         with open("NVT_water.conf", "a") as myfile:
-            defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
-            myfile.write(defPotLine)
-            defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
-            myfile.write(defKindLine)
-            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
-            myfile.write(defAlphaLine)
+        if(method != "Ewald"):
+             with open("NVT_water.conf", "a") as myfile:
+                defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
+                myfile.write(defPotLine)
+                defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
+                myfile.write(defKindLine)
+                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
+                myfile.write(defAlphaLine)
 
-    pathConf = Path(NVT_conf_name)
-    pathConf.rename(path / pathConf)
+        pathConf = Path(NVT_conf_name)
+        pathConf.rename(path / pathConf)
 
-    # Read in the file
-    with open('memTemplate.sh', 'r') as file :
-      filedata = file.read()
+        # Read in the file
+        with open('memTemplate.sh', 'r') as file :
+          filedata = file.read()
 
-    # Replace the target string
-    if(method == "Ewald"):
-        filedata = filedata.replace('XXX', str(1000))
-    else: 
-        filedata = filedata.replace('XXX', str(1000))
-    # Write the file out again
-    with open('mem.sh', 'w') as file:
-      file.write(filedata)
+        # Replace the target string
+        filedata = filedata.replace('XXX', str(system2Mem[boxLength]))
+        # Write the file out again
+        with open('mem.sh', 'w') as file:
+          file.write(filedata)
 
-    bash = Path('mem.sh')
-    bash.rename(path / bash)
-    cwd = os.getcwd()
-    os.chdir( path )
-    bashCommand = "sbatch mem.sh"
-    process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
-    output, error = process.communicate()
-    os.chdir(cwd)
+        bash = Path('mem.sh')
+        bash.rename(path / bash)
+        cwd = os.getcwd()
+        os.chdir( path )
+        bashCommand = "sbatch mem.sh"
+#        process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
+ #       output, error = process.communicate()
+        os.chdir(cwd)
 
 
