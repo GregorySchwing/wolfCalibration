@@ -18,4 +18,8 @@
 #SBATCH -e errors_%j.err
 
 module swap gnu7 intel/2019
+now="$(date)"
+printf "Launch date and time %s\n" "$now"
 /wsu/home/go/go24/go2432/wolfCalibration/PerformanceAndMemory/GOMC_CPU_NVT NVT_water.conf > log.txt
+now="$(date)"
+printf "End date and time %s\n" "$now"
