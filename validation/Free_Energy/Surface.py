@@ -47,8 +47,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     z = np.abs(df4.iloc[:,0].to_numpy())
 
     rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
-
-    F2 = interpolate.interp2d(x, y, z, kind='quintic')
+    print(rranges)
+    F2 = interpolate.interp2d(x, y, z, kind='cubic')
 
     xi = np.linspace(x.min(), x.max(), 6500)
     yi = np.linspace(y.min(), y.max(), 6500)
