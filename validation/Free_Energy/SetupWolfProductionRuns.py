@@ -83,12 +83,13 @@ for root, dirs, files in os.walk(".", topdown=False):
                         alphaRcutRelErrTuple = model2BestWolfAlphaRCut[key][(element[0], element[1], box)]
                         print("Cutoff" , alphaRcutRelErrTuple[0])
                         print("Alpha" , alphaRcutRelErrTuple[1])
-"""
                         with open(path2File, "a") as myfile:
-                            defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
+                            defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=element[0])
                             myfile.write(defPotLine)
-                            defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
+                            defKindLine = "WolfKind\t{kind}\n".format(kind=element[1])
                             myfile.write(defKindLine)
-"""
-
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=alphaRcutRelErrTuple[1])
+                            myfile.write(defAlphaLine)
+                            defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=alphaRcutRelErrTuple[0])
+                            myfile.write(defRCutLine)
 
