@@ -100,12 +100,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         #fig.savefig(fname=plotPath+".png")
         iteractivefig = go.Figure()
         iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
-        layout = go.Layout(title=title,autosize=False, width=500, height=500, 
+        layout = go.Layout(title=title,autosize=True, 
         margin=dict(l=65, r=65, b=65, t=65))
         iteractivefig.update_layout(layout)
         iteractivefig.update_layout(scene = dict(
-                    xaxis_title='Alpha',
-                    yaxis_title='RCut',
+                    xaxis_title='RCut',
+                    yaxis_title='Alpha',
                     zaxis_title='Relative Error'),
                     width=700,
                     margin=dict(r=20, b=10, l=10, t=10))
