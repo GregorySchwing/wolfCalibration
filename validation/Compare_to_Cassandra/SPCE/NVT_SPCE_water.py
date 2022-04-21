@@ -70,6 +70,10 @@ system = mc.System(box_list, species_list, mols_in_boxes=molecules_in_boxes)
 # Define the MoveSet
 moveset = mc.MoveSet("nvt", species_list)
 
+system2 = mc.System(box_list, species_list, mols_in_boxes=molecules_in_boxes)
+# Define the MoveSet
+moveset = mc.MoveSet("nvt", species_list)
+
 # Note here we need to use the angle_style="fixed" keyword argument
 # SPC/E geometry is rigid; default angle style is "harmonic"
 custom_args = {"angle_style": ["fixed"]}
@@ -113,7 +117,7 @@ print('Completed: GOMC EWALD FF file, and the psf and pdb files')
 os.chdir("../DSF_Cassandra")
 
 mc.run(
-    system=system,
+    system=system2,
     moveset=moveset,
     run_type="equilibration",
     run_length=10000,
