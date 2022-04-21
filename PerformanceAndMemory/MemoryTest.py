@@ -106,31 +106,31 @@ print(replicatePaths)
 
 for boxLength, method in itertools.product(systems, methods):
 
-        path2System ="../../../systems/" + str(boxLength) + "_a"
+    path2System ="../../../systems/" + str(boxLength) + "_a"
 
-        liquid_box_length_Ang = boxLength
-        # Build the main simulation liquid box (box 0) [1, 2, 13-17]
-        water_ethanol_box_liq = mb.fill_box(compound=Molecule_Type_List,
-                                            n_compounds=Molecule_Num_List,
-                                            box=[liquid_box_length_Ang / 10,
-                                                 liquid_box_length_Ang / 10,
-                                                 liquid_box_length_Ang / 10])
+    liquid_box_length_Ang = boxLength
+    # Build the main simulation liquid box (box 0) [1, 2, 13-17]
+    water_ethanol_box_liq = mb.fill_box(compound=Molecule_Type_List,
+                                        n_compounds=Molecule_Num_List,
+                                        box=[liquid_box_length_Ang / 10,
+                                             liquid_box_length_Ang / 10,
+                                             liquid_box_length_Ang / 10])
 
-        ## Build the Charmm object, which is required to write the FF (.inp), psf, pdb, and GOMC control files [1, 2, 5-10, 13-17]
+    ## Build the Charmm object, which is required to write the FF (.inp), psf, pdb, and GOMC control files [1, 2, 5-10, 13-17]
 
-        ## The reorder_res_in_pdb_psf command reorders the psf and pdb to the order residues variable (i.e., the residues_list in this case) [1, 2, 13-17].  
+    ## The reorder_res_in_pdb_psf command reorders the psf and pdb to the order residues variable (i.e., the residues_list in this case) [1, 2, 13-17].  
 
-        ## The fix_res_bonds_angles command fixes the angles and bonds for water in the Charmm FF file.  Note: This is specific to GOMC, as it sets the bond and angle k-values to 999999999999 [1, 2, 5-10, 13-17].
-        charmm = mf_charmm.Charmm(water_ethanol_box_liq,
-                                  str(boxLength)+"_a",
-                                  ff_filename="NVT_water_FF",
-                                  forcefield_selection=FF_dict,
-                                  residues=residues_list,
-                                  bead_to_atom_name_dict=None,
-                                  fix_residue=None,
-                                  gomc_fix_bonds_angles=fix_bonds_angles_residues,
-                                  reorder_res_in_pdb_psf=True
-                                  )
+    ## The fix_res_bonds_angles command fixes the angles and bonds for water in the Charmm FF file.  Note: This is specific to GOMC, as it sets the bond and angle k-values to 999999999999 [1, 2, 5-10, 13-17].
+    charmm = mf_charmm.Charmm(water_ethanol_box_liq,
+                              str(boxLength)+"_a",
+                              ff_filename="NVT_water_FF",
+                              forcefield_selection=FF_dict,
+                              residues=residues_list,
+                              bead_to_atom_name_dict=None,
+                              fix_residue=None,
+                              gomc_fix_bonds_angles=fix_bonds_angles_residues,
+                              reorder_res_in_pdb_psf=True
+                              )
 
     for r in range(0, numReplicates, 1):
         path = runsdir / replicatePaths[r] / Path(str(boxLength) + "_a_" + method)
