@@ -93,3 +93,13 @@ for root, dirs, files in os.walk(".", topdown=False):
                             defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=alphaRcutRelErrTuple[0])
                             myfile.write(defRCutLine)
 
+                        bash = Path('prod.sh')
+                        shutil.copy(bash, root / bash)  # For Python 3.8+.
+                        cwd = os.getcwd()
+                        os.chdir( root )
+                        #bashCommand = "sbatch mem.sh"
+                        bashCommand = "echo $PATH > test"
+                        process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
+                        output, error = process.communicate()
+                        os.chdir(cwd)
+

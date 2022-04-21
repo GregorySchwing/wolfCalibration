@@ -12,7 +12,6 @@ from scipy.optimize import minimize, brute
 from scipy import interpolate, optimize
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from matplotlib.patches import Circle, Ellipse
-from shapely.geometry import Point, Polygon
 import pickle
 import plotly.io as pio 
 import plotly.graph_objects as go
