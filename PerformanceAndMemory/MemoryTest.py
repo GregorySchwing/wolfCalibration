@@ -87,7 +87,7 @@ WolfDefaultPotential = "DSP"
 defaultAlpha = "0.21"
 #for r in range(0, numReplicates, 1):
 
-numReplicates = 5
+numReplicates = 1
 
 random.seed(123)
 randomSeeds = []
