@@ -64,7 +64,7 @@ system2Mem = dict()
 for sys in systems:
     if(sys < 200):
         system2Mem[sys] = 1
-    elif(sys == 300):
+    elif(sys <= 300):
         system2Mem[sys] = 3
     elif(sys == 400):
         system2Mem[sys] = 7
