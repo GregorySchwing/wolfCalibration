@@ -61,7 +61,9 @@ else:
    with open(bestValueFileName+".pickle", 'rb') as handle:
       model2BestWolfAlphaRCut = pickle.load(handle)
 
-WolfMethods = ["VLUGT", "GROSS", "VLUGTWINTRACUTOFF"]
+# Water has no intra so vlugtwintra is the same as vlugt and hybrid is bad.
+#WolfMethods = ["VLUGT", "GROSS", "VLUGTWINTRACUTOFF", "HYBRID"]
+WolfMethods = ["VLUGT", "GROSS"]
 WolfPotentials = ["DSF", "DSP"]
 box = str(0)
 import itertools
