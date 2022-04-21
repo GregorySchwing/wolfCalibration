@@ -84,9 +84,9 @@ for root, dirs, files in os.walk(".", topdown=False):
                         print("Cutoff" , alphaRcutRelErrTuple[0])
                         print("Alpha" , alphaRcutRelErrTuple[1])
                         with open(path2File, "a") as myfile:
-                            defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=element[0])
+                            defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=element[1])
                             myfile.write(defPotLine)
-                            defKindLine = "WolfKind\t{kind}\n".format(kind=element[1])
+                            defKindLine = "WolfKind\t{kind}\n".format(kind=element[0])
                             myfile.write(defKindLine)
                             defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=alphaRcutRelErrTuple[1])
                             myfile.write(defAlphaLine)
