@@ -17,6 +17,6 @@
 #SBATCH -o output_%j.out
 
 #SBATCH -e errors_%j.err
-source /home6/greg/anaconda3/etc
+source /home6/greg/anaconda3/etc/profile.d/conda.sh
 conda activate mamba
 python3 MemoryTest.py
