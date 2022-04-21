@@ -155,4 +155,12 @@ gomc_control.write_gomc_control_file(charmm, 'in_NVT.conf',  'NVT', 10000, 300, 
                                      )
 
 print('Completed: GOMC DSF FF file, and the psf and pdb files')
+path2File = "in_NVT.conf"
+with open(path2File, "a") as myfile:
+    defPotLine = "Wolf\tTrue\t{pot}\n".format(pot="DSF")
+    myfile.write(defPotLine)
+    defKindLine = "WolfKind\t{kind}\n".format(kind="VLUGTWINTRACUTOFF")
+    myfile.write(defKindLine)
+    defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=0, val=0.22)
+    myfile.write(defAlphaLine)
 
