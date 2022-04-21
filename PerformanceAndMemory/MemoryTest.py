@@ -194,7 +194,7 @@ for boxLength, method in itertools.product(systems, methods):
         pathConf.rename(path / pathConf)
 
         # Read in the file
-        with open('memTemplate.sh', 'r') as file :
+        with open('memTemplatePotoffCluster.sh', 'r') as file :
           filedata = file.read()
 
         # Replace the target string
