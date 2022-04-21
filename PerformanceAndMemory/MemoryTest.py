@@ -57,7 +57,7 @@ Molecule_Num_List = [1000]
 #this into the cwd
 
 systems = [25, 35, 50]
-for boxLength in range(1, 11):
+for boxLength in range(1, 7):
     systems.append(boxLength*100)
 
 system2Mem = dict()
@@ -70,7 +70,8 @@ for sys in systems:
         system2Mem[sys] = 7
     elif(sys == 500):
         system2Mem[sys] = 15
-
+    elif(sys == 600):
+        system2Mem[sys] = 25
 numSystems = len(systems)
 
 calibPathSuffix = "_a"
