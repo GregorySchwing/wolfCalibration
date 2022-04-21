@@ -209,8 +209,8 @@ for boxLength, method in itertools.product(systems, methods):
         cwd = os.getcwd()
         os.chdir( path )
         bashCommand = "sbatch mem.sh"
-#        process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
- #       output, error = process.communicate()
+        process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
+        output, error = process.communicate()
         os.chdir(cwd)
 
 
