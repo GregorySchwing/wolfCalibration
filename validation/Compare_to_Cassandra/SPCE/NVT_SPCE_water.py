@@ -116,6 +116,18 @@ print('Completed: GOMC EWALD FF file, and the psf and pdb files')
 
 os.chdir("../DSF_Cassandra")
 
+
+mc.run(
+    system=system,
+    moveset=moveset,
+    run_type="equilibration",
+    run_length=10000,
+    temperature=300.0 * u.K,
+    charge_style='dsf',
+    charge_cutoff=12.0 * u.angstrom,
+    dsf_damping=0.22
+)
+
 mc.run(
     system=system2,
     moveset=moveset,
@@ -126,6 +138,7 @@ mc.run(
     charge_cutoff=12.0 * u.angstrom,
     dsf_damping=0.22
 )
+
 
 os.chdir("../DSF_GOMC")
 
