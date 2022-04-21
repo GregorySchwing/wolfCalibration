@@ -9,7 +9,6 @@
 
 # Note: Each residue can be set to a different FF, which is done by setting the residue name to a FF in a dictionary (FF_Dict).  The FF selection can be a FF name (set from foyer FF repositor) or a specified FF xml file. [1, 2, 13-17]
 import subprocess
-import shlex
 import mbuild as mb
 from foyer import Forcefield
 import mbuild.formats.charmm_writer as mf_charmm
