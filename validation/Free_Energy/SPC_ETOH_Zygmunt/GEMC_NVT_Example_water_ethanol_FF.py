@@ -193,7 +193,7 @@ print(replicatePaths)
 
 NVT_Eq_Prefix = Path("NVT_Eq")
 NPT_Eq_Prefix = Path("NPT_Eq")
-NVT_Prod_Ewald_Prefix = Path("Prod_Ew")
+NVT_Prod_Ewald_Prefix = Path("PROD_EW")
 prefix = "state_"
 
 for r in range(0, numReplicates, 1):
