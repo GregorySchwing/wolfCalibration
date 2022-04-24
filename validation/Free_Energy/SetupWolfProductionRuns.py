@@ -105,7 +105,7 @@ for root, dirs, files in os.walk(".", topdown=False):
                         output, error = process.communicate()
                         os.chdir(cwd)
 
-                  if("Prod_Ew" in root):
+                  if("PROD_EW" in root):
                     bash = Path('prod.sh')
                     shutil.copy(bash, root / bash)  # For Python 3.8+.
                     cwd = os.getcwd()
