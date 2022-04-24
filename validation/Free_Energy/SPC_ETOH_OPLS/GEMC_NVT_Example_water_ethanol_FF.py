@@ -403,7 +403,10 @@ for r in range(0, numReplicates, 1):
                                "InitialState" : x,
                                "OutputName" : NVT_Prod_OutputName,
                                "PRNG" : randomSeeds[r][x],
-                               "Exclude" : "1-4"
+                               "Exclude" : "1-4",
+                               "CoordinatesFreq" : [False, 5000],
+                               "DCDFreq" : [True, 5000],
+                               "RestartFreq" : [True, 10000000]
                                }
 
 
