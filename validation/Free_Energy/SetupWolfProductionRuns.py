@@ -76,7 +76,7 @@ for root, dirs, files in os.walk(".", topdown=False):
          head_tail = root.split(os.sep)
          for direc in head_tail:
             for key in model2BestWolfAlphaRCut.keys():
-               if(key == direc):
+               if(key == direc and key == "MSPCE_ETOH"):
                   for element in itertools.product(WolfMethods, WolfPotentials):
                      if(element[0]+"_"+element[1] in root):
                         path2File = os.path.join(root, name)
