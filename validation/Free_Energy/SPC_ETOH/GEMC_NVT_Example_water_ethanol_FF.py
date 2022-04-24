@@ -348,7 +348,7 @@ for r in range(0, numReplicates, 1):
         NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
     """
 
-    WolfMethods = ["Vlugt", "Gross", "VlugtWIntraCutoff"]
+    WolfMethods = ["Vlugt", "Gross"]
     WolfPotentials = ["DSF", "DSP"]
     import itertools
     for element in itertools.product(WolfMethods, WolfPotentials):
