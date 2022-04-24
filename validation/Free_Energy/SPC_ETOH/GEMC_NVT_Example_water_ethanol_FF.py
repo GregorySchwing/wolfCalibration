@@ -227,7 +227,7 @@ for r in range(0, numReplicates, 1):
 
     NumNVTEqRunSteps = 5000000
     NumNPTEqRunSteps = 50000000
-    NumProdRunSteps = NumNPTEqRunSteps
+    NumProdRunSteps = 2*NumNPTEqRunSteps
     Temp_in_K = 298
     Pressure_in_bar = 1.0
 
