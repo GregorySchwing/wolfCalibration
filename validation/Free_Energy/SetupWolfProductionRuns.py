@@ -63,8 +63,10 @@ else:
 
 # Water has no intra so vlugtwintra is the same as vlugt and hybrid is bad.
 #WolfMethods = ["VLUGT", "GROSS", "VLUGTWINTRACUTOFF", "HYBRID"]
-WolfMethods = ["VLUGT", "GROSS"]
-WolfPotentials = ["DSF", "DSP"]
+WolfMethods = ["VLUGT"]
+WolfPotentials = ["DSF"]
+#WolfMethods = ["VLUGT", "GROSS"]
+#WolfPotentials = ["DSF", "DSP"]
 box = str(0)
 import itertools
 
@@ -102,4 +104,5 @@ for root, dirs, files in os.walk(".", topdown=False):
                         process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
                         output, error = process.communicate()
                         os.chdir(cwd)
+
 
