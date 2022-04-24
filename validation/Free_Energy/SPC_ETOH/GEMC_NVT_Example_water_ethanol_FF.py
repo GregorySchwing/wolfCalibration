@@ -301,6 +301,8 @@ for r in range(0, numReplicates, 1):
         NPTConfPath = Path(NPT_Eq_conf_name)
         NPTConfPath.rename(NPT_state_path / NPTConfPath)
 
+    """
+
     for x in range(0, len(LambdaVDWList)):
 
         stateName = prefix+str(x)
@@ -325,20 +327,24 @@ for r in range(0, numReplicates, 1):
                            "CBMC_Dih" : 50,
                            "Rcut": 14,
                            "RcutLow": 0,
+                           "Ewald": True,
                            "LRC": True,
                            "RcutCoulomb_box_0": 14,
                            "Tolerance" : 0.00005,
                            "LambdaVDW" : LambdaVDWList,
                            "LambdaCoulomb" : LambdaCoulList,
                            "FreeEnergyCalc" : [True, 5000],
-                           "PressureCalc" : [True, 5000],
                            "MoleculeType" : [ethanol.name, 1],
+                           "PressureCalc" : [True, 5000],
                            "ScaleAlpha" : 0.5,
                            "ScalePower" : 2,
                            "MinSigma" : 3,
                            "InitialState" : x,
                            "OutputName" : NVT_Prod_OutputName,
-                           "PRNG" : randomSeeds[r][x]
+                           "PRNG" : randomSeeds[r][x],
+                           "CoordinatesFreq" : [False, 5000],
+                           "DCDFreq" : [True, 5000],
+                           "RestartFreq" : [True, 10000000]
                            }
 
 
@@ -346,7 +352,7 @@ for r in range(0, numReplicates, 1):
                                             )
         NVTProdConfPath = Path(NVT_Prod_conf_name)
         NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
-    """
+
 
     WolfMethods = ["VLUGT", "GROSS"]
     WolfPotentials = ["DSF", "DSP"]
