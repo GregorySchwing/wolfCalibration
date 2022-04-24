@@ -231,7 +231,7 @@ for r in range(0, numReplicates, 1):
 
     NumNVTEqRunSteps = 5000000
     NumNPTEqRunSteps = 50000000
-    NumProdRunSteps = 4*NumNPTEqRunSteps
+    NumProdRunSteps = 2*NumNPTEqRunSteps
     Temp_in_K = 298
     Pressure_in_bar = 1.0
 
@@ -355,7 +355,7 @@ for r in range(0, numReplicates, 1):
         NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
     """
 
-    WolfMethods = ["Vlugt", "Gross"]
+    WolfMethods = ["VLUGT", "GROSS"]
     WolfPotentials = ["DSF", "DSP"]
     import itertools
     for element in itertools.product(WolfMethods, WolfPotentials):
