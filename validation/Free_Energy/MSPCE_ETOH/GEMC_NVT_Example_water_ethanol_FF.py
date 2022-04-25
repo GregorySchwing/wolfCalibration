@@ -345,7 +345,7 @@ for r in range(0, numReplicates, 1):
                            "PRNG" : randomSeeds[r][x],
                            "ConsoleFreq" : [True, 50000],
                            "CoordinatesFreq" : [False, 5000],
-                           "DCDFreq" : [True, 50000],
+                           "DCDFreq" : [False, 50000],
                            "BlockAverageFreq" : [False, 20000],
                            "RestartFreq" : [True, 10000000]
                            }
@@ -409,7 +409,7 @@ for r in range(0, numReplicates, 1):
                                "PRNG" : randomSeeds[r][x],
                                "ConsoleFreq" : [True, 50000],
                                "CoordinatesFreq" : [False, 5000],
-                               "DCDFreq" : [True, 50000],
+                               "DCDFreq" : [False, 50000],
                                "BlockAverageFreq" : [False, 20000],
                                "RestartFreq" : [True, 10000000]
                                }
