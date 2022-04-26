@@ -17,4 +17,4 @@
 # Set maximum time limit
 #SBATCH -t 1-0:0:0
 module swap gnu7 intel/2019
-/wsu/home/go/go24/go2432/GOMC/bin/GOMC_CPU_NVT NVT_Prod_water_ethanol_fe.conf > log
+/wsu/home/go/go24/go2432/testMPandMEMC/GOMC/bin/GOMC_GPU_NVT NVT_Prod_water_ethanol_fe.conf > log
