@@ -227,7 +227,7 @@ for r in range(0, numReplicates, 1):
 
     NumNVTEqRunSteps = 5000000
     NumNPTEqRunSteps = 50000000
-    NumProdRunSteps = 2*NumNPTEqRunSteps
+    NumProdRunSteps = 5000000
     Temp_in_K = 298
     Pressure_in_bar = 1.0
 
@@ -327,7 +327,9 @@ for r in range(0, numReplicates, 1):
                            "MEMC-2Freq": 0.00,
                            "MEMC-3Freq": 0.00,
                            "IntraMEMC-3Freq": 0.10,
-                           "MEMC_DataInput" : [ [1, ethanol.name, ['O1', 'H1'], water.name, ['O1', 'H1' ]]],
+                           "MEMC_DataInput" : [ [1, ethanol.name, ['O1', 'O1'], water.name, ['O1', 'H1' ]]],
+                           #"IntraMEMC-2Freq": 0.10,
+                           #"MEMC_DataInput" : [ [1, ethanol.name, ['O1', 'H1'], water.name, ['O1', 'H1' ]]],
                            "CBMC_First" : 10,
                            "CBMC_Nth" : 10,
                            "CBMC_Ang" : 100,
@@ -357,7 +359,7 @@ for r in range(0, numReplicates, 1):
                            }
 
 
-        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NVT_Prod
+        gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', ExpertMode=True, RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NVT_Prod
                                             )
         NVTProdConfPath = Path(NVT_Prod_conf_name)
         NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
@@ -398,7 +400,9 @@ for r in range(0, numReplicates, 1):
                                "MEMC-2Freq": 0.00,
                                "MEMC-3Freq": 0.00,
                                "IntraMEMC-3Freq": 0.10,
-                               "MEMC_DataInput" : [ [1, ethanol.name, ['O1', 'H1'], water.name, ['O1', 'H1' ]]],
+                               "MEMC_DataInput" : [ [1, ethanol.name, ['O1', 'O1'], water.name, ['O1', 'H1' ]]],
+                               #"IntraMEMC-2Freq": 0.10,
+                               #"MEMC_DataInput" : [ [1, ethanol.name, ['O1', 'H1'], water.name, ['O1', 'H1' ]]],
                                "CBMC_First" : 10,
                                "CBMC_Nth" : 10,
                                "CBMC_Ang" : 100,
@@ -429,7 +433,7 @@ for r in range(0, numReplicates, 1):
 
 
 
-            gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT', RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NVT_Prod
+            gomc_control.write_gomc_control_file(charmm, NVT_Prod_conf_name, 'NVT',  ExpertMode=True, RunSteps=NumProdRunSteps, Temperature=Temp_in_K, ff_psf_pdb_file_directory=ff_psf_pdb_file_directory_name, Restart=True, binCoordinates_box_0=str(NPT_restart_coor),extendedSystem_box_0=str(NPT_restart_xsc),check_input_files_exist=False,input_variables_dict=input_variables_dict_NVT_Prod
                                                 )
             NVTProdConfPath = Path(NVT_Prod_conf_name)
             NVTProdConfPath.rename(NVT_prod_state_path / NVTProdConfPath)
