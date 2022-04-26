@@ -79,7 +79,8 @@ for root, dirs, files in os.walk(".", topdown=False):
 
 
                if(key == direc and key == "MSPCE_ETOH" and "TI_O" in direc):
-                 """
+
+                  """
                   for element in itertools.product(WolfMethods, WolfPotentials):
                      if(element[0]+"_"+element[1] in root):
                         path2File = os.path.join(root, name)
