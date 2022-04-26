@@ -342,9 +342,9 @@ for r in range(0, numReplicates, 1):
                            "Tolerance" : 0.00005,
                            "LambdaVDW" : LambdaVDWList,
                            "LambdaCoulomb" : LambdaCoulList,
-                           "FreeEnergyCalc" : [True, 5000],
+                           "FreeEnergyCalc" : [True, 500],
                            "MoleculeType" : [ethanol.name, 1],
-                           "PressureCalc" : [True, 5000],
+                           "PressureCalc" : [True, 500],
                            "ScaleAlpha" : 0.5,
                            "ScalePower" : 2,
                            "MinSigma" : 3,
@@ -353,9 +353,9 @@ for r in range(0, numReplicates, 1):
                            "PRNG" : randomSeeds[r][x],
                            "ConsoleFreq" : [True, 50000],
                            "CoordinatesFreq" : [False, 5000],
-                           "DCDFreq" : [False, 50000],
+                           "DCDFreq" : [True, 50000],
                            "BlockAverageFreq" : [False, 20000],
-                           "RestartFreq" : [True, 10000000]
+                           "RestartFreq" : [True, 1000000]
                            }
 
 
@@ -415,9 +415,9 @@ for r in range(0, numReplicates, 1):
                                "Tolerance" : 0.00005,
                                "LambdaVDW" : LambdaVDWList,
                                "LambdaCoulomb" : LambdaCoulList,
-                               "FreeEnergyCalc" : [True, 5000],
+                               "FreeEnergyCalc" : [True, 500],
                                "MoleculeType" : [ethanol.name, 1],
-                               "PressureCalc" : [True, 5000],
+                               "PressureCalc" : [True, 500],
                                "ScaleAlpha" : 0.5,
                                "ScalePower" : 2,
                                "MinSigma" : 3,
@@ -426,9 +426,9 @@ for r in range(0, numReplicates, 1):
                                "PRNG" : randomSeeds[r][x],
                                "ConsoleFreq" : [True, 50000],
                                "CoordinatesFreq" : [False, 5000],
-                               "DCDFreq" : [False, 50000],
+                               "DCDFreq" : [True, 50000],
                                "BlockAverageFreq" : [False, 20000],
-                               "RestartFreq" : [True, 10000000]
+                               "RestartFreq" : [True, 1000000]
                                }
 
 
