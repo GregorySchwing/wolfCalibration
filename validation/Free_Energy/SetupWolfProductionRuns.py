@@ -76,8 +76,10 @@ for root, dirs, files in os.walk(".", topdown=False):
          head_tail = root.split(os.sep)
          for direc in head_tail:
             for key in model2BestWolfAlphaRCut.keys():
-"""
+
+
                if(key == direc and key == "MSPCE_ETOH" and "TI_O" in direc):
+                 """
                   for element in itertools.product(WolfMethods, WolfPotentials):
                      if(element[0]+"_"+element[1] in root):
                         path2File = os.path.join(root, name)
@@ -105,7 +107,8 @@ for root, dirs, files in os.walk(".", topdown=False):
                         process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
                         output, error = process.communicate()
                         os.chdir(cwd)
-"""
+                  """
+
                   if("PROD_EW" in root and "TI_O" in direc):
                     bash = Path('prod_gpu.sh')
                     shutil.copy(bash, root / bash)  # For Python 3.8+.
