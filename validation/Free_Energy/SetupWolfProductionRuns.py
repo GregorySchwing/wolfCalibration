@@ -107,7 +107,7 @@ for root, dirs, files in os.walk(".", topdown=False):
                         os.chdir(cwd)
 """
                   if("PROD_EW" in root and "TI_O" in direc):
-                    bash = Path('prod.sh')
+                    bash = Path('prod_gpu.sh')
                     shutil.copy(bash, root / bash)  # For Python 3.8+.
                     cwd = os.getcwd()
                     os.chdir( root )
