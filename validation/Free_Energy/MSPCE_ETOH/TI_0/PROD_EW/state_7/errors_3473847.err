@@ -1,0 +1,5 @@
+Lmod has detected the following error: Swap failed: "gnu7" is not loaded.
+
+
+
+slurmstepd: error: *** JOB 3473847 ON wsu101 CANCELLED AT 2022-04-26T03:34:28 DUE TO TIME LIMIT ***
