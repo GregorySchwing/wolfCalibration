@@ -1,0 +1,6 @@
+solvent,solute,temp_K,avg_MBAR_kcal_per_mol,std_dev_MBAR_kcal_per_mol
+waterTIP4P,Ne,280,,
+waterTIP4P,Ne,300,,
+waterTIP4P,Ne,320,,
+waterTIP4P,Ne,360,,
+waterTIP4P,Ne,380,,

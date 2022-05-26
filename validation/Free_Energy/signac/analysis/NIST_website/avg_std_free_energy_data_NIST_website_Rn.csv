@@ -1,0 +1,7 @@
+solvent,solute,temp_K,avg_MBAR_kcal_per_mol,std_dev_MBAR_kcal_per_mol
+waterTIP4P,Rn,275,0.446437371,NA
+waterTIP4P,Rn,295,0.813288893,NA
+waterTIP4P,Rn,315,1.177445634,NA
+waterTIP4P,Rn,335,1.539078928,NA
+waterTIP4P,Rn,355,1.898339614,NA
+waterTIP4P,Rn,375,2.255361507,NA

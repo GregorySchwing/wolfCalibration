@@ -1,0 +1,18 @@
+<ForceField version="0.0.1" name="Nobel gases" >
+ <AtomTypes>
+   <Type name="He" class="He" element="He" mass=" 4.002602" def="He" desc="He - Vrabec" doi="10.1021/acs.jced.9b00565"/>
+   <Type name="Ne" class="Ne" element="Ne" mass="20.1797" def="Ne" desc="Ne - Vrabec" doi="10.1021/acs.jced.9b00565"/>
+   <Type name="Ar" class="Ar" element="Ar" mass="39.948" def="Ar" desc="Ar - Vrabec" doi="10.1021/jp012542o"/>
+   <Type name="Kr" class="Kr" element="Kr" mass="83.798" def="Kr" desc="Kr - Vrabec" doi="10.1021/jp012542o"/>
+   <Type name="Xe" class="Xe" element="Xe" mass="131.293" def="Xe" desc="Xe - Vrabec" doi="10.1021/jp012542o"/>
+   <Type name="Rn" class="Rn" element="Rn" mass="222" def="Rn" desc="Rn - Potoff" doi="10.1021/acs.jced.5b01002"/>
+ </AtomTypes>
+ <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+  <Atom type="He" charge="0.0" sigma="0.2952" epsilon="0.0576524837942743"/>
+  <Atom type="Ne" charge="0.0" sigma="0.3048" epsilon="0.198441279307462"/>
+  <Atom type="Ar" charge="0.0" sigma="0.33952" epsilon="0.971046089174112"/>
+  <Atom type="Kr" charge="0.0" sigma="0.36274" epsilon="1.35176533245935"/>
+  <Atom type="Xe" charge="0.0" sigma="0.39011" epsilon="1.89195596876076"/>
+  <Atom type="Rn" charge="0.0" sigma="0.4145" epsilon="2.42782308450073"/>
+ </NonbondedForce>
+</ForceField>
