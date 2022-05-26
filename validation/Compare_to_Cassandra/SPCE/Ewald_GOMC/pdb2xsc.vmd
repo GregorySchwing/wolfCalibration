@@ -2,7 +2,7 @@ set pdb NVT_water
 set psf NVT_water
 set xsc NVT_water
 #***************************************************************************
-
+package require pbctools
 
 # load solute molecule
 set solute [mol new $psf.psf waitfor all]
