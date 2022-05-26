@@ -127,7 +127,7 @@ smiles_or_mol2_name_to_value_dict = {
     "TIP4": 'tip4p.mol2',
     "Ne": "Ne",
     "Rn": "Rn",
-    "ETOH": "ethanol_aa.mol2"
+    "ETOH": "ethanol.mol2"
 }
 
 
