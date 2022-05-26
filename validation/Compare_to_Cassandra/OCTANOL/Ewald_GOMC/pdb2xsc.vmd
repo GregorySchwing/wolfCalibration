@@ -3,7 +3,7 @@ set psf NVT_octanol
 set xsc NVT_octanol
 #***************************************************************************
 
-
+package require pbctools
 # load solute molecule
 set solute [mol new $psf.psf waitfor all]
 mol addfile $pdb.pdb mol $solute waitfor all
