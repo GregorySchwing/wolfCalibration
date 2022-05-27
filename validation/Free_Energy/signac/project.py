@@ -49,7 +49,7 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 
 # WSU grid binary paths
 gomc_binary_path = "/wsu/home/go/go24/go2432/GOMC/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_Git-2022-03-09_Source/Linux-x86_64-g++"
+namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
