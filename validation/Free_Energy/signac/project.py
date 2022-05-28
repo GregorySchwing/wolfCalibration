@@ -335,7 +335,7 @@ def initial_parameters(job):
         job.doc.namd_node_ngpu = 1
 
         job.doc.gomc_ncpu = 1  # 1 is optimal but I want data quick.  run time is set for 1 cpu
-        job.doc.gomc_ngpu = 0
+        job.doc.gomc_ngpu = 1
 
     else:
         raise ValueError(
