@@ -7,7 +7,7 @@
    <Type name="Xe" class="Xe" element="Xe" mass="131.293" def="Xe" desc="Xe - Vrabec" doi="10.1021/jp012542o"/>
    <Type name="Rn" class="Rn" element="Rn" mass="222" def="Rn" desc="Rn - Potoff" doi="10.1021/acs.jced.5b01002"/>
  </AtomTypes>
- <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+ <NonbondedForce coulomb14scale="0.0" lj14scale="0.0">
   <Atom type="He" charge="0.0" sigma="0.2952" epsilon="0.0576524837942743"/>
   <Atom type="Ne" charge="0.0" sigma="0.3048" epsilon="0.198441279307462"/>
   <Atom type="Ar" charge="0.0" sigma="0.33952" epsilon="0.971046089174112"/>
