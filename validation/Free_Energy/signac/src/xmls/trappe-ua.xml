@@ -197,7 +197,7 @@
   CHX-[C]-[C]-OH ?
   -->
  </RBTorsionForce>
- <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+ <NonbondedForce coulomb14scale="0.0" lj14scale="0.0">
   <Atom type="O" charge="-0.700" sigma="0.302" epsilon="0.773245"/>
   <Atom type="H" charge="0.435" sigma="1.0" epsilon="0.0"/>
   <Atom type="CH4" charge="0.0" sigma="0.373" epsilon="1.23054"/>
