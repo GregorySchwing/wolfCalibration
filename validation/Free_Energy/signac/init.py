@@ -14,8 +14,8 @@ project=signac.init_project('nobel_gas_in_water')
 #solute = ["Ne", "Rn"] # ["Ne", "Rn"]
 #solute = ["ETOH"] # ["Ne", "Rn"]
 solute = ["Ne"] # ["Ne", "Rn"]
-replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
-
+#replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
+replicas = [0]# [0, 1, 2, 3, 4]
 #production_temperatures = [275, 295, 315, 335, 355, 375] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 production_temperatures = [275] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 
