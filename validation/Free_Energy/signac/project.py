@@ -48,7 +48,7 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-gomc_binary_path = "/wsu/home/go/go24/go2432/GOMC/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
 # brads workstation binary paths
