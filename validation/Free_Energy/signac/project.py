@@ -730,10 +730,12 @@ def part_4c_job_production_run_completed_properly(job):
                     job,
                     filename_4c_iter,
                 ) is False:
+                    print("Isn't finished ",filename_4c_iter)
                     return False
 
                 # check specifically for the FE files
                 if job.isfile(f'Free_Energy_BOX_0_{filename_4c_iter}.dat') is False:
+                    print("Isn't finished ",f'Free_Energy_BOX_0_{filename_4c_iter}.dat')
                     return False
 
             except:
