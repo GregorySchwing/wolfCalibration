@@ -1,0 +1,10 @@
+set xyzName box1.in.xyz
+set psfName NVT_octanol
+#***************************************************************************
+
+
+# load solute molecule
+set solute [mol new $psfName.psf waitfor all]
+mol addfile $xyzName mol $solute waitfor all
+set all [atomselect top all]
+$all writenamdbin $psfName.coor
