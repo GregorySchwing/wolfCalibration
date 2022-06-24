@@ -289,10 +289,6 @@ for r in range(0, numReplicates, 1):
             NVT_prod_state_path = NVT_Prod_Wolf / statePath
             NVT_prod_state_path.mkdir(parents=True, exist_ok=True)
 
-            NPT_restart_files_state_path = RelPathToNPTEq / statePath 
-            NPT_restart_coor = NPT_restart_files_state_path / NPT_Restart_COOR_path
-            NPT_restart_xsc = NPT_restart_files_state_path / NPT_Restart_XSC_path
-
             input_variables_dict_NVT_Prod={"Pressure" : Pressure_in_bar,
                                "VDWGeometricSigma": True,
                                "DisFreq": 0.50,
