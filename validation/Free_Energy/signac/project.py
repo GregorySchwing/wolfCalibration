@@ -48,8 +48,13 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+
+# Potoff cluster bin paths
+gomc_binary_path = "/home6/greg/GOMC/bin"
+namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/namd2"
+
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -687,7 +692,10 @@ def gomc_sim_completed_properly(job, control_filename_str):
 def namd_sim_completed_properly(job, control_filename_str):
     """General check to see if the namd simulation was completed properly."""
     job_run_properly_bool = False
-    output_log_file = "out_{}.dat".format(control_filename_str)
+    if (job.sp.electrostatic_method == "Wolf"):
+        output_log_file = job.doc.path_to_namd_console
+    else:
+        output_log_file = "out_{}.dat".format(control_filename_str)
     if job.isfile(output_log_file):
         with open(job.fn(f"{output_log_file}"), "r") as fp:
             out_namd = fp.readlines()
@@ -1013,6 +1021,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
+            job.doc.path_to_namd_console =  ref_job.fn(f"{namd_equilb_NPT_control_file_name_str}.conf")
             job.doc.path_to_ref_pdb =  ref_job.fn(Coordinates_box_0)
             job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
             job.doc.path_to_ref_binCoordinates =  ref_job.fn(binCoordinates_box_0)
