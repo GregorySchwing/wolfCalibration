@@ -9,7 +9,7 @@
  <HarmonicAngleForce>
    <Angle class1="HW" class2="OW" class3="HW" angle="1.8242181342" k="230.12"/>
  </HarmonicAngleForce>
- <NonbondedForce coulomb14scale="0.5" lj14scale="0.5">
+ <NonbondedForce coulomb14scale="0.0" lj14scale="0.0">
    <!-- https://github.com/gromacs/gromacs/blob/master/share/top/oplsaa.ff/spce.itp -->
   <Atom type="OW" charge="-0.834" sigma="0.3150574227" epsilon="-0.6363864"/>
   <Atom type="HW" charge="0.417" sigma="0.0400013524" epsilon="-0.192464"/>
