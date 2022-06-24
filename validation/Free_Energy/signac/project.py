@@ -977,6 +977,18 @@ def build_psf_pdb_ff_gomc_conf(job):
     files for all the simulations in the workspace."""
     [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
+    if (job.sp.electrostatic_method == "Wolf"):
+        ref_sp = job.statepoint()
+        ref_sp['salt_conc']="Ewald"
+        jobs = list(project.find_jobs(ref_sp))
+        for ref_job in jobs:
+            #if (ref_job.isfile(f"{Coordinates_box_0}")):
+            job.doc.path_to_ref_pdb =  solvated_job.fn(Coordinates_box_0)
+            job.doc.path_to_ref_psf =  solvated_job.fn(Structure_box_0)
+            job.doc.path_to_ref_binCoordinates =  solvated_job.fn(binCoordinates_box_0)
+            job.doc.path_to_ref_extendedSystem =  solvated_job.fn(extendedSystem_box_0)
+
+
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
     MoleculeType = [job.sp.solute, 1]
 
@@ -1118,6 +1130,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 restart_control_file_name_str
             )
 
+        # Only use namd run from ewald to ensure both start at exact same configuration.
         gomc_control.write_gomc_control_file(
             gomc_charmm_object_with_files,
             output_name_control_file_name,
@@ -1130,10 +1143,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             Restart=True,
             RestartCheckpoint=True,
             ExpertMode=False,
-            Coordinates_box_0=Coordinates_box_0,
-            Structure_box_0=Structure_box_0,
-            binCoordinates_box_0=binCoordinates_box_0,
-            extendedSystem_box_0=extendedSystem_box_0,
+            Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
+            Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
+            binCoordinates_box_0= binCoordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_binCoordinates,
+            extendedSystem_box_0= extendedSystem_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_extendedSystem,
             binVelocities_box_0=None,
             Coordinates_box_1=None,
             Structure_box_1=None,
@@ -1203,9 +1216,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         )
         restart_control_file_name_str = "{}_initial_state_{}".format(
             gomc_equilb_design_ensemble_control_file_name_str, int(initial_state_sims_i)
-        )
-        output_name_control_file_calibration_name = "{}_wolf_calibration_{}".format(
-            gomc_production_control_file_name_str, initial_state_sims_i
         )
         job.doc.gomc_production_run_ensemble_dict.update(
             {
@@ -1346,7 +1356,12 @@ def build_psf_pdb_ff_gomc_conf(job):
         # production NPT or GEMC-NVT - GOMC control file writing  (end)
         # ******************************************************
 
-        if (initial_state_sims_i == list(job.doc.InitialState_list)[0]):
+        if (initial_state_sims_i == list(job.doc.InitialState_list)[0]
+            and job.sp.electrostatic_method == "Wolf"):
+            output_name_control_file_calibration_name = "{}_wolf_calibration_{}".format(
+                gomc_production_control_file_name_str, initial_state_sims_i
+            )
+
             gomc_control.write_gomc_control_file(
                 gomc_charmm_object_with_files,
                 output_name_control_file_calibration_name,
@@ -1359,10 +1374,10 @@ def build_psf_pdb_ff_gomc_conf(job):
                 Restart=True,
                 RestartCheckpoint=True,
                 ExpertMode=False,
-                Coordinates_box_0=Coordinates_box_0,
-                Structure_box_0=Structure_box_0,
-                binCoordinates_box_0=binCoordinates_box_0,
-                extendedSystem_box_0=extendedSystem_box_0,
+                Coordinates_box_0=job.doc.path_to_ref_pdb,
+                Structure_box_0=job.doc.path_to_ref_psf,
+                binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
+                extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
                 binVelocities_box_0=None,
                 Coordinates_box_1=None,
                 Structure_box_1=None,
