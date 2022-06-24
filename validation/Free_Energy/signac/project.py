@@ -598,14 +598,28 @@ def part_3b_output_gomc_equilb_design_ensemble_started(job):
 @flow.with_job
 def part_3b_output_gomc_calibration_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
-    output_started_bool = False
-    control_file_name_str = job.doc.gomc_equilb_design_ensemble_dict[
-            str(0)
-        ]["output_name_control_file_name"]
-    if job.isfile("Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_{}.dat".format(control_filename_str)):
-        output_started_bool = True
+    try:
+        initial_state_i = list(job.doc.InitialState_list)[0]
+        if job.isfile(
+            "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_{}.dat".format(
+                job.doc.gomc_equilb_design_ensemble_dict[
+                    str(initial_state_i)
+                ]["output_name_control_file_name"]
+            )
+        ):
+            gomc_simulation_started(
+                job,
+                job.doc.gomc_equilb_design_ensemble_dict[
+                    str(initial_state_i)
+                ]["output_name_control_file_name"],
+            )
 
-    return output_started_bool
+        else:
+            return False
+    except:
+        return False
+
+        return True
 
 # check if production GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
@@ -979,7 +993,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
-        ref_sp['salt_conc']="Ewald"
+        ref_sp['electrostatic_method']="Ewald"
         jobs = list(project.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
