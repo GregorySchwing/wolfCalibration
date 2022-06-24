@@ -198,8 +198,6 @@ NVT_Prod_Ewald_Prefix = Path("PROD_EW")
 for r in range(0, numReplicates, 1):
 
     NVT_Prod_Ewald = replicatePaths[r] / NVT_Prod_Ewald_Prefix
-    RelPathToNVTEq = Path("../../..") / NVT_Eq
-    RelPathToNPTEq = Path("../../..") / NPT_Eq
 
     NVT_Prod_Ewald.mkdir(parents=True, exist_ok=True)
     prefix = "state_"
