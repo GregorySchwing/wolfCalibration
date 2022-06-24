@@ -994,13 +994,13 @@ def build_psf_pdb_ff_gomc_conf(job):
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
-        jobs = list(project.find_jobs(ref_sp))
+        jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
-            job.doc.path_to_ref_pdb =  solvated_job.fn(Coordinates_box_0)
-            job.doc.path_to_ref_psf =  solvated_job.fn(Structure_box_0)
-            job.doc.path_to_ref_binCoordinates =  solvated_job.fn(binCoordinates_box_0)
-            job.doc.path_to_ref_extendedSystem =  solvated_job.fn(extendedSystem_box_0)
+            job.doc.path_to_ref_pdb =  ref_job.fn(Coordinates_box_0)
+            job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
+            job.doc.path_to_ref_binCoordinates =  ref_job.fn(binCoordinates_box_0)
+            job.doc.path_to_ref_extendedSystem =  ref_job.fn(extendedSystem_box_0)
 
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
