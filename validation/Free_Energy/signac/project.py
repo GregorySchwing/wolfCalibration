@@ -599,9 +599,10 @@ def part_3b_output_gomc_equilb_design_ensemble_started(job):
 def part_3b_output_gomc_calibration_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
     output_started_bool = False
-    if job.isfile("out_{}.dat".format(control_filename_str)) and job.isfile(
-        "{}.restart.xsc".format(control_filename_str)
-    ):
+    control_file_name_str = job.doc.gomc_equilb_design_ensemble_dict[
+            str(0)
+        ]["output_name_control_file_name"]
+    if job.isfile("Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_{}.dat".format(control_filename_str)):
         output_started_bool = True
 
     return output_started_bool
@@ -1203,6 +1204,9 @@ def build_psf_pdb_ff_gomc_conf(job):
         restart_control_file_name_str = "{}_initial_state_{}".format(
             gomc_equilb_design_ensemble_control_file_name_str, int(initial_state_sims_i)
         )
+        output_name_control_file_calibration_name = "{}_wolf_calibration_{}".format(
+            gomc_production_control_file_name_str, initial_state_sims_i
+        )
         job.doc.gomc_production_run_ensemble_dict.update(
             {
                 initial_state_sims_i: {
@@ -1342,6 +1346,72 @@ def build_psf_pdb_ff_gomc_conf(job):
         # production NPT or GEMC-NVT - GOMC control file writing  (end)
         # ******************************************************
 
+        if (initial_state_sims_i == list(job.doc.InitialState_list)[0]):
+            gomc_control.write_gomc_control_file(
+                gomc_charmm_object_with_files,
+                output_name_control_file_calibration_name,
+                used_ensemble,
+                MC_steps,
+                production_temperature_K,
+                ff_psf_pdb_file_directory=None,
+                check_input_files_exist=False,
+                Parameters="{}.inp".format(gomc_ff_filename_str),
+                Restart=True,
+                RestartCheckpoint=True,
+                ExpertMode=False,
+                Coordinates_box_0=Coordinates_box_0,
+                Structure_box_0=Structure_box_0,
+                binCoordinates_box_0=binCoordinates_box_0,
+                extendedSystem_box_0=extendedSystem_box_0,
+                binVelocities_box_0=None,
+                Coordinates_box_1=None,
+                Structure_box_1=None,
+                binCoordinates_box_1=None,
+                extendedSystem_box_1=None,
+                binVelocities_box_1=None,
+                input_variables_dict={
+                    "PRNG": seed_no,
+                    "Pressure": production_pressure_bar,
+                    "Ewald": False,
+                    "ElectroStatic": use_ElectroStatics,
+                    "VDWGeometricSigma": VDWGeometricSigma,
+                    "Rcut": job.doc.Rcut_ang,
+                    "Exclude": Exclude,
+                    "VolFreq": VolFreq[-1],
+                    "MultiParticleFreq": MultiParticleFreq[-1],
+                    "IntraSwapFreq": IntraSwapFreq[-1],
+                    "CrankShaftFreq": CrankShaftFreq[-1],
+                    "SwapFreq": SwapFreq[-1],
+                    "DisFreq": DisFreq[-1],
+                    "RotFreq": RotFreq[-1],
+                    "RegrowthFreq": RegrowthFreq[-1],
+                    "OutputName": output_name_control_file_calibration_name,
+                    "EqSteps": EqSteps,
+                    "PressureCalc": output_false_list_input,
+                    "RestartFreq": output_true_list_input,
+                    "CheckpointFreq": output_true_list_input,
+                    "ConsoleFreq": output_true_list_input,
+                    "BlockAverageFreq": output_true_list_input,
+                    "HistogramFreq": output_false_list_input,
+                    "CoordinatesFreq": output_false_list_input,
+                    "DCDFreq": output_true_list_input,
+                    "Potential": cutoff_style,
+                    "LRC": True,
+                    "RcutLow": 0,
+                    "CBMC_First": 12,
+                    "CBMC_Nth": 10,
+                    "CBMC_Ang": 50,
+                    "CBMC_Dih": 50,
+                    "FreeEnergyCalc": FreeEnergyCalc,
+                    "MoleculeType": MoleculeType,
+                    "InitialState": initial_state_sims_i,
+                    "LambdaVDW": list(job.doc.LambdaVDW_list),
+                    # "LambdaCoulomb": None,
+                },
+            )
+            print("#**********************")
+            print("Completed: Wolf Calibration GOMC control file writing")
+            print("#**********************")
 
 # ******************************************************
 # ******************************************************
@@ -1401,7 +1471,7 @@ def run_namd_equilb_NPT_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.post(part_3b_output_gomc_calibration_started)
