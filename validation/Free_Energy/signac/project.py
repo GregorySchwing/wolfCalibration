@@ -593,6 +593,19 @@ def part_3b_output_gomc_equilb_design_ensemble_started(job):
     except:
         return False
 
+# check if equilb_with design ensemble GOMC run is started
+@Project.label
+@flow.with_job
+def part_3b_output_gomc_calibration_started(job):
+    """Check to see if the gomc_calibration simulation is started (set temperature)."""
+    output_started_bool = False
+    if job.isfile("out_{}.dat".format(control_filename_str)) and job.isfile(
+        "{}.restart.xsc".format(control_filename_str)
+    ):
+        output_started_bool = True
+
+    return output_started_bool
+
 # check if production GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
 @flow.with_job
@@ -690,6 +703,29 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
         job, namd_equilb_NPT_control_file_name_str
     )
 
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_calibration_completed_properly(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    try:
+        for initial_state_i in list(job.doc.InitialState_list):
+            try:
+                filename_4b_iter = job.doc.gomc_equilb_design_ensemble_dict[
+                    str(initial_state_i)
+                ]["output_name_control_file_name"]
+
+                if gomc_sim_completed_properly(
+                    job,
+                    filename_4b_iter,
+                ) is False:
+                    print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
+                    return False
+            except:
+                return False
+        return True
+    except:
+        return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1359,6 +1395,45 @@ def run_namd_equilb_NPT_gomc_command(job):
 # namd_equilb_NPT -starting the NAMD simulations (end)
 # ******************************************************
 # ******************************************************
+
+# ******************************************************
+# ******************************************************
+# equilb NPT - starting the GOMC simulation (start)
+# ******************************************************
+# ******************************************************
+
+@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+@Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
+@Project.post(part_3b_output_gomc_calibration_started)
+@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.operation.with_directives(
+    {
+        "np": lambda job: job.doc.namd_node_ncpu,
+        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "memory": memory_needed,
+        "walltime": walltime_namd_hr,
+    }
+)
+@flow.with_job
+@flow.cmd
+def run_calibration_run_gomc_command(job):
+    """Run the gomc_calibration_run_ensemble simulation."""
+    control_file_name_str = job.doc.gomc_equilb_design_ensemble_dict[
+        str(initial_state_j)
+    ]["output_name_control_file_name"]
+
+    print(f"Running simulation job id {job}")
+    run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
+        str(gomc_binary_path),
+        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(job.doc.gomc_ncpu),
+        str(control_file_name_str),
+        str(control_file_name_str),
+    )
+
+    print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
+
+    return run_command
 
 
 # ******************************************************
