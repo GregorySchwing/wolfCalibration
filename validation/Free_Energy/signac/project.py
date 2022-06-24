@@ -734,7 +734,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                     job,
                     filename_4b_iter,
                 ) is False:
-                    print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
+                    #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
                     return False
             except:
                 return False
@@ -758,7 +758,7 @@ def part_4b_job_gomc_equilb_design_ensemble_completed_properly(job):
                     job,
                     filename_4b_iter,
                 ) is False:
-                    print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
+                    #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
                     return False
             except:
                 return False
@@ -781,12 +781,12 @@ def part_4c_job_production_run_completed_properly(job):
                     job,
                     filename_4c_iter,
                 ) is False:
-                    print("Isn't finished ",filename_4c_iter)
+                    #print("Isn't finished ",filename_4c_iter)
                     return False
 
                 # check specifically for the FE files
                 if job.isfile(f'Free_Energy_BOX_0_{filename_4c_iter}.dat') is False:
-                    print("Isn't finished ",f'Free_Energy_BOX_0_{filename_4c_iter}.dat')
+                    #print("Isn't finished ",f'Free_Energy_BOX_0_{filename_4c_iter}.dat')
                     return False
 
             except:
@@ -991,6 +991,22 @@ def build_psf_pdb_ff_gomc_conf(job):
     files for all the simulations in the workspace."""
     [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
+    namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
+    restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
+
+    Coordinates_box_0 = "{}.pdb".format(
+        namd_restart_pdb_psf_file_name_str
+    )
+    Structure_box_0 = "{}.psf".format(
+        namd_restart_pdb_psf_file_name_str
+    )
+    binCoordinates_box_0 = "{}.restart.coor".format(
+        restart_control_file_name_str
+    )
+    extendedSystem_box_0 = "{}.restart.xsc".format(
+        restart_control_file_name_str
+    )
+
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
@@ -1082,9 +1098,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("#**********************")
 
     for initial_state_sims_i in list(job.doc.InitialState_list):
-        namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
 
-        restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
         output_name_control_file_name = "{}_initial_state_{}".format(
             gomc_equilb_design_ensemble_control_file_name_str, initial_state_sims_i
         )
@@ -1131,18 +1145,6 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-            Coordinates_box_0 = "{}.pdb".format(
-                namd_restart_pdb_psf_file_name_str
-            )
-            Structure_box_0 = "{}.psf".format(
-                namd_restart_pdb_psf_file_name_str
-            )
-            binCoordinates_box_0 = "{}.restart.coor".format(
-                restart_control_file_name_str
-            )
-            extendedSystem_box_0 = "{}.restart.xsc".format(
-                restart_control_file_name_str
-            )
 
         # Only use namd run from ewald to ensure both start at exact same configuration.
         gomc_control.write_gomc_control_file(
@@ -1453,6 +1455,9 @@ def build_psf_pdb_ff_gomc_conf(job):
 # namd_equilb_NPT -starting the NAMD simulations (start)
 # ******************************************************
 # ******************************************************
+# Only run namd on the Ewald directories, then use the same 
+# final trajectory for Wolf.
+@Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.post(part_3a_output_namd_equilb_NPT_started)
