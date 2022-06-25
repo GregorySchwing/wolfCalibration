@@ -38,8 +38,6 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     hostname_pattern = r".*\.grid\.wayne\.edu"
     template = "grid.sh"
 
-
-
 # ******************************************************
 # users typical variables, but not all (start)
 # ******************************************************
@@ -53,7 +51,7 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 
 # Potoff cluster bin paths
 gomc_binary_path = "/home6/greg/GOMC/bin"
-namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/namd2"
+namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
 
 
 # brads workstation binary paths
@@ -692,24 +690,26 @@ def gomc_sim_completed_properly(job, control_filename_str):
 def namd_sim_completed_properly(job, control_filename_str):
     """General check to see if the namd simulation was completed properly."""
     job_run_properly_bool = False
-    if (job.sp.electrostatic_method == "Wolf"):
-        output_log_file = job.doc.path_to_namd_console
-    else:
-        output_log_file = "out_{}.dat".format(control_filename_str)
-    if job.isfile(output_log_file):
-        with open(job.fn(f"{output_log_file}"), "r") as fp:
-            out_namd = fp.readlines()
-            for i, line in enumerate(out_namd):
-                if "WallClock:" in line:
-                    split_move_line = line.split()
-                    if (split_move_line[0] == "WallClock:"
-                            and split_move_line[2] == "CPUTime:"
-                            and split_move_line[4] == "Memory:"
-                    ):
-                        job_run_properly_bool = True
-    else:
+    try:
+        if (job.sp.electrostatic_method == "Wolf"):
+            output_log_file = job.doc.path_to_namd_console
+        else:
+            output_log_file = "out_{}.dat".format(control_filename_str)
+        if job.isfile(output_log_file):
+            with open(job.fn(f"{output_log_file}"), "r") as fp:
+                out_namd = fp.readlines()
+                for i, line in enumerate(out_namd):
+                    if "WallClock:" in line:
+                        split_move_line = line.split()
+                        if (split_move_line[0] == "WallClock:"
+                                and split_move_line[2] == "CPUTime:"
+                                and split_move_line[4] == "Memory:"
+                        ):
+                            job_run_properly_bool = True
+        else:
+            job_run_properly_bool = False
+    except:
         job_run_properly_bool = False
-
     return job_run_properly_bool
 
 # check if melt equilb NVT GOMC run completed by checking the end of the GOMC consol file
