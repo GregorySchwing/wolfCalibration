@@ -771,6 +771,14 @@ def part_4b_job_gomc_calibration_completed_properly(job):
         except:
             return False
 
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+@flow.with_job
+def part_4b_job_gomc_calibration_error_minimum_found(job):
+
+
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
