@@ -25,6 +25,7 @@ module swap gnu7 intel/2019
 
 {% if gpus %}
 module load cuda/11.0
+#SBATCH --gres gpu:{{ gpus }}
 {%- endif %}
 
 {% endblock header %}
