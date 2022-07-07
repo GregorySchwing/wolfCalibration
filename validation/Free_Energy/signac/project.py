@@ -757,19 +757,19 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-        if(job.sp.electrostatic_method != "Wolf"):
-            return true
+    if(job.sp.electrostatic_method != "Wolf"):
+        return True
 
-        try:
-            control_file_name_str = "wolf_calibration"
-            if gomc_sim_completed_properly(
-                job,
-                control_file_name_str,
-            ) is False:
-                #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-                return False
-        except:
+    try:
+        control_file_name_str = "wolf_calibration"
+        if gomc_sim_completed_properly(
+            job,
+            control_file_name_str,
+        ) is False:
+            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
             return False
+    except:
+        return False
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
@@ -777,7 +777,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_calibration_error_minimum_found(job):
-
+    print("placeholder")
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
