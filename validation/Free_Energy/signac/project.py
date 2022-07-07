@@ -379,12 +379,12 @@ def initial_parameters(job):
     # set rcut, ewalds
     if job.doc.solvent in ["TIP4", "TIP3"] and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
         job.doc.namd_node_ncpu = 1
-        #job.doc.namd_node_ngpu = 1
-        job.doc.namd_node_ngpu = 0
+        job.doc.namd_node_ngpu = 1
+        #job.doc.namd_node_ngpu = 0
 
         job.doc.gomc_ncpu = 1  # 1 is optimal but I want data quick.  run time is set for 1 cpu
-        #job.doc.gomc_ngpu = 1
-        job.doc.gomc_ngpu = 0
+        job.doc.gomc_ngpu = 1
+        #job.doc.gomc_ngpu = 0
     else:
         raise ValueError(
             "ERROR: The solvent and solute do are not set up to selected the mixing rules or electrostatics "
