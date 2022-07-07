@@ -38,6 +38,12 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     hostname_pattern = r".*\.grid\.wayne\.edu"
     template = "grid.sh"
 
+class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
+    """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
+
+    hostname_pattern = r"potoff33"
+    template = "potoff.sh"
+
 # ******************************************************
 # users typical variables, but not all (start)
 # ******************************************************
@@ -51,7 +57,8 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 
 # Potoff cluster bin paths
 gomc_binary_path = "/home6/greg/GOMC/bin"
-namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
+#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
+namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 
 # brads workstation binary paths
@@ -372,11 +379,12 @@ def initial_parameters(job):
     # set rcut, ewalds
     if job.doc.solvent in ["TIP4", "TIP3"] and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
         job.doc.namd_node_ncpu = 1
-        job.doc.namd_node_ngpu = 1
+        #job.doc.namd_node_ngpu = 1
+        job.doc.namd_node_ngpu = 0
 
         job.doc.gomc_ncpu = 1  # 1 is optimal but I want data quick.  run time is set for 1 cpu
-        job.doc.gomc_ngpu = 1
-
+        #job.doc.gomc_ngpu = 1
+        job.doc.gomc_ngpu = 0
     else:
         raise ValueError(
             "ERROR: The solvent and solute do are not set up to selected the mixing rules or electrostatics "
@@ -1778,18 +1786,18 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # ******************************************************
 # ******************************************************
 
-@aggregator.groupby(key=statepoint_without_replica,
-                    sort_by="production_temperature_K",
-                    sort_ascending=True
-)
-@Project.operation.with_directives(
-     {
-         "np": 1,
-         "ngpu": 0,
-         "memory": memory_needed,
-         "walltime": walltime_gomc_analysis_hr,
-     }
-)
+#@aggregator.groupby(key=statepoint_without_replica,
+#                    sort_by="production_temperature_K",
+#                    sort_ascending=True
+#)
+#@Project.operation.with_directives(
+#     {
+#         "np": 1,
+#         "ngpu": 0,
+#         "memory": memory_needed,
+#         "walltime": walltime_gomc_analysis_hr,
+#     }
+#)
 
 @Project.pre(lambda *jobs: all(part_5a_analysis_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
