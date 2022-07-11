@@ -882,6 +882,8 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    if (job.sp.electrostatic_method == "Ewald"):
+        return True
 
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
