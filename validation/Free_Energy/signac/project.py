@@ -840,6 +840,54 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 def part_4b_job_gomc_wolf_parameters_found(job):
     return job.isfile("bestWolfParameters.pickle")
 
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_wolf_parameters_appended(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+
+    try:
+        if job.doc.wolf_parameters_appended == True:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(part_4b_job_gomc_wolf_parameters_found)
+@flow.with_job
+def part_4b_job_gomc_append_wolf_parameters(job):
+    import pickle as pickle
+    import re
+    regex = re.compile("gomc_*_initial_state_(\w+?).conf")
+
+    bestValueFileName = "bestWolfParameters"
+    
+    for root, dirs, files in os.walk(job.fn("")):
+        for file in files:
+            if regex.match(file):
+                print(file)
+                continue
+                with open(job.fn("wolf_calibration.conf"), "a") as myfile:
+                    defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
+                    myfile.write(defPotLine)
+                    defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
+                    myfile.write(defKindLine)
+                    defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
+                    myfile.write(defPotLine)
+                    for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \
+                    in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
+                    WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
+                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
+                        myfile.write(defAlphaLine)
+
+                        CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
+                        myfile.write(CutoffLine)
+
+                        alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
+                        myfile.write(alphaLine)
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1688,7 +1736,7 @@ def part_4b_job_gomc_calibration_find_minimum(job):
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
-    @Project.pre(part_4b_job_gomc_wolf_parameters_found)
+    @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
