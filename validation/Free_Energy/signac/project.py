@@ -882,12 +882,27 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    if (job.sp.electrostatic_method == "Ewald"):
-        return True
-
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
     success = True
+
+    if (job.sp.electrostatic_method == "Ewald"):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Wolf"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                for root, dirs, files in os.walk(job.fn("")):
+                    for file in files:
+                        if regex.match(file):
+                            with open(file, "r") as openedfile:
+                                last_line = openedfile.readlines()[-1]
+                            if ("RcutCoulomb" in last_line):
+                                continue
+                            else:
+                                success = success and False
+            return success
+
+
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
@@ -897,7 +912,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                     continue
                 else:
                     success = success and False
-    print()
     return success
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
