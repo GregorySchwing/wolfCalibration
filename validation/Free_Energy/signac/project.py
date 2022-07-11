@@ -1379,7 +1379,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             input_variables_dict={
                 "PRNG": seed_no,
                 "Pressure": production_pressure_bar,
-                "Ewald": use_ElectroStatics,
+                "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
                 "ElectroStatic": use_ElectroStatics,
                 "VDWGeometricSigma": VDWGeometricSigma,
                 "Rcut": job.doc.Rcut_ang,
@@ -1534,7 +1534,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             input_variables_dict={
                 "PRNG": seed_no,
                 "Pressure": production_pressure_bar,
-                "Ewald": use_ElectroStatics,
+                "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
                 "ElectroStatic": use_ElectroStatics,
                 "VDWGeometricSigma": VDWGeometricSigma,
                 "Rcut": job.doc.Rcut_ang,
