@@ -838,7 +838,44 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
-    return job.isfile("bestWolfParameters.pickle")
+    if (not job.isfile("bestWolfParameters.pickle")):
+        return False
+
+    try:
+        import pickle as pickle
+        import re
+        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+        with open(job.fn("bestWolfParameters.pickle"), 'rb') as handle:
+            model2BestWolfAlphaRCut = pickle.load(handle)
+        
+        bestModel = ""
+        smallestRelErr = 1.0
+        bestRCut = 0
+        bestAlpha = 0
+        for model in model2BestWolfAlphaRCut:
+            if (model2BestWolfAlphaRCut[model]['GD_relerr'] < smallestRelErr):
+                bestModel = model
+                smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']    
+            if (model2BestWolfAlphaRCut[model]['BF_relerr'] < smallestRelErr):
+                bestModel = model
+                smallestRelErr = model2BestWolfAlphaRCut[model]['BF_relerr']
+                bestRCut =  model2BestWolfAlphaRCut[model]['BF_rcut']  
+                bestAlpha =  model2BestWolfAlphaRCut[model]['BF_alpha'] 
+        print("bestModel :", bestModel)
+        print("smallestRelErr :", smallestRelErr)
+        print("bestRCut :", bestRCut)
+        print("bestAlpha :", bestAlpha)
+
+        Dict = {"WolfKind": bestModel[0], "Potential": bestModel[0], "RCutCoul": bestRCut,
+        "Alpha":bestAlpha}
+        with open("winningWolfParameters.pickle", 'wb') as handle:
+            pickle.dump(Dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        return job.isfile("winningWolfParameters.pickle")
+    except:
+        return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -846,48 +883,53 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
 
-    try:
-        if job.doc.wolf_parameters_appended == True:
-            return True
-        else:
-            return False
-    except:
-        return False
+    import re
+    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+    success = True
+    for root, dirs, files in os.walk(job.fn("")):
+        for file in files:
+            if regex.match(file):
+                with open(file, "r") as openedfile:
+                    last_line = openedfile.readlines()[-1]
+                if ("RcutCoulomb" in last_line):
+                    continue
+                else:
+                    success = success and False
+    print()
+    return success
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
+@Project.post(part_4b_job_gomc_wolf_parameters_appended)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
     import pickle as pickle
     import re
-    regex = re.compile("gomc_*_initial_state_(\w+?).conf")
-
-    bestValueFileName = "bestWolfParameters"
-    
+    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+    with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
+        winningWolf = pickle.load(handle)
+    box = "0"
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
-                print(file)
-                continue
-                with open(job.fn("wolf_calibration.conf"), "a") as myfile:
-                    defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
+                with open(file, "a") as myfile:
+                    defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=winningWolf["Potential"])
                     myfile.write(defPotLine)
-                    defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
+                    defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
                     myfile.write(defKindLine)
-                    defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
-                    myfile.write(defPotLine)
-                    for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \
-                    in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
-                    WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
-                        myfile.write(defAlphaLine)
-
-                        CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
-                        myfile.write(CutoffLine)
-
-                        alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
-                        myfile.write(alphaLine)
+                    defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
+                    myfile.write(defAlphaLine)
+                    defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
+                    myfile.write(defRCutLine)
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1722,8 +1764,8 @@ def part_4b_job_gomc_calibration_find_minimum(job):
                     box = groups.group(3)
                     tupleMin = find_minimum(job.fn(file), job.sp.solute, wolfKind, potential, box, True)
                     # Use smaller error, either BF or Grad Desc
-                    model2BestWolfAlphaRCut[(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5], tupleMin[6], tupleMin[7]]
-        print(model2BestWolfAlphaRCut)
+                    model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
+
         with open(bestValueFileName+".pickle", 'wb') as handle:
             pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
