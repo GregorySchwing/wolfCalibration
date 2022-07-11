@@ -52,13 +52,13 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
 # Potoff cluster bin paths
-#gomc_binary_path = "/home6/greg/GOMC/bin"
+gomc_binary_path = "/home6/greg/GOMC/bin"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
-#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
+namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 
 # brads workstation binary paths
@@ -379,12 +379,12 @@ def initial_parameters(job):
     # set rcut, ewalds
     if job.doc.solvent in ["TIP4", "TIP3"] and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
         job.doc.namd_node_ncpu = 1
-        job.doc.namd_node_ngpu = 1
-        #job.doc.namd_node_ngpu = 0
+        #job.doc.namd_node_ngpu = 1
+        job.doc.namd_node_ngpu = 0
 
         job.doc.gomc_ncpu = 1  # 1 is optimal but I want data quick.  run time is set for 1 cpu
-        job.doc.gomc_ngpu = 1
-        #job.doc.gomc_ngpu = 0
+        #job.doc.gomc_ngpu = 1
+        job.doc.gomc_ngpu = 0
     else:
         raise ValueError(
             "ERROR: The solvent and solute do are not set up to selected the mixing rules or electrostatics "
@@ -607,6 +607,13 @@ def namd_simulation_started(job, control_filename_str):
 def part_3a_output_namd_equilb_NPT_started(job):
     """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
+    if(job.sp.electrostatic_method == "Wolf"):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+
     return namd_simulation_started(job, namd_equilb_NPT_control_file_name_str)
 
 
@@ -647,8 +654,23 @@ def part_3b_output_gomc_equilb_design_ensemble_started(job):
 def part_3b_output_gomc_calibration_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
     try:
+#This will cause Ewald sims to wait for Wolf calibration to complete.
+        #This will cause Ewald sims to wait for Wolf calibration to complete.
+        if(job.sp.electrostatic_method != "Wolf"):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Wolf"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                if ewald_job.isfile(
+                    "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+                ):
+                    return True
+                else:
+                    return False
+
+
         if job.isfile(
-            "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0.dat"
+            "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
         ):
             return True
         else:
@@ -752,21 +774,51 @@ def namd_sim_completed_properly(job, control_filename_str):
 def part_4a_job_namd_equilb_NPT_completed_properly(job):
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
-    x = namd_sim_completed_properly(
-        job, namd_equilb_NPT_control_file_name_str
-    )
-    #print(f'namd check = {x}')
-    return namd_sim_completed_properly(
-        job, namd_equilb_NPT_control_file_name_str
-    )
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    if(job.sp.electrostatic_method == "Wolf"):
+        wolf_sp = job.statepoint()
+        wolf_sp['electrostatic_method']="Ewald"
+        jobs = list(pr.find_jobs(wolf_sp))
+        for wolf_job in jobs:
+            if namd_sim_completed_properly(
+                wolf_job, namd_equilb_NPT_control_file_name_str
+            ) is False:
+                #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
+                return False
+        return True
+    else:
+        x = namd_sim_completed_properly(
+            job, namd_equilb_NPT_control_file_name_str
+        )
+        #print(f'namd check = {x}')
+        return namd_sim_completed_properly(
+            job, namd_equilb_NPT_control_file_name_str
+        )
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    # This will let ewald start before wolf cal is done
+    # for now make it wait until I get cal sorted out.
+    #if(job.sp.electrostatic_method != "Wolf"):
+    #    return true
+
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method != "Wolf"):
-        return True
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            control_file_name_str = "wolf_calibration"
+            if gomc_sim_completed_properly(
+                ewald_job,
+                control_file_name_str,
+            ) is False:
+                return False
+            else:
+                return True
 
     try:
         control_file_name_str = "wolf_calibration"
@@ -776,16 +828,18 @@ def part_4b_job_gomc_calibration_completed_properly(job):
         ) is False:
             #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
             return False
+        else:
+            return True
     except:
         return False
-
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
-def part_4b_job_gomc_calibration_error_minimum_found(job):
-    print("placeholder")
+def part_4b_job_gomc_wolf_parameters_found(job):
+    return job.isfile("bestWolfParameters.pickle")
+
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1160,6 +1214,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
         # calc MC steps
         MC_steps = int(gomc_steps_equilb_design_ensemble)
+        Calibration_MC_steps = 2000
         EqSteps = 1000
 
         # output all data and calc frequecy
@@ -1426,7 +1481,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 gomc_charmm_object_with_files,
                 output_name_control_file_calibration_name,
                 used_ensemble,
-                MC_steps,
+                Calibration_MC_steps,
                 production_temperature_K,
                 ff_psf_pdb_file_directory=None,
                 check_input_files_exist=False,
@@ -1576,7 +1631,7 @@ def run_calibration_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(job.doc.gomc_production_ensemble_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
@@ -1587,6 +1642,43 @@ def run_calibration_run_gomc_command(job):
     return run_command
 
 
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_4b_job_gomc_wolf_parameters_found)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@flow.with_job
+def part_4b_job_gomc_calibration_find_minimum(job):
+
+    from src.utils.surface import find_minimum
+    import pickle as pickle
+    import re
+    regex = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_(\w+?).dat")
+
+    bestValueFileName = "bestWolfParameters"
+    if (not job.isfile(bestValueFileName+".pickle")):
+        model2BestWolfAlphaRCut = dict()
+        for root, dirs, files in os.walk(job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    groups = regex.search(file)
+                    wolfKind = groups.group(1)
+                    potential = groups.group(2)
+                    box = groups.group(3)
+                    tupleMin = find_minimum(job.fn(file), job.sp.solute, wolfKind, potential, box, True)
+                    # Use smaller error, either BF or Grad Desc
+                    model2BestWolfAlphaRCut[(wolfKind, potential, box)] = [tupleMin[3], tupleMin[4], tupleMin[5], tupleMin[6], tupleMin[7]]
+        print(model2BestWolfAlphaRCut)
+        with open(bestValueFileName+".pickle", 'wb') as handle:
+            pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 # ******************************************************
 # ******************************************************
 # equilb NPT - starting the GOMC simulation (start)
@@ -1596,7 +1688,7 @@ def run_calibration_run_gomc_command(job):
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
-    @Project.pre(part_4b_job_gomc_calibration_completed_properly)
+    @Project.pre(part_4b_job_gomc_wolf_parameters_found)
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
