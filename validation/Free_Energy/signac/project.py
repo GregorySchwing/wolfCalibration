@@ -891,10 +891,10 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
             ewald_sp['electrostatic_method']="Wolf"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                for root, dirs, files in os.walk(job.fn("")):
+                for root, dirs, files in os.walk(ewald_job.fn("")):
                     for file in files:
                         if regex.match(file):
-                            with open(file, "r") as openedfile:
+                            with open(ewald_job.fn(file), "r") as openedfile:
                                 last_line = openedfile.readlines()[-1]
                             if ("RcutCoulomb" in last_line):
                                 continue
@@ -908,6 +908,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
             if regex.match(file):
                 with open(file, "r") as openedfile:
                     last_line = openedfile.readlines()[-1]
+                    print(last_line)
                 if ("RcutCoulomb" in last_line):
                     continue
                 else:
