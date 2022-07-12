@@ -221,7 +221,7 @@ def append_wolf_calibration_parameters(job):
     WolfAlphabUpperBoundList = [0.5]
     WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = 100
+    wolfCalFreq = 2000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
         defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
@@ -908,7 +908,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
             if regex.match(file):
                 with open(file, "r") as openedfile:
                     last_line = openedfile.readlines()[-1]
-                    print(last_line)
                 if ("RcutCoulomb" in last_line):
                     continue
                 else:
@@ -1224,7 +1223,12 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
             job.doc.path_to_ref_binCoordinates =  ref_job.fn(binCoordinates_box_0)
             job.doc.path_to_ref_extendedSystem =  ref_job.fn(extendedSystem_box_0)
-
+    else:
+        job.doc.path_to_namd_console =  job.fn(f"{namd_equilb_NPT_control_file_name_str}.conf")
+        job.doc.path_to_ref_pdb =  job.fn(Coordinates_box_0)
+        job.doc.path_to_ref_psf =  job.fn(Structure_box_0)
+        job.doc.path_to_ref_binCoordinates =  job.fn(binCoordinates_box_0)
+        job.doc.path_to_ref_extendedSystem =  job.fn(extendedSystem_box_0)     
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
     MoleculeType = [job.sp.solute, 1]
@@ -1318,7 +1322,6 @@ def build_psf_pdb_ff_gomc_conf(job):
                 }
             }
         )
-
         # calc MC steps
         MC_steps = int(gomc_steps_equilb_design_ensemble)
         Calibration_MC_steps = 2000
@@ -1496,16 +1499,16 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-            Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
+            Prod_Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
                 restart_control_file_name_str
             )
-            Structure_box_0 = "{}_BOX_0_restart.psf".format(
+            Prod_Structure_box_0 = "{}_BOX_0_restart.psf".format(
                 restart_control_file_name_str
             )
-            binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
+            Prod_binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
                 restart_control_file_name_str
             )
-            extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
+            Prod_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
                 restart_control_file_name_str
             )
 
@@ -1522,10 +1525,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             Restart=True,
             RestartCheckpoint=True,
             ExpertMode=False,
-            Coordinates_box_0=Coordinates_box_0,
-            Structure_box_0=Structure_box_0,
-            binCoordinates_box_0=binCoordinates_box_0,
-            extendedSystem_box_0=extendedSystem_box_0,
+            Coordinates_box_0=Prod_Coordinates_box_0,
+            Structure_box_0=Prod_Structure_box_0,
+            binCoordinates_box_0=Prod_binCoordinates_box_0,
+            extendedSystem_box_0=Prod_extendedSystem_box_0,
             binVelocities_box_0=None,
             Coordinates_box_1=None,
             Structure_box_1=None,
