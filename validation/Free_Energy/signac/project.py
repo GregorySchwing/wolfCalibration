@@ -52,13 +52,13 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-#gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
-#namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
 # Potoff cluster bin paths
-gomc_binary_path = "/home6/greg/GOMC/bin"
+#gomc_binary_path = "/home6/greg/GOMC/bin"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
-namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
+#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 
 # brads workstation binary paths
@@ -378,11 +378,11 @@ def initial_parameters(job):
 
     # set rcut, ewalds
     if job.doc.solvent in ["TIP4", "TIP3"] and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
-        job.doc.namd_node_ncpu = 1
-        #job.doc.namd_node_ngpu = 1
-        job.doc.namd_node_ngpu = 0
+        job.doc.namd_node_ncpu = 4
+        job.doc.namd_node_ngpu = 1
+        #job.doc.namd_node_ngpu = 0
 
-        job.doc.gomc_ncpu = 1  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+        job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
         #job.doc.gomc_ngpu = 1
         job.doc.gomc_ngpu = 0
     else:
