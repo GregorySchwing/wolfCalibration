@@ -938,7 +938,9 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         for file in files:
             if regex.match(file):
                 with open(file, "a") as myfile:
-                    defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=winningWolf["Potential"])
+                    defWolfLine = "Wolf\tTrue\n"
+                    myfile.write(defWolfLine)
+                    defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
                     myfile.write(defPotLine)
                     defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
                     myfile.write(defKindLine)
