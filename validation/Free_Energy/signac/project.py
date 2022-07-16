@@ -221,7 +221,7 @@ def append_wolf_calibration_parameters(job):
     WolfAlphabUpperBoundList = [0.5]
     WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = 2000
+    wolfCalFreq = 1000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
         defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
@@ -1326,7 +1326,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         )
         # calc MC steps
         MC_steps = int(gomc_steps_equilb_design_ensemble)
-        Calibration_MC_steps = 2000
+        Calibration_MC_steps = 50000
         EqSteps = 1000
 
         # output all data and calc frequecy
