@@ -378,7 +378,7 @@ def initial_parameters(job):
 
     # set rcut, ewalds
     if job.doc.solvent in ["TIP4", "TIP3"] and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
-        job.doc.namd_node_ncpu = 4
+        job.doc.namd_node_ncpu = 1
         job.doc.namd_node_ngpu = 1
         #job.doc.namd_node_ngpu = 0
 
