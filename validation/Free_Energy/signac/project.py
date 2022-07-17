@@ -52,12 +52,12 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
 # Potoff cluster bin paths
-#gomc_binary_path = "/home6/greg/GOMC/bin"
-#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
+gomc_binary_path = "/home6/greg/GOMC/bin"
+namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 
@@ -868,7 +868,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         print("bestRCut :", bestRCut)
         print("bestAlpha :", bestAlpha)
 
-        Dict = {"WolfKind": bestModel[0], "Potential": bestModel[0], "RCutCoul": bestRCut,
+        Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
         "Alpha":bestAlpha}
         with open("winningWolfParameters.pickle", 'wb') as handle:
             pickle.dump(Dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
