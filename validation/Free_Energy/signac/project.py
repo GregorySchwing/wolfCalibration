@@ -208,7 +208,7 @@ def statepoint_without_temperature(job):
 def append_wolf_calibration_parameters(job):
 
     WolfDefaultKind = "VlugtWIntraCutoff"
-    WolfDefaultPotential = "DSF"
+    WolfDefaultPotential = "DSP"
     WolfDefaultAlpha = [0.21]
 
     WolfCutoffBoxList = [0]
@@ -224,7 +224,9 @@ def append_wolf_calibration_parameters(job):
     wolfCalFreq = 1000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
-        defPotLine = "Wolf\tTrue\t{pot}\n".format(pot=WolfDefaultPotential)
+        defPotLine = "Wolf\tTrue\n"
+        myfile.write(defPotLine)
+        defPotLine = "WolfPotential\t{pot}\n".format(pot=WolfDefaultPotential)
         myfile.write(defPotLine)
         defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
         myfile.write(defKindLine)
@@ -1233,6 +1235,9 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_ref_extendedSystem =  job.fn(extendedSystem_box_0)     
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
+    # This has to be off during calibration
+    NoFreeEnergyCalc = [False, int(gomc_free_energy_output_data_every_X_steps)]
+
     MoleculeType = [job.sp.solute, 1]
 
     use_ElectroStatics = True
@@ -1300,6 +1305,10 @@ def build_psf_pdb_ff_gomc_conf(job):
     # namd_equilb_NPT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
     # ******************************************************
 
+    # namd and gomc integrators are off by ~2%, which causes drift
+    # if you calibrate wolf using the restart files from namd
+    # therefore a single state nvt equilibration is performed
+    # in gomc before wolf calibration.
 
     # ******************************************************
     # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (start)
@@ -1644,7 +1653,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": 10,
                     "CBMC_Ang": 50,
                     "CBMC_Dih": 50,
-                    "FreeEnergyCalc": FreeEnergyCalc,
+                    "FreeEnergyCalc": NoFreeEnergyCalc,
                     "MoleculeType": MoleculeType,
                     "InitialState": initial_state_sims_i,
                     "LambdaVDW": list(job.doc.LambdaVDW_list),
