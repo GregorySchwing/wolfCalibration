@@ -126,6 +126,9 @@ memory_needed = 16
 
 # forcefield names dict
 forcefield_residue_to_ff_filename_dict = {
+    "MSPCE": "mspce_trappe.xml",
+    "SPCE": "spce_trappe.xml",
+    "SPC": "spc_trappe.xml",
     "TIP4": "tip4p_2005.xml",
     "Ne": "nobel_gas_vrabec_LB_mixing.xml",
     "Rn": "nobel_gas_vrabec_LB_mixing.xml",
@@ -135,10 +138,14 @@ forcefield_residue_to_ff_filename_dict = {
 
 # smiles of mol2 file input a .mol2 file or smiles as a string
 smiles_or_mol2_name_to_value_dict = {
+    "MSPCE": "O",
+    "SPCE": "O",
+    "SPC": "O",
     "TIP4": 'tip4p.mol2',
     "Ne": "Ne",
     "Rn": "Rn",
-    "ETOH": "ethanol.mol2"
+    "ETOH": "ethanol.mol2",
+    "ETOH-OPLS": "CCO"
 }
 
 
@@ -376,18 +383,20 @@ def initial_parameters(job):
     )
 
     # set solvent and solute in doc
-    job.doc.solvent = "TIP4"
+    job.doc.solvent = job.sp.solvent
     job.doc.solute = job.sp.solute
 
-    # set rcut, ewalds
-    if job.doc.solvent in ["TIP4", "TIP3"] and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
-        job.doc.namd_node_ncpu = 1
-        job.doc.namd_node_ngpu = 1
-        #job.doc.namd_node_ngpu = 0
+    job.doc.namd_node_ncpu = 1
+    job.doc.namd_node_ngpu = 1
+    #job.doc.namd_node_ngpu = 0
 
-        job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
-        #job.doc.gomc_ngpu = 1
-        job.doc.gomc_ngpu = 0
+    job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+    #job.doc.gomc_ngpu = 1
+    job.doc.gomc_ngpu = 0
+
+    # set rcut, ewalds
+    if job.doc.solvent in ["SPC"] and job.doc.solute in ["ETOH-OPLS"]:
+        print("OPLS")
     else:
         raise ValueError(
             "ERROR: The solvent and solute do are not set up to selected the mixing rules or electrostatics "
@@ -420,7 +429,6 @@ def initial_parameters(job):
         )
 
     # set the initial iteration number of the simulation
-    job.doc.gomc_equilb_design_ensemble_dict = {}
     job.doc.gomc_production_run_ensemble_dict = {}
 
 
@@ -883,6 +891,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
+@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     import re
@@ -1319,9 +1328,10 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("#**********************")
     print("Started: equilb NPT or GEMC-NVT GOMC control file writing")
     print("#**********************")
+    job.doc.gomc_equilb_design_ensemble_dict = {}
 
     for initial_state_sims_i in list(job.doc.InitialState_list):
-
+        print("State ", initial_state_sims_i)
         output_name_control_file_name = "{}_initial_state_{}".format(
             gomc_equilb_design_ensemble_control_file_name_str, initial_state_sims_i
         )
@@ -1349,7 +1359,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             int(gomc_output_data_every_X_steps),
         ]
 
-        if job.doc.solvent in ["TIP4", "TIP3"] \
+        if job.doc.solvent in ["SPC", "MSPCE"] \
                 and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
             used_ensemble = "NPT"
             if job.doc.production_ensemble in ["NVT", "NPT"]:
@@ -1445,7 +1455,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         # ******************************************************
         # production NPT or GEMC-NVT - GOMC control file writing  (start)
         # ******************************************************
-
+        """
         print("#**********************")
         print("Started: production NPT or GEMC-NVT GOMC control file writing")
         print("#**********************")
@@ -1481,8 +1491,8 @@ def build_psf_pdb_ff_gomc_conf(job):
         ]
         
         
-        if job.doc.solvent in ["TIP4", "TIP3"] \
-                    and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
+        if job.doc.solvent in ["SPC", "MSPCE"] \
+                and job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "ETOH"]:
             used_ensemble = job.doc.production_ensemble
             if job.doc.production_ensemble in ["NVT", "NPT"]:
                 if job.doc.production_ensemble in ["NVT"]:
@@ -1668,7 +1678,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             print("#**********************")
             print("Completed: Wolf Calibration GOMC control file writing")
             print("#**********************")
-
+        """
 # ******************************************************
 # ******************************************************
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (end)

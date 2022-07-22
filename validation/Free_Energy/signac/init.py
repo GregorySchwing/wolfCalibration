@@ -13,7 +13,8 @@ project=signac.init_project('nobel_gas_in_water')
 
 #solute = ["Ne", "Rn"] # ["Ne", "Rn"]
 #solute = ["ETOH"] # ["Ne", "Rn"]
-solute = ["Ne"] # ["Ne", "Rn"]
+solute = ["ETOH"] # ["Ne", "Rn"]
+solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 
 #replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
@@ -39,16 +40,18 @@ total_statepoints = list()
 
 for replica_i in replicas:
     for solute_i in solute:
-        for prod_temp_i in production_temperatures:
-            for e_method in electrostatic_method:
-                statepoint = {
-                    "replica_number_int": replica_i,
-                    "solute": solute_i,
-                    "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
-                    "electrostatic_method": e_method,
-                }
+        for solvent_i in solvent:
+            for prod_temp_i in production_temperatures:
+                for e_method in electrostatic_method:
+                    statepoint = {
+                        "replica_number_int": replica_i,
+                        "solute": solute_i,
+                        "solvent": solvent_i,
+                        "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                        "electrostatic_method": e_method,
+                    }
 
-                total_statepoints.append(statepoint)
+                    total_statepoints.append(statepoint)
 
 for sp in total_statepoints:
     pr.open_job(
