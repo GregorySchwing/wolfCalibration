@@ -429,7 +429,6 @@ def initial_parameters(job):
         )
 
     # set the initial iteration number of the simulation
-    job.doc.gomc_production_run_ensemble_dict = {}
 
 
     if job.doc.production_ensemble == "NPT":
@@ -1329,9 +1328,9 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("Started: equilb NPT or GEMC-NVT GOMC control file writing")
     print("#**********************")
     job.doc.gomc_equilb_design_ensemble_dict = {}
+    job.doc.gomc_production_run_ensemble_dict = {}
 
     for initial_state_sims_i in list(job.doc.InitialState_list):
-        print("State ", initial_state_sims_i)
         output_name_control_file_name = "{}_initial_state_{}".format(
             gomc_equilb_design_ensemble_control_file_name_str, initial_state_sims_i
         )
@@ -1455,7 +1454,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         # ******************************************************
         # production NPT or GEMC-NVT - GOMC control file writing  (start)
         # ******************************************************
-        """
         print("#**********************")
         print("Started: production NPT or GEMC-NVT GOMC control file writing")
         print("#**********************")
@@ -1533,7 +1531,6 @@ def build_psf_pdb_ff_gomc_conf(job):
             Prod_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
                 restart_control_file_name_str
             )
-
 
         gomc_control.write_gomc_control_file(
             gomc_charmm_object_with_files,
@@ -1678,7 +1675,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             print("#**********************")
             print("Completed: Wolf Calibration GOMC control file writing")
             print("#**********************")
-        """
+
 # ******************************************************
 # ******************************************************
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (end)
