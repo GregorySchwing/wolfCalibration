@@ -10,6 +10,7 @@ import unyt as u
 # *******************************************
 
 project=signac.init_project('nobel_gas_in_water')
+skipEq = ["True", "False"] # ["Ne", "Rn"]
 
 #solute = ["Ne", "Rn"] # ["Ne", "Rn"]
 solute = ["Ne"] # ["Ne", "Rn"]
@@ -45,13 +46,15 @@ for replica_i in replicas:
         for solvent_i in solvent:
             for prod_temp_i in production_temperatures:
                 for e_method in electrostatic_method:
-                    statepoint = {
-                        "replica_number_int": replica_i,
-                        "solute": solute_i,
-                        "solvent": solvent_i,
-                        "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
-                        "electrostatic_method": e_method,
-                    }
+                    for useEq in skipEq:
+                        statepoint = {
+                            "replica_number_int": replica_i,
+                            "solute": solute_i,
+                            "solvent": solvent_i,
+                            "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                            "electrostatic_method": e_method,
+                            "skipEq" : useEq
+                        }
 
                     total_statepoints.append(statepoint)
 

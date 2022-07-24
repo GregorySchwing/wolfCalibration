@@ -715,6 +715,7 @@ def part_3b_output_gomc_calibration_started(job):
     try:
 #This will cause Ewald sims to wait for Wolf calibration to complete.
         #This will cause Ewald sims to wait for Wolf calibration to complete.
+
         if(job.sp.electrostatic_method != "Wolf"):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Wolf"
@@ -834,6 +835,7 @@ def gomc_sim_completed_properly(job, control_filename_str):
 def namd_sim_completed_properly(job, control_filename_str):
     """General check to see if the namd simulation was completed properly."""
     job_run_properly_bool = False
+
     try:
         if (job.sp.electrostatic_method == "Wolf"):
             output_log_file = job.doc.path_to_namd_console
@@ -860,6 +862,8 @@ def namd_sim_completed_properly(job, control_filename_str):
 @Project.label
 @flow.with_job
 def part_4a_job_namd_equilb_NPT_completed_properly(job):
+    if (job.sp.skipEq):
+        return True
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -931,7 +935,8 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     # for now make it wait until I get cal sorted out.
     #if(job.sp.electrostatic_method != "Wolf"):
     #    return true
-
+    if (job.sp.skipEq):
+        return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     Single_state_gomc_eq_control_file_name = "single_state_eq"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1687,7 +1692,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             ff_psf_pdb_file_directory=None,
             check_input_files_exist=False,
             Parameters="{}.inp".format(gomc_ff_filename_str),
-            Restart=True,
+            Restart= False if job.sp.skipEq else True,
             RestartCheckpoint=True,
             ExpertMode=False,
             Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
@@ -1875,18 +1880,18 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )                
 
-            Prod_Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
-                restart_control_file_name_str
-            )
-            Prod_Structure_box_0 = "{}_BOX_0_restart.psf".format(
-                restart_control_file_name_str
-            )
-            Prod_binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
-                restart_control_file_name_str
-            )
-            Prod_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
-                restart_control_file_name_str
-            )
+        Prod_Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
+            restart_control_file_name_str
+        )
+        Prod_Structure_box_0 = "{}_BOX_0_restart.psf".format(
+            restart_control_file_name_str
+        )
+        Prod_binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
+            restart_control_file_name_str
+        )
+        Prod_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
+            restart_control_file_name_str
+        )
 
         gomc_control.write_gomc_control_file(
             gomc_charmm_object_with_files,
@@ -2047,6 +2052,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
+@Project.pre(lambda j: j.sp.skipEq == False)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.post(part_3a_output_namd_equilb_NPT_started)
@@ -2094,7 +2100,10 @@ def run_namd_equilb_NPT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
+@Project.pre(lambda j: j.sp.skipEq == False)
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
+@Project.pre(mosdef_input_written)
+@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.post(part_3b_output_gomc_sseq_started)
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
@@ -2209,6 +2218,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
+    @Project.pre(part_4b_job_gomc_calibration_completed_properly)
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
