@@ -667,6 +667,20 @@ def part_3a_output_namd_equilb_NPT_started(job):
     return namd_simulation_started(job, namd_equilb_NPT_control_file_name_str)
 
 
+# check if melt equilb_NVT namd run is started
+@Project.label
+@flow.with_job
+def part_3a_output_namd_equilb_NPT_hasnt_started(job):
+    """Check to see if the namd_equilb_NPT_control_file is started
+    (high temperature to set temperature in NAMD control file)."""
+    if(job.sp.electrostatic_method == "Wolf"):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return not namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+
+    return not namd_simulation_started(job, namd_equilb_NPT_control_file_name_str)
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
 @flow.with_job
@@ -2046,6 +2060,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+@Project.pre(part_3a_output_namd_equilb_NPT_hasnt_started)
 @Project.post(part_3a_output_namd_equilb_NPT_started)
 @Project.post(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.operation.with_directives(
@@ -2151,7 +2166,7 @@ def run_calibration_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(job.doc.gomc_production_ensemble_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
