@@ -1258,8 +1258,8 @@ def build_charmm(job, write_files=True):
                       )
     solvent.name = job.doc.solvent
 
-    if job.doc.solvent not in ["TIP4"]:
-        solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
+    #if job.doc.solvent not in ["TIP4"]:
+        #solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
         solute = mb.Compound(name=job.doc.solute)
@@ -1274,7 +1274,7 @@ def build_charmm(job, write_files=True):
                                solvent.name: forcefield_dict[solvent.name]
                                }
 
-    solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
+    #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
 
     bead_to_atom_name_dict = {
         "_LP": "LP",
