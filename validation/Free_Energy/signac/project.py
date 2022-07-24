@@ -374,10 +374,11 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-
+    equilibration_ensemble = "NPT"
+    production_ensemble = "NVT"
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
-    job.doc.equilibration_ensemble = "NPT"
-    job.doc.production_ensemble = "NVT"
+    job.doc.equilibration_ensemble = equilibration_ensemble
+    job.doc.production_ensemble = production_ensemble
     job.doc.production_pressure_bar = (1 * u.atm).to('bar')
     job.doc.production_temperature_K = job.sp.production_temperature_K
 
@@ -436,12 +437,6 @@ def initial_parameters(job):
     job.doc.gomc_ngpu = 0
 
     # set rcut, ewalds
-    if job.doc.solvent in ["SPC"] and job.doc.solute in ["ETOH-OPLS"]:
-        print("OPLS")
-    else:
-        raise ValueError(
-            "ERROR: The solvent and solute do are not set up to selected the mixing rules or electrostatics "
-        )
 
     # get the namd binary paths
     if job.doc.namd_node_ngpu == 0:
@@ -470,25 +465,21 @@ def initial_parameters(job):
         )
 
     # set the initial iteration number of the simulation
-    if job.doc.equilibration_ensemble == "NPT":
+    if equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-
-    elif job.doc.equilibration_ensemble == "NVT":
+    elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
     else:
         raise ValueError(
             "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
         )
-        
+    
 
-    if job.doc.production_ensemble == "NPT":
-        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
+    if production_ensemble == "NPT":
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-
-    elif job.doc.production_ensemble == "NVT":
-        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
+    elif production_ensemble == "NVT":
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
     else:
         raise ValueError(
@@ -862,7 +853,7 @@ def namd_sim_completed_properly(job, control_filename_str):
 @Project.label
 @flow.with_job
 def part_4a_job_namd_equilb_NPT_completed_properly(job):
-    if (job.sp.skipEq):
+    if (job.sp.skipEq == "True"):
         return True
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
@@ -935,7 +926,7 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     # for now make it wait until I get cal sorted out.
     #if(job.sp.electrostatic_method != "Wolf"):
     #    return true
-    if (job.sp.skipEq):
+    if (job.sp.skipEq == "True"):
         return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     Single_state_gomc_eq_control_file_name = "single_state_eq"
@@ -1692,7 +1683,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             ff_psf_pdb_file_directory=None,
             check_input_files_exist=False,
             Parameters="{}.inp".format(gomc_ff_filename_str),
-            Restart= False if job.sp.skipEq else True,
+            Restart= False if job.sp.skipEq == "True" else True,
             RestartCheckpoint=True,
             ExpertMode=False,
             Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
@@ -2052,7 +2043,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.skipEq == False)
+@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.post(part_3a_output_namd_equilb_NPT_started)
@@ -2100,7 +2091,7 @@ def run_namd_equilb_NPT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.skipEq == False)
+@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
@@ -2108,8 +2099,8 @@ def run_namd_equilb_NPT_gomc_command(job):
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.namd_node_ncpu,
-        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
@@ -2145,8 +2136,8 @@ def run_sseq_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.namd_node_ncpu,
-        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }

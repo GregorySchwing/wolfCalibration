@@ -55,8 +55,7 @@ for replica_i in replicas:
                             "electrostatic_method": e_method,
                             "skipEq" : useEq
                         }
-
-                    total_statepoints.append(statepoint)
+                        total_statepoints.append(statepoint)
 
 for sp in total_statepoints:
     pr.open_job(
