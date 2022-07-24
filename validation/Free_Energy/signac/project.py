@@ -376,6 +376,7 @@ def initial_parameters(job):
     job.doc.InitialState_list = InitialState_list
 
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
+    job.doc.equilibration_ensemble = "NPT"
     job.doc.production_ensemble = "NVT"
     job.doc.production_pressure_bar = (1 * u.atm).to('bar')
     job.doc.production_temperature_K = job.sp.production_temperature_K
@@ -469,18 +470,26 @@ def initial_parameters(job):
         )
 
     # set the initial iteration number of the simulation
+    if job.doc.equilibration_ensemble == "NPT":
+        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
+        job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
 
+    elif job.doc.equilibration_ensemble == "NVT":
+        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
+        job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
+    else:
+        raise ValueError(
+            "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
+        )
+        
 
     if job.doc.production_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
-        job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
 
     elif job.doc.production_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
-        job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
-
     else:
         raise ValueError(
             "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
@@ -2105,7 +2114,7 @@ def run_sseq_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_production_ensemble_gomc_binary_file),
+        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(Single_state_gomc_eq_control_file_name),
         str(Single_state_gomc_eq_control_file_name),
@@ -2142,7 +2151,7 @@ def run_calibration_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_production_ensemble_gomc_binary_file),
+        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
