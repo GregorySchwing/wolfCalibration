@@ -1981,7 +1981,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 ff_psf_pdb_file_directory=None,
                 check_input_files_exist=False,
                 Parameters="{}.inp".format(gomc_ff_filename_str),
-                Restart=True,
+                Restart= False if job.sp.skipEq == "True" else True,
                 RestartCheckpoint=True,
                 ExpertMode=False,
                 Coordinates_box_0=job.doc.path_to_ref_pdb,
