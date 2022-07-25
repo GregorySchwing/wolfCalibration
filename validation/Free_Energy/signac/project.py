@@ -759,13 +759,13 @@ def part_3b_output_gomc_sseq_started(job):
             wolf_sp['electrostatic_method']="Ewald"
             jobs = list(pr.find_jobs(wolf_sp))
             for ewald_job in jobs:
-                if ewald_job.isfile(f"{Single_state_gomc_eq_control_file_name}_out.log"):
+                if ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat"):
                     return True
                 else:
                     return False
 
 
-        if job.isfile(f"{Single_state_gomc_eq_control_file_name}_out.log"):
+        if job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat"):
             return True
         else:
             return False
@@ -1414,7 +1414,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
-            job.doc.path_to_namd_console =  ref_job.fn(f"{namd_equilb_NPT_control_file_name_str}_out.log")
+            job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
             job.doc.path_to_ref_pdb =  ref_job.fn(Coordinates_box_0)
             job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
             job.doc.path_to_ref_binCoordinates =  ref_job.fn(binCoordinates_box_0)
@@ -1423,7 +1423,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
             job.doc.path_to_sseq_binCoordinates =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_0)
             job.doc.path_to_sseq_extendedSystem =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_0)
-            job.doc.path_to_sseq_console =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_out.log")
+            job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
        
     else:
         job.doc.path_to_namd_console =  job.fn(f"{namd_equilb_NPT_control_file_name_str}.conf")
@@ -1435,7 +1435,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_psf =  job.fn(Single_state_gomc_eq_Structure_box_0)
         job.doc.path_to_sseq_binCoordinates =  job.fn(Single_state_gomc_eq_binCoordinates_box_0)
         job.doc.path_to_sseq_extendedSystem =  job.fn(Single_state_gomc_eq_extendedSystem_box_0)
-        job.doc.path_to_sseq_console =  job.fn(f"{Single_state_gomc_eq_control_file_name}_out.log")
+        job.doc.path_to_sseq_console =  job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
     # This has to be off during calibration
