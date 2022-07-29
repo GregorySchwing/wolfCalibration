@@ -1426,7 +1426,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
        
     else:
-        job.doc.path_to_namd_console =  job.fn(f"{namd_equilb_NPT_control_file_name_str}.conf")
+        job.doc.path_to_namd_console =  job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
         job.doc.path_to_ref_pdb =  job.fn(Coordinates_box_0)
         job.doc.path_to_ref_psf =  job.fn(Structure_box_0)
         job.doc.path_to_ref_binCoordinates =  job.fn(binCoordinates_box_0)
@@ -1530,8 +1530,17 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Nth = (10,)
         CBMC_Ang = (50,)
         CBMC_Dih = (50,)
-        used_ensemble = "NPT"
-        if job.doc.production_ensemble in ["NVT", "NPT"]:
+        if job.doc.production_ensemble in ["NVT"]:
+            VolFreq = (0.00,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.40,)
+            RotFreq = (0.3,)
+            RegrowthFreq = (0.3,)
+
+        elif job.doc.production_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -1554,7 +1563,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Nth = (10,)
         CBMC_Ang = (100,)
         CBMC_Dih = (50,)
-        used_ensemble = "NPT"
         if job.doc.production_ensemble in ["NVT"]:
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
@@ -1587,7 +1595,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     gomc_control.write_gomc_control_file(
         gomc_charmm_object_with_files,
         Single_state_gomc_eq_control_file_name,
-        used_ensemble,
+        job.doc.equilibration_ensemble,
         Calibration_MC_steps,
         production_temperature_K,
         ff_psf_pdb_file_directory=None,
@@ -1686,12 +1694,76 @@ def build_psf_pdb_ff_gomc_conf(job):
             False,
             int(gomc_output_data_every_X_steps),
         ]
+
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            useCoul = False
+            CBMC_First = (12,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (50,)
+            CBMC_Dih = (50,)
+            if job.doc.equilibration_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.4,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            elif job.doc.equilibration_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.39,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )
+
+        if job.doc.solute in ["ETOH"]:
+            useCoul = True
+            CBMC_First = (10,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (100,)
+            CBMC_Dih = (50,)
+            if job.doc.equilibration_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.50,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            elif job.doc.equilibration_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.49,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )                
                 
         # Only use namd run from ewald to ensure both start at exact same configuration.
         gomc_control.write_gomc_control_file(
             gomc_charmm_object_with_files,
             output_name_control_file_name,
-            used_ensemble,
+            job.doc.equilibration_ensemble,
             MC_steps,
             production_temperature_K,
             ff_psf_pdb_file_directory=None,
@@ -1767,12 +1839,25 @@ def build_psf_pdb_ff_gomc_conf(job):
         print("Started: production NPT or GEMC-NVT GOMC control file writing")
         print("#**********************")
 
+    for initial_state_sims_i in list(job.doc.InitialState_list):
+        output_name_control_file_name = "{}_initial_state_{}".format(
+            gomc_equilb_design_ensemble_control_file_name_str, initial_state_sims_i
+        )
+
+        # output all data and calc frequecy
+        output_true_list_input = [
+            True,
+            int(gomc_output_data_every_X_steps),
+        ]
+        output_false_list_input = [
+            False,
+            int(gomc_output_data_every_X_steps),
+        ]
+
         output_name_control_file_name = "{}_initial_state_{}".format(
             gomc_production_control_file_name_str, initial_state_sims_i
         )
-        restart_control_file_name_str = "{}_initial_state_{}".format(
-            gomc_equilb_design_ensemble_control_file_name_str, int(initial_state_sims_i)
-        )
+
         job.doc.gomc_production_run_ensemble_dict.update(
             {
                 initial_state_sims_i: {
@@ -1797,36 +1882,13 @@ def build_psf_pdb_ff_gomc_conf(job):
             int(gomc_output_data_every_X_steps),
         ]
         
-        if job.doc.solute in ["ETOH"]:
-            if job.doc.production_ensemble in ["NVT"]:
-                VolFreq = (0.00,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (0.1,)
-                SwapFreq = (None,)
-                DisFreq = (0.50,)
-                RotFreq = (0.2,)
-                RegrowthFreq = (0.20,)
-
-            elif job.doc.production_ensemble in ["NPT"]:
-                VolFreq = (0.01,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (0.1,)
-                SwapFreq = (None,)
-                DisFreq = (0.49,)
-                RotFreq = (0.2,)
-                RegrowthFreq = (0.20,)
-
-
         if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
             useCoul = False
             CBMC_First = (12,)
             CBMC_Nth = (10,)
             CBMC_Ang = (50,)
             CBMC_Dih = (50,)
-            used_ensemble = "NPT"
-            if job.doc.production_ensemble in ["NVT", "NPT"]:
+            if job.doc.production_ensemble in ["NVT"]:
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -1858,7 +1920,6 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Nth = (10,)
             CBMC_Ang = (100,)
             CBMC_Dih = (50,)
-            used_ensemble = "NPT"
             if job.doc.production_ensemble in ["NVT"]:
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
@@ -1901,7 +1962,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         gomc_control.write_gomc_control_file(
             gomc_charmm_object_with_files,
             output_name_control_file_name,
-            used_ensemble,
+            job.doc.production_ensemble,
             MC_steps,
             production_temperature_K,
             ff_psf_pdb_file_directory=None,
@@ -1968,14 +2029,16 @@ def build_psf_pdb_ff_gomc_conf(job):
         # production NPT or GEMC-NVT - GOMC control file writing  (end)
         # ******************************************************
 
-        if (initial_state_sims_i == list(job.doc.InitialState_list)[0]
-            and job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.electrostatic_method == "Wolf"):
             output_name_control_file_calibration_name = "wolf_calibration"
+            output_name_control_file_name = "{}_initial_state_{}".format(
+                output_name_control_file_calibration_name, initial_state_sims_i
+            )
 
             gomc_control.write_gomc_control_file(
                 gomc_charmm_object_with_files,
                 output_name_control_file_calibration_name,
-                used_ensemble,
+                job.doc.equilibration_ensemble,
                 Calibration_MC_steps,
                 production_temperature_K,
                 ff_psf_pdb_file_directory=None,
@@ -2027,7 +2090,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": CBMC_Nth[-1],
                     "CBMC_Ang": CBMC_Ang[-1],
                     "CBMC_Dih": CBMC_Dih[-1],
-                    "FreeEnergyCalc": NoFreeEnergyCalc,
+                    "FreeEnergyCalc": FreeEnergyCalc,
                     "MoleculeType": MoleculeType,
                     "InitialState": initial_state_sims_i,
                     "LambdaVDW": list(job.doc.LambdaVDW_list),
