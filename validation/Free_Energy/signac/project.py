@@ -1595,7 +1595,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         gomc_charmm_object_with_files,
         Single_state_gomc_eq_control_file_name,
         job.doc.equilibration_ensemble,
-        Calibration_MC_steps,
+        MC_steps,
         production_temperature_K,
         ff_psf_pdb_file_directory=None,
         check_input_files_exist=False,
