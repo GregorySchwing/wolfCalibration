@@ -10,7 +10,8 @@ import unyt as u
 # *******************************************
 
 project=signac.init_project('nobel_gas_in_water')
-skipEq = ["True", "False"] # ["Ne", "Rn"]
+#skipEq = ["True", "False"] # ["Ne", "Rn"]
+skipEq = ["False"] # ["Ne", "Rn"]
 
 #solute = ["Ne", "Rn"] # ["Ne", "Rn"]
 solute = ["Ne"] # ["Ne", "Rn"]

@@ -1530,17 +1530,17 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Nth = (10,)
         CBMC_Ang = (50,)
         CBMC_Dih = (50,)
-        if job.doc.production_ensemble in ["NVT"]:
+        if job.doc.equilibration_ensemble in ["NVT"]:
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
             CrankShaftFreq = (None,)
             SwapFreq = (None,)
-            DisFreq = (0.40,)
+            DisFreq = (0.4,)
             RotFreq = (0.3,)
             RegrowthFreq = (0.3,)
 
-        elif job.doc.production_ensemble in ["NPT"]:
+        elif job.doc.equilibration_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -1556,14 +1556,13 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "in the GOMC control file writer."
             )
 
-    # ETOH uses crankshaft
     if job.doc.solute in ["ETOH"]:
         useCoul = True
         CBMC_First = (10,)
         CBMC_Nth = (10,)
         CBMC_Ang = (100,)
         CBMC_Dih = (50,)
-        if job.doc.production_ensemble in ["NVT"]:
+        if job.doc.equilibration_ensemble in ["NVT"]:
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -1573,7 +1572,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             RotFreq = (0.2,)
             RegrowthFreq = (0.20,)
 
-        elif job.doc.production_ensemble in ["NPT"]:
+        elif job.doc.equilibration_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
