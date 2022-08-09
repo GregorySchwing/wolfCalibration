@@ -43,15 +43,20 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     x = df3.iloc[:,0].to_numpy()
     y = df3.iloc[:,1].to_numpy()
-    z = np.abs(df4.iloc[:,0].to_numpy())
-
-    rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
-    print(rranges)
-    F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    #z = np.abs(df4.iloc[:,0].to_numpy())
+    # I wonder if interpolation has problem with abs value
+    z = df4.iloc[:,0].to_numpy()
 
     xi = np.linspace(x.min(), x.max(), 6500)
     yi = np.linspace(y.min(), y.max(), 6500)
+    zi = np.linspace(z.min(), z.max(), 6500)
 
+    rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
+    print(rranges)
+
+    #F2 = interpolate.interp2d(x, y, z, kind='linear')
+    #F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
     X,Y = np.meshgrid(xi,yi)
 
