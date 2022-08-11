@@ -14,7 +14,8 @@ project=signac.init_project('nobel_gas_in_water')
 skipEq = ["False"] # ["Ne", "Rn"]
 
 #solute = ["Ne"] # ["Ne", "Rn"]
-solute = ["Ne", "ETOH"] # ["Ne", "Rn"]
+solute = ["ETOH"] # ["Ne", "Rn"]
+#solute = ["Ne", "ETOH"] # ["Ne", "Rn"]
 solvent = ["SPC"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
