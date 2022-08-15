@@ -52,13 +52,13 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-#gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
-#namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
 # Potoff cluster bin paths
-gomc_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin"
 #gomc_binary_path = "/home6/greg/GOMC/bin"
-namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
+#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 
@@ -462,7 +462,7 @@ def initial_parameters(job):
     job.doc.solvent = job.sp.solvent
     job.doc.solute = job.sp.solute
 
-    job.doc.namd_node_ncpu = 1
+    job.doc.namd_node_ncpu = 4
     job.doc.namd_node_ngpu = 1
     #job.doc.namd_node_ngpu = 0
 
