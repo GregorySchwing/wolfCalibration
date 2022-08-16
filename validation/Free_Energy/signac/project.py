@@ -52,8 +52,11 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
+
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
 #gomc_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin"
@@ -131,8 +134,8 @@ output_avg_std_of_replicates_txt_file_name_box_0 = "analysis_avg_std_of_replicat
 
 walltime_mosdef_hr = 24
 walltime_namd_hr = 24
-walltime_gomc_equilbrium_hr = 72
-walltime_gomc_production_hr = 368
+walltime_gomc_equilbrium_hr = 144
+walltime_gomc_production_hr = 736
 walltime_gomc_analysis_hr = 4
 memory_needed = 16
 
