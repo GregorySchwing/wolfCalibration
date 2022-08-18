@@ -2460,7 +2460,7 @@ def run_namd_equilb_NPT_gomc_command(job):
         "np": lambda job: job.doc.gomc_ncpu,
         "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
-        "walltime": walltime_namd_hr,
+        "walltime": walltime_gomc_equilbrium_hr,
     }
 )
 @flow.with_job
@@ -2493,7 +2493,7 @@ def run_sseq_run_gomc_command(job):
         "np": lambda job: job.doc.gomc_ncpu,
         "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
-        "walltime": walltime_namd_hr,
+        "walltime": walltime_gomc_equilbrium_hr,
     }
 )
 @flow.with_job
@@ -2531,7 +2531,7 @@ def run_wolf_sanity_run_gomc_command(job):
         "np": lambda job: job.doc.gomc_ncpu,
         "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
-        "walltime": walltime_namd_hr,
+        "walltime": walltime_gomc_equilbrium_hr,
     }
 )
 @flow.with_job
