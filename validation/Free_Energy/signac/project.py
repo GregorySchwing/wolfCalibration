@@ -94,7 +94,8 @@ EqSteps = 1000
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
-number_of_lambda_spacing_including_zero_int = 11
+#number_of_lambda_spacing_including_zero_int = 11
+number_of_lambda_spacing_including_zero_int = 23
 
 
 # force field (FF) file for all simulations in that job
@@ -135,7 +136,7 @@ output_avg_std_of_replicates_txt_file_name_box_0 = "analysis_avg_std_of_replicat
 walltime_mosdef_hr = 24
 walltime_namd_hr = 24
 walltime_gomc_equilbrium_hr = 144
-walltime_gomc_production_hr = 736
+walltime_gomc_production_hr = 144
 walltime_gomc_analysis_hr = 4
 memory_needed = 16
 
@@ -380,12 +381,18 @@ def initial_parameters(job):
         # 0.0-0.5, by 0.5
         for x in range(0, 55, 5):
             LambdaCoul_list.append(round(x*0.01,2))
+            InitialState_list.append(counter)
+            counter = counter + 1
         # 0.6-0.9
         for x in range(6, 10, 1):
             LambdaCoul_list.append(round(x*0.1,2))
+            InitialState_list.append(counter)
+            counter = counter + 1
         # Append 7 1.0's
         for x in range(0, 8, 1):
             LambdaCoul_list.append(1.0)    
+            InitialState_list.append(counter)
+            counter = counter + 1
 
     print("*********************")
     print("*********************")
@@ -1993,8 +2000,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             ExpertMode=False,
             Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
             Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
-            binCoordinates_box_0= binCoordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_binCoordinates,
-            extendedSystem_box_0= extendedSystem_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_extendedSystem,
+            binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
+            extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
             Coordinates_box_1=None,
             Structure_box_1=None,
