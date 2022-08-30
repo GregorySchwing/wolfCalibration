@@ -364,35 +364,35 @@ def initial_parameters(job):
         counter = 0
         # Append 16 0.0's
         for x in range(0, 16):
-            LambdaVDW_list.append(0.0)
+            LambdaCoul_list.append(0.0)
             InitialState_list.append(counter)
             counter = counter + 1
         # Append 0.2, 0.4, 0.6
         for x in range(2, 8, 2):
-            LambdaVDW_list.append(round(x*0.1,2))
+            LambdaCoul_list.append(round(x*0.1,2))
             InitialState_list.append(counter)
             counter = counter + 1
         # Append 0.7, 0.8, 0.9, 1.0
         for x in range(7, 11, 1):
-            LambdaVDW_list.append(round(x*0.1,2))
+            LambdaCoul_list.append(round(x*0.1,2))
             InitialState_list.append(counter)
             counter = counter + 1
 
         # 0.0-0.5, by 0.5
         for x in range(0, 55, 5):
-            LambdaCoul_list.append(round(x*0.01,2))
+            LambdaVDW_list.append(round(x*0.01,2))
             InitialState_list.append(counter)
-            counter = counter + 1
+            #counter = counter + 1
         # 0.6-0.9
         for x in range(6, 10, 1):
-            LambdaCoul_list.append(round(x*0.1,2))
+            LambdaVDW_list.append(round(x*0.1,2))
             InitialState_list.append(counter)
-            counter = counter + 1
+            #counter = counter + 1
         # Append 7 1.0's
         for x in range(0, 8, 1):
-            LambdaCoul_list.append(1.0)    
+            LambdaVDW_list.append(1.0)    
             InitialState_list.append(counter)
-            counter = counter + 1
+            #counter = counter + 1
 
     print("*********************")
     print("*********************")
