@@ -381,17 +381,17 @@ def initial_parameters(job):
         # 0.0-0.5, by 0.5
         for x in range(0, 55, 5):
             LambdaVDW_list.append(round(x*0.01,2))
-            InitialState_list.append(counter)
+            #InitialState_list.append(counter)
             #counter = counter + 1
         # 0.6-0.9
         for x in range(6, 10, 1):
             LambdaVDW_list.append(round(x*0.1,2))
-            InitialState_list.append(counter)
+            #InitialState_list.append(counter)
             #counter = counter + 1
         # Append 7 1.0's
         for x in range(0, 8, 1):
             LambdaVDW_list.append(1.0)    
-            InitialState_list.append(counter)
+            #InitialState_list.append(counter)
             #counter = counter + 1
 
     print("*********************")
