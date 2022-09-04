@@ -2771,8 +2771,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
 
         # for MBAR estimator
         u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-        mbar = MBAR().fit(u_nk)
-        delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+        #mbar = MBAR().fit(u_nk)
+        #delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
 
         # for BAR estimator
         bar = BAR().fit(u_nk)
@@ -2783,8 +2783,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
         box_0_replicate_data_txt_file.write(
             f"{output_column_temp_title: <30} "
             f"{output_column_solute_title: <30} "
-            f"{output_column_dFE_MBAR_title: <30} "
-            f"{output_column_dFE_MBAR_std_title: <30} "
+            #f"{output_column_dFE_MBAR_title: <30} "
+            #f"{output_column_dFE_MBAR_std_title: <30} "
             f"{output_column_dFE_TI_title: <30} "
             f"{output_column_dFE_TI_std_title: <30} "
             f"{output_column_dFE_BAR_title: <30} "
@@ -2794,8 +2794,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
         box_0_replicate_data_txt_file.write(
             f"{job.sp.production_temperature_K: <30} "
             f"{job.sp.solute: <30} "
-            f"{delta_mbar: <30} "
-            f"{delta_std_mbar: <30} "
+            #f"{delta_mbar: <30} "
+            #f"{delta_std_mbar: <30} "
             f"{delta_ti: <30} "
             f"{delta_std_ti: <30} "
             f"{delta_bar: <30} "
