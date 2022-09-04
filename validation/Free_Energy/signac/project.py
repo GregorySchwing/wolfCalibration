@@ -2801,9 +2801,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             energies_np = np.array(energies)
             print(energies_np.mean())
             dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
-        print(dict_of_states)
         df = pd.DataFrame.from_dict(dict_of_states)
-        print(df)
+        df.to_csv('state_eq_blk_averages.csv')
         quit()
 
         # for TI estimator
