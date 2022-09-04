@@ -2769,8 +2769,9 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             print("Printing ", blk_file)
             energies = []
             with open(blk_file, 'r', encoding='utf8') as f:
-                #print('\n'.join(line.split()[1] for line in f))
-                energies.append('\n'.join(line.split()[1] for line in f))
+                for line in f:
+                    #print('\n'.join(line.split()[1] for line in f))
+                    energies.append(''.join(line.split()[1]))
             print(energies)
         quit()
 
