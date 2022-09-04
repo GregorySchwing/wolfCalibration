@@ -2759,7 +2759,7 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
         k_b = 1.9872036E-3  # kcal/mol/K
         temperature = job.sp.production_temperature_K
         k_b_T = temperature * k_b
-
+        df = []
         for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
             reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
                                           f'initial_state_{initial_state_iter}.dat'
@@ -2775,7 +2775,9 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
                         energies.append(float(line.split()[1]))
                     except:
                         print("An exception occurred") 
-            print(energies)
+            
+            df[initial_state_iter] = energies.mean()
+        print(df)
         quit()
 
         # for TI estimator
