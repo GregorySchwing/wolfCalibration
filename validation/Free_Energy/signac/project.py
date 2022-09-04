@@ -2755,6 +2755,7 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
     # get the averages from each individual simulation and write the csv's.
     for job in jobs:
         files = []
+        blk_files = []
         k_b = 1.9872036E-3  # kcal/mol/K
         temperature = job.sp.production_temperature_K
         k_b_T = temperature * k_b
@@ -2763,6 +2764,12 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
                                           f'initial_state_{initial_state_iter}.dat'
             files.append(reading_filename_box_0_iter)
+            blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}.dat'
+            print("Printing ", blk_file)
+            with open(blk_file, 'r', encoding='utf8') as f:
+                print('\n'.join(line.split()[1] for line in f))
+            quit()
+            blk_files.append(blk_file)
 
         # for TI estimator
         dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
