@@ -1377,6 +1377,30 @@ def part_5a_analysis_individual_simulation_averages_completed(job):
 
     return file_written_bool
 
+# check if analysis for averages of all the replicates is completed
+@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
+@Project.label
+def part_5b_preliminary_analysis_replica_averages_completed(*jobs):
+    """Check that the simulation replicate average and std. dev. files are written."""
+    file_written_bool_list = []
+    all_file_written_bool_pass = False
+    for job in jobs:
+        file_written_bool = False
+
+        if (
+            job.isfile(
+                f"../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}"
+            )
+        ):
+            file_written_bool = True
+
+        file_written_bool_list.append(file_written_bool)
+
+    if False not in file_written_bool_list:
+        all_file_written_bool_pass = True
+
+    return all_file_written_bool_pass
+
 
 # check if analysis for averages of all the replicates is completed
 @Project.pre(part_5a_analysis_individual_simulation_averages_completed)
@@ -2766,7 +2790,6 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             files.append(reading_filename_box_0_iter)
             blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
                        f'initial_state_{initial_state_iter}_BOX_0.dat'
-            print("Printing ", blk_file)
             energies = []
             with open(blk_file, 'r', encoding='utf8') as f:
                 for line in f:
@@ -2936,6 +2959,123 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 #     }
 #)
 
+@Project.pre(lambda *jobs: all(part_5a_preliminary_analysis_individual_simulation_averages(j)
+                               for j in jobs[0]._project))
+@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
+@Project.post(part_5b_analysis_replica_averages_completed)
+def part_5b_preliminary_analysis_replica_averages(*jobs):
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (start)
+    # ***************************************************
+    # output and labels
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
+
+    # get the list used in this function
+    temp_repilcate_list = []
+    solute_repilcate_list = []
+
+    delta_MBAR_repilcate_box_0_list = []
+    delta_TI_repilcate_box_0_list = []
+    delta_BAR_repilcate_box_0_list = []
+
+
+    output_txt_file_header = f"{output_column_temp_title: <30} " \
+                             f"{output_column_temp_std_title: <30} " \
+                             f"{output_column_solute_title: <30} "\
+                             f"{output_column_dFE_MBAR_title: <30} "\
+                             f"{output_column_dFE_MBAR_std_title: <30} "\
+                             f"{output_column_dFE_TI_title: <3    0} "\
+                             f"{output_column_dFE_TI_std_title: <30} "\
+                             f"{output_column_dFE_BAR_title: <30} "\
+                             f"{output_column_dFE_BAR_std_title: <30} "\
+                             f"\n"
+
+
+    write_file_path_and_name_box_0 = f'analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'
+    if os.path.isfile(write_file_path_and_name_box_0):
+        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
+    else:
+        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "w")
+        box_box_0_data_txt_file.write(output_txt_file_header)
+
+
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (end)
+    # ***************************************************
+
+    for job in jobs:
+
+        # *************************
+        # drawing in data from single file and extracting specific rows from box 0 (start)
+        # *************************
+        reading_file_box_box_0 = job.fn(output_replicate_txt_file_name_box_0)
+
+        data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
+        data_box_box_0 = pd.DataFrame(data_box_box_0)
+
+        temp_repilcate_list.append(data_box_box_0.loc[:, output_column_temp_title][0])
+        solute_repilcate_list.append(data_box_box_0.loc[:, output_column_solute_title][0])
+
+        delta_MBAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_MBAR_title][0])
+        delta_TI_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_TI_title][0])
+        delta_BAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_BAR_title][0])
+
+        # *************************
+        # drawing in data from single file and extracting specific rows from box 0 (end)
+        # *************************
+
+
+    # *************************
+    # get the replica means and std.devs (start)
+    # *************************
+    temp_mean = np.mean(temp_repilcate_list)
+    temp_std = np.std(temp_repilcate_list, ddof=1)
+
+    solute_iter = solute_repilcate_list[0]
+
+    delta_MBAR_mean_box_box_0 = np.mean(delta_MBAR_repilcate_box_0_list)
+    delta_TI_mean_box_box_0 = np.mean(delta_TI_repilcate_box_0_list)
+    delta_BAR_mean_box_box_0 = np.mean(delta_BAR_repilcate_box_0_list)
+
+    delta_std_MBAR_mean_box_box_0 = np.std(delta_MBAR_repilcate_box_0_list, ddof=1)
+    delta_std_TI_mean_box_box_0 = np.std(delta_TI_repilcate_box_0_list, ddof=1)
+    delta_std_BAR_mean_box_box_0 = np.std(delta_BAR_repilcate_box_0_list, ddof=1)
+
+    # *************************
+    # get the replica means and std.devs (end)
+    # *************************
+
+    # ************************************
+    # write the analysis data files for the liquid and vapor boxes (start)
+    # ************************************
+
+    box_box_0_data_txt_file.write(
+        f"{temp_mean: <30} "
+        f"{temp_std: <30} "
+        f"{solute_iter: <30} "
+        f"{delta_MBAR_mean_box_box_0: <30} "
+        f"{delta_std_MBAR_mean_box_box_0: <30} "
+        f"{delta_TI_mean_box_box_0: <30} "
+        f"{delta_std_TI_mean_box_box_0: <30} "
+        f"{delta_BAR_mean_box_box_0: <30} "
+        f"{delta_std_BAR_mean_box_box_0: <30} "
+        f" \n"
+    )
+
+    # ************************************
+    # write the analysis data files for the liquid and vapor boxes (end)
+    # ************************************
+
+
 @Project.pre(lambda *jobs: all(part_5a_analysis_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
 @Project.pre(part_4c_job_production_run_completed_properly)
@@ -3051,7 +3191,6 @@ def part_5b_analysis_replica_averages(*jobs):
     # ************************************
     # write the analysis data files for the liquid and vapor boxes (end)
     # ************************************
-
 
 # ******************************************************
 # ******************************************************
