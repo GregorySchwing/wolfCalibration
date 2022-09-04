@@ -2803,7 +2803,6 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
         df = pd.DataFrame.from_dict(dict_of_states)
         df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
-        quit()
 
         # for TI estimator
         dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
