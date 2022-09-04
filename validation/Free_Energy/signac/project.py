@@ -2767,9 +2767,11 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
                        f'initial_state_{initial_state_iter}_BOX_0.dat'
             print("Printing ", blk_file)
+            energies = []
             with open(blk_file, 'r', encoding='utf8') as f:
-                print('\n'.join(line.split()[1] for line in f))
-            blk_files.append(blk_file)
+                #print('\n'.join(line.split()[1] for line in f))
+                energies.append(line.split()[1] for line in f)
+            print(energies)
         quit()
 
         # for TI estimator
