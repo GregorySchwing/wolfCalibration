@@ -2776,6 +2776,7 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
                     except:
                         print("An exception occurred") 
             energies_np = np.array(energies)
+            print(energies_np.mean())
             df[f'state_{initial_state_iter}'] = energies_np.mean()
         print(df)
         quit()
