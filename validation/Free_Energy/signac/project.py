@@ -121,6 +121,9 @@ gomc_equilb_design_ensemble_control_file_name_str = "gomc_equilb_design_ensemble
 # Note: do not add extensions
 gomc_production_control_file_name_str = "gomc_production_run"
 
+
+preliminary_output_replicate_txt_file_name_box_0 = "preliminary_analysis_avg_data_box_0.txt"
+
 # Analysis (each replicates averages):
 # Output text (txt) file names for each replicates averages
 # directly put in each replicate folder (.txt, .dat, etc)
@@ -131,6 +134,7 @@ output_replicate_txt_file_name_box_0 = "analysis_avg_data_box_0.txt"
 # including the extention (.txt, .dat, etc)
 output_avg_std_of_replicates_txt_file_name_box_0 = "analysis_avg_std_of_replicates_box_0.txt"
 
+preliminary_output_avg_std_of_replicates_txt_file_name_box_0 = "preliminary_analysis_avg_std_of_replicates_box_0.txt"
 
 
 walltime_mosdef_hr = 24
@@ -1339,6 +1343,23 @@ def part_4c_job_production_run_completed_properly(job):
 # check if GOMC anaylsis is completed properly (start)
 # ******************************************************
 # ******************************************************
+# check if analysis is done for the individual replicates wrote the gomc files
+@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+@Project.label
+@flow.with_job
+def part_5a_preliminary_analysis_individual_simulation_averages_completed(job):
+    """Check that the individual simulation averages files are written ."""
+    file_written_bool = False
+    if (
+        job.isfile(
+            f"{preliminary_output_replicate_txt_file_name_box_0}"
+        )
+    ):
+        file_written_bool = True
+
+    return file_written_bool
+
+
 
 # check if analysis is done for the individual replicates wrote the gomc files
 @Project.pre(part_4c_job_production_run_completed_properly)
@@ -2658,6 +2679,7 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2c_gomc_production_control_file_written)
     @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
+    @Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
     @Project.post(part_part_3c_output_gomc_production_run_started)
     @Project.post(part_4c_job_production_run_completed_properly)
     @Project.operation.with_directives(
@@ -2697,6 +2719,89 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 # ******************************************************
 # ******************************************************
 
+@Project.operation.with_directives(
+     {
+         "np": 1,
+         "ngpu": 0,
+         "memory": memory_needed,
+         "walltime": walltime_gomc_analysis_hr,
+     }
+)
+@FlowProject.pre(
+     lambda *jobs: all(
+         part_4b_job_gomc_equilb_design_ensemble_completed_properly(job)
+         for job in jobs
+     )
+)
+@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+@Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
+@flow.with_job
+def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
+    # remove the total averaged replicate data and all analysis data after this,
+    # as it is no longer valid when adding more simulations
+    if os.path.isfile(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'):
+        os.remove(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}')
+
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
+
+
+    # get the averages from each individual simulation and write the csv's.
+    for job in jobs:
+        files = []
+        k_b = 1.9872036E-3  # kcal/mol/K
+        temperature = job.sp.production_temperature_K
+        k_b_T = temperature * k_b
+
+        for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
+            reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
+                                          f'initial_state_{initial_state_iter}.dat'
+            files.append(reading_filename_box_0_iter)
+
+        # for TI estimator
+        dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
+        ti = TI().fit(dHdl)
+        delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+
+        # for MBAR estimator
+        u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
+        mbar = MBAR().fit(u_nk)
+        delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+
+        # for BAR estimator
+        bar = BAR().fit(u_nk)
+        delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+        # write the data out in each job
+        box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
+        box_0_replicate_data_txt_file.write(
+            f"{output_column_temp_title: <30} "
+            f"{output_column_solute_title: <30} "
+            f"{output_column_dFE_MBAR_title: <30} "
+            f"{output_column_dFE_MBAR_std_title: <30} "
+            f"{output_column_dFE_TI_title: <30} "
+            f"{output_column_dFE_TI_std_title: <30} "
+            f"{output_column_dFE_BAR_title: <30} "
+            f"{output_column_dFE_BAR_std_title: <30} "
+            f" \n"
+        )
+        box_0_replicate_data_txt_file.write(
+            f"{job.sp.production_temperature_K: <30} "
+            f"{job.sp.solute: <30} "
+            f"{delta_mbar: <30} "
+            f"{delta_std_mbar: <30} "
+            f"{delta_ti: <30} "
+            f"{delta_std_ti: <30} "
+            f"{delta_bar: <30} "
+            f"{delta_std_bar: <30} "
+            f" \n"
+        )
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
