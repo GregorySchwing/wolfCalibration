@@ -2764,7 +2764,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
                                           f'initial_state_{initial_state_iter}.dat'
             files.append(reading_filename_box_0_iter)
-            blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}.dat'
+            blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
+                       f'initial_state_{initial_state_iter}.dat'
             print("Printing ", blk_file)
             with open(blk_file, 'r', encoding='utf8') as f:
                 print('\n'.join(line.split()[1] for line in f))
