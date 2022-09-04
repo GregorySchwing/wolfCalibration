@@ -2769,8 +2769,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             print("Printing ", blk_file)
             with open(blk_file, 'r', encoding='utf8') as f:
                 print('\n'.join(line.split()[1] for line in f))
-            quit()
             blk_files.append(blk_file)
+        quit()
 
         # for TI estimator
         dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
