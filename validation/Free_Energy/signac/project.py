@@ -1197,23 +1197,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
     success = True
 
-    if (job.sp.electrostatic_method == "Ewald"):
-            ewald_sp = job.statepoint()
-            ewald_sp['electrostatic_method']="Wolf"
-            jobs = list(pr.find_jobs(ewald_sp))
-            for ewald_job in jobs:
-                for root, dirs, files in os.walk(ewald_job.fn("")):
-                    for file in files:
-                        if regex.match(file):
-                            with open(ewald_job.fn(file), "r") as openedfile:
-                                last_line = openedfile.readlines()[-1]
-                            if ("RcutCoulomb" in last_line):
-                                continue
-                            else:
-                                success = success and False
-            return success
-
-
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
@@ -1226,7 +1209,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     return success
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -1249,7 +1231,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         for file in files:
             if regex.match(file):
                 with open(file, "a") as myfile:
-                    defWolfLine = "Wolf\tTrue\n"
+                    defWolfLine = "Wolf\t{wolfBool}\n".format(wolfBool=job.sp.electrostatic_method == "Wolf")
                     myfile.write(defWolfLine)
                     defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
                     myfile.write(defPotLine)
