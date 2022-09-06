@@ -2816,8 +2816,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
         box_0_replicate_data_txt_file.write(
             f"{job.sp.production_temperature_K: <30} "
             f"{job.sp.solute: <30} "
-            #f"{delta_mbar: <30} "
-            #f"{delta_std_mbar: <30} "
+            f"{delta_mbar: <30} "
+            f"{delta_std_mbar: <30} "
             f"{delta_ti: <30} "
             f"{delta_std_ti: <30} "
             f"{delta_bar: <30} "
