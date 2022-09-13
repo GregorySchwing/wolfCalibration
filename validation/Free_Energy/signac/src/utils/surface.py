@@ -89,8 +89,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("ZGD : ", ZGD)
 
 
-    scales = [0.1, 0.01, 0.001]
-    
+    scales = [0.01]
+    #scales = [0.1, 0.01, 0.001]
+    shgo_mins = {}
+    da_mins = {}
+    de_mins = {}
+    danx_mins = {}
+    denx_mins = {}
     for sizeOfRegionScale in scales:
         sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
         sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
@@ -122,6 +127,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         # Derivative-free, so can't use gradient here to rank.
         shgoOut = shgo(f, bounds=bounds)
         print(shgoOut)
+        shgo_mins[sizeOfRegionScale] = shgoOut.x
 
         print("Calling dual_annealing")
         dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
@@ -129,6 +135,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         print(dual_annealingOut)    
         print("Calling dual_annealingNoX0")
         print(dual_annealingOutNoX0)    
+        da_mins[sizeOfRegionScale] = dual_annealingOut.x
+        danx_mins[sizeOfRegionScale] = dual_annealingOutNoX0.x
 
 
         print("Calling differential_evolution")
@@ -138,8 +146,19 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         print(differential_evolutionOut.keys())   
         print("Calling differential_evolutionX0")
         print(differential_evolutionOutNox0) 
+        de_mins[sizeOfRegionScale] = differential_evolutionOut.x
+        denx_mins[sizeOfRegionScale] = differential_evolutionOutNox0.x
+
+    print("shgo_mins", shgo_mins)
+    print("da_mins", da_mins)
+    print("de_mins", de_mins)
+    print("danx_mins", danx_mins)
+    print("denx_mins", denx_mins)
+
 
     if(plotSuface):
+        import plotly.io as pio 
+        import plotly.graph_objects as go
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
         xi_forplotting = np.linspace(x.min(), x.max(), 1000)
         yi_forplotting = np.linspace(y.min(), y.max(), 1000)
