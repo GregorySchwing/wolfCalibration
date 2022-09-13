@@ -235,7 +235,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         yvals = [item[1] for item in shgo_mins.values()]
         zvals = []
         for x,y in zip(xvals,yvals):
-            zvals.append(F2(x, y))
+            zvals.append(F2(x, y)[0])
         print("x:", xvals)
         print("y:", yvals)
         print("z:", zvals)
