@@ -253,6 +253,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     print("sptbf_auc", sptbf_auc)
     print("sptgd_auc", sptgd_auc)
+    print("sptshgo_auc", sptshgo_auc)
+    print("sptda_auc", sptda_auc)
+    print("sptde_auc", sptde_auc)
+    print("sptdanx_auc", sptdanx_auc)
+    print("sptdenx_auc", sptdenx_auc)
     print("bf_auc", bf_auc)
     print("gd_auc", gd_auc)
     print("shgo_auc", shgo_auc)
