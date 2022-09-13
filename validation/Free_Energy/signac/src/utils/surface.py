@@ -154,7 +154,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("de_mins", de_mins)
     print("danx_mins", danx_mins)
     print("denx_mins", denx_mins)
-
+    quit()
 
     if(plotSuface):
         import plotly.io as pio 
