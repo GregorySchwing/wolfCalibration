@@ -94,13 +94,20 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(shgoOut)
 
     print("Calling dual_annealing")
+    dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
     dual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
     print(dual_annealingOut)    
+    print("Calling dual_annealingNoX0")
+    print(dual_annealingOutNoX0)    
+
 
     print("Calling differential_evolution")
     differential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
+    differential_evolutionOutNox0 = differential_evolution(f, bounds=bounds)
     print(differential_evolutionOut)  
     print(differential_evolutionOut.keys())   
+    print("Calling differential_evolutionX0")
+    print(differential_evolutionOutNox0) 
     quit() 
     """
     differential_evolutionOutXY = np.array(differential_evolutionOut.x)
