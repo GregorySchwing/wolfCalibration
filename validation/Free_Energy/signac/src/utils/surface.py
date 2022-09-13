@@ -229,8 +229,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     margin=dict(r=20, b=10, l=10, t=10))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
-        print("shgo_mins", shgo_mins)
 
+
+        print("shgo_mins", shgo_mins)
         xvals = [item[0] for item in shgo_mins.values()]
         yvals = [item[1] for item in shgo_mins.values()]
         zvals = []
@@ -245,7 +246,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         z=zvals,
                         mode='markers',
                         name='shgo_mins',
-                        ids=[str(x) for x in scales])
+                        hovertext=[str(x) for x in scales])
         )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
         quit()
