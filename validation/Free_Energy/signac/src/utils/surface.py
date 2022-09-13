@@ -98,6 +98,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     de_mins = {}
     danx_mins = {}
     denx_mins = {}
+
+    bf_auc = {}
+    gd_auc = {}
+    shgo_auc = {}
+    da_auc = {}
+    de_auc = {}
+    danx_auc = {}
+    denx_auc = {}
     for sizeOfRegionScale in scales:
         sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
         sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
@@ -109,6 +117,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
         bfXY = np.array(bf[0])
         bf_mins[sizeOfRegionScale] = bfXY
+        bf_auc[sizeOfRegionScale] = bf.fval
+
         print(bfXY[0])
         print(bfXY[1])
         x0 = (bfXY[0], bfXY[1])
@@ -116,6 +126,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         print(gd)
         gdXY = np.array(gd.x)
         gd_mins[sizeOfRegionScale] = gd.x
+        gd_auc[sizeOfRegionScale] = gd.fun
         print(gdXY[0])
         print(gdXY[1])
         gdJacXY = np.array(gd.jac)
@@ -132,6 +143,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         shgoOut = shgo(f, bounds=bounds)
         print(shgoOut)
         shgo_mins[sizeOfRegionScale] = shgoOut.x
+        shgo_auc[sizeOfRegionScale] = shgoOut.fun
 
         print("Calling dual_annealing")
         dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
@@ -142,6 +154,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         da_mins[sizeOfRegionScale] = dual_annealingOut.x
         danx_mins[sizeOfRegionScale] = dual_annealingOutNoX0.x
 
+        da_auc[sizeOfRegionScale] = dual_annealingOut.fun
+        danx_auc[sizeOfRegionScale] = dual_annealingOutNoX0.fun
 
         print("Calling differential_evolution")
         differential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
@@ -153,11 +167,23 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         de_mins[sizeOfRegionScale] = differential_evolutionOut.x
         denx_mins[sizeOfRegionScale] = differential_evolutionOutNox0.x
 
+        de_auc[sizeOfRegionScale] = differential_evolutionOut.fun
+        denx_auc[sizeOfRegionScale] = differential_evolutionOutNox0.fun
+    print("bf_mins", bf_mins)
+    print("gd_mins", gd_mins)
     print("shgo_mins", shgo_mins)
     print("da_mins", da_mins)
     print("de_mins", de_mins)
     print("danx_mins", danx_mins)
     print("denx_mins", denx_mins)
+
+    print("bf_auc", bf_auc)
+    print("gd_auc", gd_auc)
+    print("shgo_auc", shgo_auc)
+    print("da_auc", da_auc)
+    print("de_auc", de_auc)
+    print("danx_auc", danx_auc)
+    print("denx_auc", denx_auc)
     quit()
 
     if(plotSuface):
