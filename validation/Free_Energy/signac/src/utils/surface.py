@@ -64,6 +64,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(*x))
     bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
+    print(bf.keys())
     bfXY = np.array(bf[0])
     print(bfXY[0])
     print(bfXY[1])
