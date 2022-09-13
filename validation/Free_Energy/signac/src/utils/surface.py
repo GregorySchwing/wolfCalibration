@@ -87,7 +87,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #bounds = [(x.min(), x.max()),(y.min(), y.max())]
     # TypeError: shgo() got multiple values for argument 'bounds'
     # Derivative-free, so can't use gradient here to rank.
-    shgoOut = shgo(f, bounds=bounds, x0=x0)
+    shgoOut = shgo(f, bounds=bounds)
     print(shgoOut)
 
     print("Calling dual_annealing")
@@ -97,7 +97,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("Calling differential_evolution")
     differential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
     print(differential_evolutionOut)  
-    print(differential_evolutionOut.keys())    
+    print(differential_evolutionOut.keys())   
+    quit() 
     """
     differential_evolutionOutXY = np.array(differential_evolutionOut.x)
     print(differential_evolutionOutXY[0])
