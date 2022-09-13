@@ -62,13 +62,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     Z2 = F2(xi, yi)
 
-    sizeOfRegion = 0.01
-
+    sizeOfRegionX = 0.01*(x.max()-x.min())
+    sizeOfRegionY = 0.01*(y.max()-y.min())
     #f = lambda x: np.abs(F2(*x))
-    f = lambda x: np.sum(np.abs(F2(np.linspace(x[0]-sizeOfRegion, x[0]+sizeOfRegion, 10),np.linspace(x[1]-sizeOfRegion, x[1]+sizeOfRegion, 10))))
+    f = lambda x: np.sum(np.abs(F2(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10),np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))))
 
 
-    bounds = [(x.min()+sizeOfRegion, x.max()-sizeOfRegion),(y.min()+sizeOfRegion, y.max()-sizeOfRegion)]
+    bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
     bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
     bfXY = np.array(bf[0])
     print(bfXY[0])
@@ -108,7 +108,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(differential_evolutionOut.keys())   
     print("Calling differential_evolutionX0")
     print(differential_evolutionOutNox0) 
-    quit() 
+    #quit() 
     """
     differential_evolutionOutXY = np.array(differential_evolutionOut.x)
     print(differential_evolutionOutXY[0])
