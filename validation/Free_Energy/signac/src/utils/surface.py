@@ -155,7 +155,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         print(shgoOut)
         shgo_mins[sizeOfRegionScale] = shgoOut.x
         shgo_auc[sizeOfRegionScale] = shgoOut.fun
-        """
+        
         print("Calling dual_annealing")
         dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
         dual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
@@ -180,9 +180,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         de_auc[sizeOfRegionScale] = differential_evolutionOut.fun
         denx_auc[sizeOfRegionScale] = differential_evolutionOutNox0.fun
-        """
+        
 
-    """
+    
     print("sptbf_mins", sptbf_mins)
     print("sptgd_mins", sptgd_mins)
     print("bf_mins", bf_mins)
@@ -202,7 +202,18 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("de_auc", de_auc)
     print("danx_auc", danx_auc)
     print("denx_auc", denx_auc)
-    """
+    
+
+    goMethods = {}
+    goMethods["sptbf"] = sptbf_mins
+    goMethods["sptgd"] = sptgd_mins
+    goMethods["bf"] = bf_mins
+    goMethods["gd"] = gd_mins
+    goMethods["da"] = da_mins
+    goMethods["de"] = de_mins
+    goMethods["danx"] = danx_mins
+    goMethods["denx"] = denx_mins
+
     if(plotSuface):
         import plotly.io as pio 
         import plotly.graph_objects as go
@@ -230,25 +241,25 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
 
-
-        print("shgo_mins", shgo_mins)
-        xvals = [item[0] for item in shgo_mins.values()]
-        yvals = [item[1] for item in shgo_mins.values()]
-        zvals = []
-        for x,y in zip(xvals,yvals):
-            zvals.append(F2(x, y)[0])
-        print("x:", xvals)
-        print("y:", yvals)
-        print("z:", zvals)
-        iteractivefig.add_trace(
-            go.Scatter3d(x=xvals,
-                        y=yvals,
-                        z=zvals,
-                        mode='markers',
-                        name='shgo_mins',
-                        hovertext=[str(x) for x in scales],
-                        showlegend=True)
-        )
+        for key, value in goMethods.items():
+            print("method",key, value)
+            xvals = [item[0] for item in value.values()]
+            yvals = [item[1] for item in value.values()]
+            zvals = []
+            for x,y in zip(xvals,yvals):
+                zvals.append(F2(x, y)[0])
+            print("x:", xvals)
+            print("y:", yvals)
+            print("z:", zvals)
+            iteractivefig.add_trace(
+                go.Scatter3d(x=xvals,
+                            y=yvals,
+                            z=zvals,
+                            mode='markers',
+                            name=key,
+                            hovertext=[str(x) for x in scales],
+                            showlegend=True)
+            )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
         quit()
 
