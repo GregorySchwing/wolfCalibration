@@ -233,7 +233,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         xvals = [item[0] for item in shgo_mins.values()]
         yvals = [item[1] for item in shgo_mins.values()]
-        zvals = F2(xvals, yvals)
+        zvals = []
+        for x,y in zip(xvals,yvals):
+            zvals.append(F2(x, y))
         print("x:", xvals)
         print("y:", yvals)
         print("z:", zvals)
@@ -246,5 +248,5 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
         quit()
-        
+
     return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
