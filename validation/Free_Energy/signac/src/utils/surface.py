@@ -98,8 +98,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("ZGD : ", ZGD)
 
 
-    scales = [0.01]
-    #scales = [0.1, 0.01, 0.001]
+    #scales = [0.01]
+    scales = [0.1, 0.01, 0.001]
     bf_mins = {}
     gd_mins = {}
     shgo_mins = {}
