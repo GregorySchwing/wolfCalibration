@@ -112,35 +112,35 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #bounds = [(x.min(), x.max()),(y.min(), y.max())]
     # TypeError: shgo() got multiple values for argument 'bounds'
     # Derivative-free, so can't use gradient here to rank.
-    shgoOut = shgo(f, bounds=bounds)
-    print(shgoOut)
-    sptshgo_mins["REF"] = shgoOut.x
-    sptshgo_auc["REF"] = shgoOut.fun
+    sptshgoOut = shgo(f, bounds=bounds)
+    print(sptshgoOut)
+    sptshgo_mins["REF"] = sptshgoOut.x
+    sptshgo_auc["REF"] = sptshgoOut.fun
     
     print("Calling dual_annealing")
     sptdual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
     sptdual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
-    print(dual_annealingOut)    
+    print(sptdual_annealingOut)    
     print("Calling dual_annealingNoX0")
-    print(dual_annealingOutNoX0)    
-    sptda_mins["REF"] = dual_annealingOut.x
-    sptdanx_mins["REF"] = dual_annealingOutNoX0.x
+    print(sptdual_annealingOutNoX0)    
+    sptda_mins["REF"] = sptdual_annealingOut.x
+    sptdanx_mins["REF"] = sptdual_annealingOutNoX0.x
 
-    sptda_auc["REF"] = dual_annealingOut.fun
-    sptdanx_auc["REF"] = dual_annealingOutNoX0.fun
+    sptda_auc["REF"] = sptdual_annealingOut.fun
+    sptdanx_auc["REF"] = sptdual_annealingOutNoX0.fun
 
     print("Calling differential_evolution")
     sptdifferential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
     sptdifferential_evolutionOutNox0 = differential_evolution(f, bounds=bounds)
-    print(differential_evolutionOut)  
-    print(differential_evolutionOut.keys())   
+    print(sptdifferential_evolutionOut)  
+    print(sptdifferential_evolutionOut.keys())   
     print("Calling differential_evolutionX0")
-    print(differential_evolutionOutNox0) 
-    sptde_mins["REF"] = differential_evolutionOut.x
-    sptdenx_mins["REF"] = differential_evolutionOutNox0.x
+    print(sptdifferential_evolutionOutNox0) 
+    sptde_mins["REF"] = sptdifferential_evolutionOut.x
+    sptdenx_mins["REF"] = sptdifferential_evolutionOutNox0.x
 
-    sptde_auc["REF"] = differential_evolutionOut.fun
-    sptdenx_auc["REF"] = differential_evolutionOutNox0.fun
+    sptde_auc["REF"] = sptdifferential_evolutionOut.fun
+    sptdenx_auc["REF"] = sptdifferential_evolutionOutNox0.fun
 
 
 
@@ -238,6 +238,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     
     print("sptbf_mins", sptbf_mins)
     print("sptgd_mins", sptgd_mins)
+    print("sptshgo_mins", sptshgo_mins)
+    print("sptda_mins", sptda_mins)
+    print("sptde_mins", sptde_mins)
+    print("sptdanx_mins", sptdanx_mins)
+    print("sptdenx_mins", sptdenx_mins)
     print("bf_mins", bf_mins)
     print("gd_mins", gd_mins)
     print("shgo_mins", shgo_mins)
