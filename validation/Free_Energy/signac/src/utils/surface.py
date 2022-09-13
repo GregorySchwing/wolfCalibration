@@ -81,7 +81,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(gdJacXY[1])
 
     print("Calling shgo")
-    shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
+    # Default method is SLSQP
+    #shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
+    shgoOut = shgo(f, x0, bounds=bounds)
     print(shgoOut)
     print("Calling dual_annealing")
     dual_annealingOut = dual_annealing(f, x0, method='SLSQP', bounds=bounds)
