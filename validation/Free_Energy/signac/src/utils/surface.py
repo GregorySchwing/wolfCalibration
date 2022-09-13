@@ -54,6 +54,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
     print(rranges)
 
+    sptbf_mins = {}
+    sptgd_mins = {}
+    sptbf_auc = {}
+    sptgd_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.interp2d(x, y, z, kind='cubic')
     F2 = interpolate.interp2d(x, y, z, kind='quintic')
@@ -77,6 +81,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(gdJacXY[0])
     print(gdJacXY[1])
     
+    sptbf_mins["REF"] = bfXY
+    sptbf_auc["REF"] = bf[1]
+    sptgd_mins["REF"] = gd.x
+    sptgd_auc["REF"] = gd.fun
+
     ZBF = F2(bfXY[0], bfXY[1])
     ZGD = F2(gdXY[0], gdXY[1])
 
@@ -169,6 +178,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         de_auc[sizeOfRegionScale] = differential_evolutionOut.fun
         denx_auc[sizeOfRegionScale] = differential_evolutionOutNox0.fun
+
+    print("sptbf_mins", sptbf_mins)
+    print("sptgd_mins", sptgd_mins)
     print("bf_mins", bf_mins)
     print("gd_mins", gd_mins)
     print("shgo_mins", shgo_mins)
@@ -177,6 +189,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("danx_mins", danx_mins)
     print("denx_mins", denx_mins)
 
+    print("sptbf_auc", sptbf_auc)
+    print("sptgd_auc", sptgd_auc)
     print("bf_auc", bf_auc)
     print("gd_auc", gd_auc)
     print("shgo_auc", shgo_auc)
