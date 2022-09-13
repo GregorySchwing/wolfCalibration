@@ -229,7 +229,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
             iteractivefig.add_trace(
                 go.Scatter3d(x=[shgo_mins[sizeOfRegionScale][0]],
                             y=[shgo_mins[sizeOfRegionScale][1]],
-                            z=[1],
+                            z=[F2(shgo_mins[sizeOfRegionScale])],
                             mode='markers')
             )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
