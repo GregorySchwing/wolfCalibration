@@ -198,7 +198,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("de_auc", de_auc)
     print("danx_auc", danx_auc)
     print("denx_auc", denx_auc)
-    quit()
 
     if(plotSuface):
         import plotly.io as pio 
@@ -226,7 +225,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     margin=dict(r=20, b=10, l=10, t=10))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
-
+        for sizeOfRegionScale in scales:
+            iteractivefig.add_trace(
+                go.Scatter3d(x=[shgo_mins[sizeOfRegionScale][0]],
+                            y=[shgo_mins[sizeOfRegionScale][1]],
+                            z=[1],
+                            mode='markers')
+            )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
