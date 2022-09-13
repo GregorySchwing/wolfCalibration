@@ -61,14 +61,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     X,Y = np.meshgrid(xi,yi)
 
     Z2 = F2(xi, yi)
-
-    sizeOfRegionX = 0.01*(x.max()-x.min())
-    sizeOfRegionY = 0.01*(y.max()-y.min())
-    #f = lambda x: np.abs(F2(*x))
-    f = lambda x: np.sum(np.abs(F2(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10),np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))))
-
-
-    bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
+    
+    f = lambda x: np.abs(F2(*x))
     bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
     bfXY = np.array(bf[0])
     print(bfXY[0])
@@ -83,31 +77,56 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(gdJacXY[0])
     print(gdJacXY[1])
 
-    print("Calling shgo")
-    # Default method is SLSQP
-    #shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
-    # Doesnt work for shgo
-    #bounds = [(x.min(), x.max()),(y.min(), y.max())]
-    # TypeError: shgo() got multiple values for argument 'bounds'
-    # Derivative-free, so can't use gradient here to rank.
-    shgoOut = shgo(f, bounds=bounds)
-    print(shgoOut)
 
-    print("Calling dual_annealing")
-    dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
-    dual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
-    print(dual_annealingOut)    
-    print("Calling dual_annealingNoX0")
-    print(dual_annealingOutNoX0)    
+    scales = [0.1, 0.01, 0.001]
+    
+    for sizeOfRegionScale in scales:
+        sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
+        sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
+        #f = lambda x: np.abs(F2(*x))
+        f = lambda x: np.sum(np.abs(F2(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10),np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))))
 
 
-    print("Calling differential_evolution")
-    differential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
-    differential_evolutionOutNox0 = differential_evolution(f, bounds=bounds)
-    print(differential_evolutionOut)  
-    print(differential_evolutionOut.keys())   
-    print("Calling differential_evolutionX0")
-    print(differential_evolutionOutNox0) 
+        bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
+        bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
+        bfXY = np.array(bf[0])
+        print(bfXY[0])
+        print(bfXY[1])
+        x0 = (bfXY[0], bfXY[1])
+        gd = minimize(f, x0, method='SLSQP', bounds=bounds)
+        print(gd)
+        gdXY = np.array(gd.x)
+        print(gdXY[0])
+        print(gdXY[1])
+        gdJacXY = np.array(gd.jac)
+        print(gdJacXY[0])
+        print(gdJacXY[1])
+
+        print("Calling shgo")
+        # Default method is SLSQP
+        #shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
+        # Doesnt work for shgo
+        #bounds = [(x.min(), x.max()),(y.min(), y.max())]
+        # TypeError: shgo() got multiple values for argument 'bounds'
+        # Derivative-free, so can't use gradient here to rank.
+        shgoOut = shgo(f, bounds=bounds)
+        print(shgoOut)
+
+        print("Calling dual_annealing")
+        dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
+        dual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
+        print(dual_annealingOut)    
+        print("Calling dual_annealingNoX0")
+        print(dual_annealingOutNoX0)    
+
+
+        print("Calling differential_evolution")
+        differential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
+        differential_evolutionOutNox0 = differential_evolution(f, bounds=bounds)
+        print(differential_evolutionOut)  
+        print(differential_evolutionOut.keys())   
+        print("Calling differential_evolutionX0")
+        print(differential_evolutionOutNox0) 
     #quit() 
     """
     differential_evolutionOutXY = np.array(differential_evolutionOut.x)
