@@ -61,7 +61,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     X,Y = np.meshgrid(xi,yi)
 
     Z2 = F2(xi, yi)
-    
+    bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(*x))
     bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
     bfXY = np.array(bf[0])
@@ -76,6 +76,17 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     gdJacXY = np.array(gd.jac)
     print(gdJacXY[0])
     print(gdJacXY[1])
+    
+    ZBF = F2(bfXY[0], bfXY[1])
+    ZGD = F2(gdXY[0], gdXY[1])
+
+    d = {'x': [gdXY[0]], 'y': [gdXY[1]], 'z':[ZGD]}
+
+    dfGD = pd.DataFrame(data=d)
+
+
+    print("ZBF : ", ZBF)
+    print("ZGD : ", ZGD)
 
 
     scales = [0.1, 0.01, 0.001]
@@ -127,26 +138,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         print(differential_evolutionOut.keys())   
         print("Calling differential_evolutionX0")
         print(differential_evolutionOutNox0) 
-    #quit() 
-    """
-    differential_evolutionOutXY = np.array(differential_evolutionOut.x)
-    print(differential_evolutionOutXY[0])
-    print(differential_evolutionOutXY[1])
-    differential_evolutionOutJacXY = np.array(differential_evolutionOut.jac)
-    print(differential_evolutionOutJacXY[0])
-    print(differential_evolutionOutJacXY[1])
-    """
-    
-    ZBF = F2(bfXY[0], bfXY[1])
-    ZGD = F2(gdXY[0], gdXY[1])
-
-    d = {'x': [gdXY[0]], 'y': [gdXY[1]], 'z':[ZGD]}
-
-    dfGD = pd.DataFrame(data=d)
-
-
-    print("ZBF : ", ZBF)
-    print("ZGD : ", ZGD)
 
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
