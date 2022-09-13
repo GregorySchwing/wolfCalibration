@@ -129,8 +129,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         bf_mins[sizeOfRegionScale] = bfXY
         bf_auc[sizeOfRegionScale] = bf[1]
 
-        print(bfXY[0])
-        print(bfXY[1])
+        print("x0[0]", bfXY[0])
+        print("x0[1]", bfXY[1])
         x0 = (bfXY[0], bfXY[1])
         gd = minimize(f, x0, method='SLSQP', bounds=bounds)
         print(gd)
