@@ -123,6 +123,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
+        """
         bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
         bfXY = np.array(bf[0])
         bf_mins[sizeOfRegionScale] = bfXY
@@ -141,6 +142,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         gdJacXY = np.array(gd.jac)
         print(gdJacXY[0])
         print(gdJacXY[1])
+        """
 
         print("Calling shgo")
         # Default method is SLSQP
@@ -153,7 +155,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         print(shgoOut)
         shgo_mins[sizeOfRegionScale] = shgoOut.x
         shgo_auc[sizeOfRegionScale] = shgoOut.fun
-
+        """
         print("Calling dual_annealing")
         dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
         dual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
@@ -178,7 +180,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         de_auc[sizeOfRegionScale] = differential_evolutionOut.fun
         denx_auc[sizeOfRegionScale] = differential_evolutionOutNox0.fun
+        """
 
+    """
     print("sptbf_mins", sptbf_mins)
     print("sptgd_mins", sptgd_mins)
     print("bf_mins", bf_mins)
@@ -198,7 +202,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("de_auc", de_auc)
     print("danx_auc", danx_auc)
     print("denx_auc", denx_auc)
-
+    """
     if(plotSuface):
         import plotly.io as pio 
         import plotly.graph_objects as go
@@ -225,6 +229,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     margin=dict(r=20, b=10, l=10, t=10))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
+        print("x:", [item[0] for item in shgo_mins.values()])
+        print("y:", [item[1] for item in shgo_mins.values()])
+        print("z:", [F2(list(shgo_mins.values()))])
+
         iteractivefig.add_trace(
             go.Scatter3d(x=[item[0] for item in shgo_mins.values()],
                         y=[item[1] for item in shgo_mins.values()],
