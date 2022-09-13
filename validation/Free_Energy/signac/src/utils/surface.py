@@ -62,7 +62,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     Z2 = F2(xi, yi)
 
-    f = lambda x: np.abs(F2(*x))
+    #f = lambda x: np.abs(F2(*x))
+    f = lambda x: np.sum(np.abs(F2(np.linspace(*x[0]-0.05, *x[0]+0.05, 10),np.linspace(*x[1]-0.05, *x[1]+0.05, 10))))
 
 
     bounds = [(x.min(), x.max()),(y.min(), y.max())]
