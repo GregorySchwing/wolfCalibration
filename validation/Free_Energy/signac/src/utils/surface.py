@@ -262,6 +262,5 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                             showlegend=True)
             )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
-        quit()
 
     return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
