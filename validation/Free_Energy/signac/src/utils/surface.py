@@ -67,7 +67,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     Z2 = F2(xi, yi)
     bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(*x))
-    bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
+    bf = brute(f, rranges, full_output=True, finish=None)
     bfXY = np.array(bf[0])
     print(bfXY[0])
     print(bfXY[1])
@@ -124,7 +124,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
         rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, ((x.max()-sizeOfRegionX) - (x.min()+sizeOfRegionX))/650), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY, ((y.max()-sizeOfRegionY) - (y.min()+sizeOfRegionY))/650)
-        bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
+        bf = brute(f, rranges, full_output=True, finish=None)
         bfXY = np.array(bf[0])
         bf_mins[sizeOfRegionScale] = bfXY
         bf_auc[sizeOfRegionScale] = bf[1]
