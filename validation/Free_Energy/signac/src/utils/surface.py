@@ -246,7 +246,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         z=zvals,
                         mode='markers',
                         name='shgo_mins',
-                        hovertext=[str(x) for x in scales])
+                        hovertext=[str(x) for x in scales],
+                        showlegend=True)
         )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
         quit()
