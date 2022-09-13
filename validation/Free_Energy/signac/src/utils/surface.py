@@ -90,10 +90,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     shgoOut = shgo(f, bounds=bounds)
     print(shgoOut)
     print("Calling dual_annealing")
-    dual_annealingOut = dual_annealing(f, x0, method='SLSQP', bounds=bounds)
+    dual_annealingOut = dual_annealing(f, bounds=bounds)
     print(dual_annealingOut)    
     print("Calling differential_evolution")
-    differential_evolutionOut = differential_evolution(f, x0, method='SLSQP', bounds=bounds)
+    differential_evolutionOut = differential_evolution(f, bounds=bounds)
     print(differential_evolutionOut)   
 
     ZBF = F2(bfXY[0], bfXY[1])
