@@ -83,7 +83,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("Calling shgo")
     # Default method is SLSQP
     #shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
-    shgoOut = shgo(f, x0, bounds=bounds)
+    # Doesnt work for shgo
+    #bounds = [(x.min(), x.max()),(y.min(), y.max())]
+    # TypeError: shgo() got multiple values for argument 'bounds'
+
+    shgoOut = shgo(f, bounds=bounds)
     print(shgoOut)
     print("Calling dual_annealing")
     dual_annealingOut = dual_annealing(f, x0, method='SLSQP', bounds=bounds)
