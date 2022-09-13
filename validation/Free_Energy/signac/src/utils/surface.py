@@ -64,11 +64,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(*x))
     bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
-    print(bf[1])
     bfXY = np.array(bf[0])
     print(bfXY[0])
     print(bfXY[1])
-    print(bfXY[2])
     x0 = (bfXY[0], bfXY[1])
     gd = minimize(f, x0, method='SLSQP', bounds=bounds)
     print(gd)
@@ -119,7 +117,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
         bfXY = np.array(bf[0])
         bf_mins[sizeOfRegionScale] = bfXY
-        bf_auc[sizeOfRegionScale] = bf.fval
+        bf_auc[sizeOfRegionScale] = bf[1]
 
         print(bfXY[0])
         print(bfXY[1])
