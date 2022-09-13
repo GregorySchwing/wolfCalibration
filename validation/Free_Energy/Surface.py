@@ -8,7 +8,7 @@ import re
 import os
 import glob
 from matplotlib import cm
-from scipy.optimize import minimize, brute
+from scipy.optimize import minimize, brute, shgo, dual_annealing, differential_evolution
 from scipy import interpolate, optimize
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from matplotlib.patches import Circle, Ellipse
@@ -74,6 +74,16 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     gdJacXY = np.array(gd.jac)
     print(gdJacXY[0])
     print(gdJacXY[1])
+
+    shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
+    print(shgoOut)
+
+    dual_annealingOut = dual_annealing(f, x0, method='SLSQP', bounds=bounds)
+    print(dual_annealingOut)    
+
+    differential_evolutionOut = differential_evolution(f, x0, method='SLSQP', bounds=bounds)
+    print(differential_evolutionOut)    
+
 
     ZBF = F2(bfXY[0], bfXY[1])
     ZGD = F2(gdXY[0], gdXY[1])
