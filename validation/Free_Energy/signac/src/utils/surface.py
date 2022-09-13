@@ -123,7 +123,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
-        
+        rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, ((x.max()-sizeOfRegionX) - (x.min()+sizeOfRegionX))/650), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY, ((y.max()-sizeOfRegionY) - (y.min()+sizeOfRegionY))/650)
         bf = brute(f, rranges, full_output=True, finish=optimize.fmin)
         bfXY = np.array(bf[0])
         bf_mins[sizeOfRegionScale] = bfXY
@@ -216,8 +216,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     goMethods["denx"] = denx_mins
 
     if(plotSuface):
-        import plotly.io as pio 
-        import plotly.graph_objects as go
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
         xi_forplotting = np.linspace(x.min(), x.max(), 1000)
         yi_forplotting = np.linspace(y.min(), y.max(), 1000)
