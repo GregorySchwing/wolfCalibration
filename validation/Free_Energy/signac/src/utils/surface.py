@@ -89,18 +89,23 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # Derivative-free, so can't use gradient here to rank.
     shgoOut = shgo(f, bounds=bounds)
     print(shgoOut)
+
     print("Calling dual_annealing")
     dual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
     print(dual_annealingOut)    
+
     print("Calling differential_evolution")
     differential_evolutionOut = differential_evolution(f, bounds=bounds)
-    print(differential_evolutionOut)   
+    print(differential_evolutionOut)  
+    print(differential_evolutionOut.keys())    
+    """
     differential_evolutionOutXY = np.array(differential_evolutionOut.x)
     print(differential_evolutionOutXY[0])
     print(differential_evolutionOutXY[1])
     differential_evolutionOutJacXY = np.array(differential_evolutionOut.jac)
     print(differential_evolutionOutJacXY[0])
     print(differential_evolutionOutJacXY[1])
+    """
     
     ZBF = F2(bfXY[0], bfXY[1])
     ZGD = F2(gdXY[0], gdXY[1])
