@@ -8,7 +8,7 @@ import re
 import os
 import glob
 from matplotlib import cm
-from scipy.optimize import minimize, brute
+from scipy.optimize import minimize, brute, shgo, dual_annealing, differential_evolution
 from scipy import interpolate, optimize
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from matplotlib.patches import Circle, Ellipse
