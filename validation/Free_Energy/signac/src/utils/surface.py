@@ -231,12 +231,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                                   highlightcolor="limegreen", project_z=True))
         print("x:", [item[0] for item in shgo_mins.values()])
         print("y:", [item[1] for item in shgo_mins.values()])
-        print("z:", [F2([(item[0], item[1]) for item in shgo_mins.values()])])
+        print("z:", [F2((item[0], item[1])) for item in shgo_mins.values()])
 
         iteractivefig.add_trace(
             go.Scatter3d(x=[item[0] for item in shgo_mins.values()],
                         y=[item[1] for item in shgo_mins.values()],
-                        z=[F2([(item[0], item[1]) for item in shgo_mins.values()])],
+                        z=[F2((item[0], item[1])) for item in shgo_mins.values()],
                         mode='markers',
                         name='shgo_mins')
         )
