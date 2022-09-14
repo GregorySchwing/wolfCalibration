@@ -51,7 +51,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     yi = np.linspace(y.min(), y.max(), 6500)
     zi = np.linspace(z.min(), z.max(), 6500)
 
-    rranges = slice(x.min(), x.max(), (x.max() - x.min())/len(x)), slice(y.min(), y.max(), (y.max() - y.min())/len(x))
+    rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
     print(rranges)
 
     sptbf_mins = {}
@@ -289,14 +289,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         xi_forplotting = np.linspace(x.min(), x.max(), 1000)
         yi_forplotting = np.linspace(y.min(), y.max(), 1000)
 
-        Z2_forplotting = F2(x, y)
+        Z2_forplotting = F2(xi_forplotting, yi_forplotting)
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
 
         #fig.savefig(fname=plotPath+".png")
         iteractivefig = go.Figure()
-        iteractivefig.add_surface(x=x,y=y,z=z)
+        iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=True, 
         margin=dict(l=65, r=65, b=65, t=65))
         iteractivefig.update_layout(layout)
