@@ -51,9 +51,23 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     z = df4.iloc[:,0].to_numpy()
 
     boolArrayOfGoodVals = reject_outliers(z)
+    print("XMIN", x.min())
+    print("YMIN", y.min())
+    print("ZMIN", z.min())
+    print("XMAX", x.max())
+    print("YMAX", y.max())
+    print("ZMAX", z.max())
     print(boolArrayOfGoodVals)
+    x = x[boolArrayOfGoodVals]
+    y = y[boolArrayOfGoodVals]
+    z = z[boolArrayOfGoodVals]
+    print("XMIN", x.min())
+    print("YMIN", y.min())
+    print("ZMIN", z.min())
+    print("XMAX", x.max())
+    print("YMAX", y.max())
+    print("ZMAX", z.max())
     quit()
-
     xi = np.linspace(x.min(), x.max(), 6500)
     yi = np.linspace(y.min(), y.max(), 6500)
     zi = np.linspace(z.min(), z.max(), 6500)
