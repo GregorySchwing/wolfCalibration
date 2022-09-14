@@ -57,17 +57,17 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("XMAX", x.max())
     print("YMAX", y.max())
     print("ZMAX", z.max())
-    print(boolArrayOfGoodVals)
-    x = x[boolArrayOfGoodVals]
-    y = y[boolArrayOfGoodVals]
-    z = z[boolArrayOfGoodVals]
+    #print(boolArrayOfGoodVals)
+    print("remove outliers")
+    x = x[tuple(boolArrayOfGoodVals)]
+    y = y[tuple(boolArrayOfGoodVals)]
+    z = z[tuple(boolArrayOfGoodVals)]
     print("XMIN", x.min())
     print("YMIN", y.min())
     print("ZMIN", z.min())
     print("XMAX", x.max())
     print("YMAX", y.max())
     print("ZMAX", z.max())
-    quit()
     xi = np.linspace(x.min(), x.max(), 6500)
     yi = np.linspace(y.min(), y.max(), 6500)
     zi = np.linspace(z.min(), z.max(), 6500)
