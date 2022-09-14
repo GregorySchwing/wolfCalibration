@@ -71,11 +71,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdanx_auc = {}
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
-    if (wolfKind == "VLUGT"):
-        F2 = interpolate.interp2d(x, y, z, kind='cubic')
-    else:
-        return
-        F2 = interpolate.interp2d(x, y, z, kind='quintic')
+    F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    #F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
     X,Y = np.meshgrid(xi,yi)
 

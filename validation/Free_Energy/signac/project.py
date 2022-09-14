@@ -2638,7 +2638,7 @@ def part_4b_job_gomc_calibration_find_minimum(job):
                     box = groups.group(3)
                     tupleMin = find_minimum(job.fn(file), job.sp.solute, wolfKind, potential, box, True)
                     # Use smaller error, either BF or Grad Desc
-                    #model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
+                    model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
         quit()
         with open(bestValueFileName+".pickle", 'wb') as handle:
             pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
