@@ -324,7 +324,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                             z=zvals,
                             mode='markers',
                             name=key,
-                            hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in key],
+                            hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                             showlegend=True)
             )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
