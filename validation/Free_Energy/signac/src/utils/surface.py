@@ -29,6 +29,9 @@ def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None
 		art3d.pathpatch_2d_to_3d(p, z=z0, zdir=a)
 		i = i + 1
 
+def reject_outliers(data, m=2):
+    return [abs(data - np.mean(data)) < m * np.std(data)]
+
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df = pd.read_csv(path,sep='\t',index_col=0)
     df = df.iloc[: , :-1]
@@ -46,6 +49,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
     z = df4.iloc[:,0].to_numpy()
+
+    boolArrayOfGoodVals = reject_outliers(z)
+    print(boolArrayOfGoodVals)
+    quit()
 
     xi = np.linspace(x.min(), x.max(), 6500)
     yi = np.linspace(y.min(), y.max(), 6500)
