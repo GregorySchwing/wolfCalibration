@@ -74,6 +74,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     if (wolfKind == "VLUGT"):
         F2 = interpolate.interp2d(x, y, z, kind='cubic')
     else:
+        return
         F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
     X,Y = np.meshgrid(xi,yi)
