@@ -51,7 +51,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     yi = np.linspace(y.min(), y.max(), 6500)
     zi = np.linspace(z.min(), z.max(), 6500)
 
-    rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
+    rranges = slice(x.min(), x.max(), (x.max() - x.min())/len(x)), slice(y.min(), y.max(), (y.max() - y.min())/len(x))
     print(rranges)
 
     sptbf_mins = {}
@@ -72,6 +72,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
     #F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
     X,Y = np.meshgrid(xi,yi)
@@ -288,14 +289,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         xi_forplotting = np.linspace(x.min(), x.max(), 1000)
         yi_forplotting = np.linspace(y.min(), y.max(), 1000)
 
-        Z2_forplotting = F2(xi_forplotting, yi_forplotting)
+        Z2_forplotting = F2(x, y)
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
 
         #fig.savefig(fname=plotPath+".png")
         iteractivefig = go.Figure()
-        iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
+        iteractivefig.add_surface(x=x,y=y,z=z)
         layout = go.Layout(title=title,autosize=True, 
         margin=dict(l=65, r=65, b=65, t=65))
         iteractivefig.update_layout(layout)
@@ -329,4 +330,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
             )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
+    # Using any of the single point BF/GD methods is obviously a bad idea.
+    #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
+    # The question is which of the above optimizations to use.  For now, I am going with 0.01 AUC as the metric.
     return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
