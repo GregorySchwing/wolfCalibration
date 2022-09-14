@@ -33,6 +33,8 @@ def reject_outliers(data, m=2):
     return [abs(data - np.mean(data)) < m * np.std(data)]
 
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
+    if (wolfKind != "VLUGT" and potential != "DSF"):
+        return
     df = pd.read_csv(path,sep='\t',index_col=0)
     df = df.iloc[: , :-1]
     dfMean = df.mean()
