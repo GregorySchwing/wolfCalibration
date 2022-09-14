@@ -107,7 +107,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     X,Y = np.meshgrid(xi,yi)
 
     Z2 = F2(xi, yi)
-    bounds = [(x_raw.min(), x_raw.max()),(y_raw.min(), y_raw.max())]
+    bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(*x))
     bf = brute(f, rranges, full_output=True, finish=None)
     bfXY = np.array(bf[0])
@@ -205,7 +205,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         f = lambda x: np.sum(np.abs(F2(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10),np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))))
 
 
-        bounds = [(x_raw.min()+sizeOfRegionX, x_raw.max()-sizeOfRegionX),(y_raw.min()+sizeOfRegionY, y_raw.max()-sizeOfRegionY)]
+        bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
         rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, ((x.max()-sizeOfRegionX) - (x.min()+sizeOfRegionX))/650), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY, ((y.max()-sizeOfRegionY) - (y.min()+sizeOfRegionY))/650)
         bf = brute(f, rranges, full_output=True, finish=None)
         bfXY = np.array(bf[0])
