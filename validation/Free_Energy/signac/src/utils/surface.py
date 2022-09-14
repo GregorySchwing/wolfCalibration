@@ -46,30 +46,36 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df3 = pd.DataFrame(pointsSplit.tolist(), columns=['rcut','alpha'], dtype=np.float64)
     df4 = pd.DataFrame(dfMean.values, columns=['err'], dtype=np.float64)
 
-    x = df3.iloc[:,0].to_numpy()
-    y = df3.iloc[:,1].to_numpy()
+    x_raw = df3.iloc[:,0].to_numpy()
+    y_raw = df3.iloc[:,1].to_numpy()
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
-    z = df4.iloc[:,0].to_numpy()
+    z_raw = df4.iloc[:,0].to_numpy()
 
     boolArrayOfGoodVals = reject_outliers(z)
-    print("XMIN", x.min())
-    print("YMIN", y.min())
-    print("ZMIN", z.min())
-    print("XMAX", x.max())
-    print("YMAX", y.max())
-    print("ZMAX", z.max())
+    print("XMIN", x_raw.min())
+    print("YMIN", y_raw.min())
+    print("ZMIN", z_raw.min())
+    print("XMAX", x_raw.max())
+    print("YMAX", y_raw.max())
+    print("ZMAX", z_raw.max())
+    print("len(x_raw)", len(x_raw))
+    print("len(y_raw)", len(y_raw))
+    print("len(z_raw)", len(z_raw))
     #print(boolArrayOfGoodVals)
     print("remove outliers")
-    x = x[tuple(boolArrayOfGoodVals)]
-    y = y[tuple(boolArrayOfGoodVals)]
-    z = z[tuple(boolArrayOfGoodVals)]
+    x = x_raw[tuple(boolArrayOfGoodVals)]
+    y = y_raw[tuple(boolArrayOfGoodVals)]
+    z = z_raw[tuple(boolArrayOfGoodVals)]
     print("XMIN", x.min())
     print("YMIN", y.min())
     print("ZMIN", z.min())
     print("XMAX", x.max())
     print("YMAX", y.max())
     print("ZMAX", z.max())
+    print("len(x)", len(x))
+    print("len(y)", len(y))
+    print("len(z)", len(z))
     xi = np.linspace(x.min(), x.max(), 6500)
     yi = np.linspace(y.min(), y.max(), 6500)
     zi = np.linspace(z.min(), z.max(), 6500)
