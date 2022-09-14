@@ -215,7 +215,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
         print("x0[0]", bfXY[0])
         print("x0[1]", bfXY[1])
-        x0 = (bfXY[0], bfXY[1])
+        x0 = (12, 0.12)
+        #    x0 = (bfXY[0], bfXY[1])
         gd = minimize(f, x0, method='SLSQP', bounds=bounds)
         print(gd)
         gdXY = np.array(gd.x)
