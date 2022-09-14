@@ -51,6 +51,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
+    bounds = [(x.min(), x.max()),(y.min(), y.max())]
 
     boolArrayOfGoodVals = reject_outliers(z_raw)
     print("XMIN", x_raw.min())
@@ -107,7 +108,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     X,Y = np.meshgrid(xi,yi)
 
     Z2 = F2(xi, yi)
-    bounds = [(x.min(), x.max()),(y.min(), y.max())]
+    #bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(*x))
     bf = brute(f, rranges, full_output=True, finish=None)
     bfXY = np.array(bf[0])
