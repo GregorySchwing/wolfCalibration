@@ -137,7 +137,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
-    F2 = interpolate.RegularGridInterpolator((x,y), z)
+    F2 = interpolate.RegularGridInterpolator((y,x), z)
 
     #F2 = interpolate.interp2d(x, y, z, kind='cubic')
     #F2 = interp2d(x, y, z)  # radial basis function interpolator instance
