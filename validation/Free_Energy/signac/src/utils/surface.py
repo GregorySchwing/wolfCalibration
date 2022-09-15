@@ -55,13 +55,20 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     x_raw = df3.iloc[:,0].to_numpy()
     y_raw = df3.iloc[:,1].to_numpy()
+
+    x_raw = np.unique(x_raw)
+    y_raw = np.unique(y_raw)
+
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
 
+    z_raw = np.reshape(z_raw, (-1, len(y_raw)))
+
     print(x_raw)
     print(y_raw)
     print(z_raw)
+    quit()
 
     xy_raw = df3.iloc[:,0:1].to_numpy()
     ind = np.lexsort((xy_raw[:,1],xy_raw[:,0]))    
