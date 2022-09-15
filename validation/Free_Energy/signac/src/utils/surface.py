@@ -16,6 +16,7 @@ import pickle
 import plotly.io as pio 
 import plotly.graph_objects as go
 from scipy.interpolate import griddata
+from scipy.interpolate import Rbf
 def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None):
 	xy_len, z_len = ax.get_figure().get_size_inches()
 	axis_length = [x[1] - x[0] for x in [ax.get_xbound(), ax.get_ybound(), ax.get_zbound()]]
@@ -107,7 +108,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdanx_auc = {}
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
-    F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    #F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    F2 = Rbf(x, y, z)  # radial basis function interpolator instance
     # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
     #F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
