@@ -107,9 +107,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdanx_auc = {}
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
-    #F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    F2 = interpolate.interp2d(x, y, z, kind='cubic')
     # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
-    F2 = interpolate.interp2d(x, y, z, kind='quintic')
+    #F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
     X,Y = np.meshgrid(xi,yi)
 
