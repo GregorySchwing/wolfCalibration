@@ -400,7 +400,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # The question is which of the above optimizations to use.  For now, I am going with 0.01 AUC as the metric.
     print("GD_rcut",goMethods[winningOptimizer][0])
     print("GD_alpha",goMethods[winningOptimizer][1])
-    print("GD_relerr",F2(goMethods[winningOptimizer][0], goMethods[winningOptimizer][1])[0])
+    print("GD_relerr",F2(goMethods[winningOptimizer][0.01][0], goMethods[winningOptimizer][0.01][1])[0])
     print("GD_AUC_100",goAUCs[winningOptimizer][0.01]), 
     print("WINNING_OPT",winningOptimizer)
     return ( ("GD_rcut",goMethods[winningOptimizer][0]), ("GD_alpha",goMethods[winningOptimizer][1]), ("GD_relerr",F2(goMethods[winningOptimizer][0], goMethods[winningOptimizer][1])[0]), ("GD_AUC_100",goAUCs[winningOptimizer][0.01]), ("WINNING_OPT",winningOptimizer) )
