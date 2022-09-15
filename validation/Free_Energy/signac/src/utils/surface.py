@@ -122,8 +122,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #F2 = interpolate.interp2d(x, y, z, kind='cubic')
     # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
     F2 = interpolate.interp2d(x, y, z, kind='quintic')
-    #F2 = LinearNDInterpolator(cartcoord, z, fill_value=0)
-    #Z0 = F2(X, Y)
+
+    F2_LinearNDInterpolator = LinearNDInterpolator(cartcoord, z, fill_value=0)
+    Z0 = F2_LinearNDInterpolator(X, Y)
+    plt.figure()
+    plt.pcolormesh(X, Y, Z0)
+    plt.colorbar() # Color Bar
+    #plt.savefig('foo.png')
 
     X,Y = np.meshgrid(xi,yi)
 
@@ -376,7 +381,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
 
-        #fig.savefig(fname=plotPath+".png")
+        plt.savefig(fname=plotPath+"_ND.png")
         iteractivefig = go.Figure()
         iteractivefig.add_surface(x=X_forplotting[0, :],y=Y_forplotting[0, :],z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=True, 
