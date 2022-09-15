@@ -55,6 +55,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df3 = pd.DataFrame(pointsSplit.tolist(), columns=['rcut','alpha'], dtype=np.float64)
     df4 = pd.DataFrame(dfMean.values, columns=['err'], dtype=np.float64)
 
+    print(df3)
+    print(df4)
+
     x_raw = df3.iloc[:,0].to_numpy()
     y_raw = df3.iloc[:,1].to_numpy()
     #z = np.abs(df4.iloc[:,0].to_numpy())
