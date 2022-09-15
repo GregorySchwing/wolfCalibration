@@ -109,11 +109,21 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptde_auc = {}
     sptdanx_auc = {}
     sptdenx_auc = {}
+
+    # Create coordinate pairs
+    cartcoord = list(zip(x, y))
+
+
+    X = np.linspace(min(x), max(x))
+    Y = np.linspace(min(y), max(y))
+    X, Y = np.meshgrid(X, Y)
+
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.interp2d(x, y, z, kind='cubic')
-    F2 = LinearNDInterpolator(x, y, z)  # Guarunteed to respect max/min of data.
     # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
-    #F2 = interpolate.interp2d(x, y, z, kind='quintic')
+    F2 = interpolate.interp2d(x, y, z, kind='quintic')
+    #F2 = LinearNDInterpolator(cartcoord, z, fill_value=0)
+    #Z0 = F2(X, Y)
 
     X,Y = np.meshgrid(xi,yi)
 
@@ -355,17 +365,20 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
-        xi_forplotting = np.linspace(x.min(), x.max(), 1000)
-        yi_forplotting = np.linspace(y.min(), y.max(), 1000)
+        #xi_forplotting = np.linspace(x.min(), x.max(), 1000)
+        #yi = np.linspace(y.min(), y.max(), 1000)
+        xi_forplotting = np.linspace(x.min(), x.max())
+        yi_forplotting = np.linspace(y.min(), y.max())
+        X_forplotting, Y_forplotting = np.meshgrid(xi_forplotting, yi_forplotting)
 
-        Z2_forplotting = F2(xi_forplotting, yi_forplotting)
+        Z2_forplotting = F2(X_forplotting[0, :], Y_forplotting[:, 0])
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
 
         #fig.savefig(fname=plotPath+".png")
         iteractivefig = go.Figure()
-        iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
+        iteractivefig.add_surface(x=X_forplotting[0, :],y=Y_forplotting[0, :],z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=True, 
         margin=dict(l=65, r=65, b=65, t=65))
         iteractivefig.update_layout(layout)
