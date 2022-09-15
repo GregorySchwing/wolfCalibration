@@ -60,9 +60,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     x_raw = df3.iloc[:,0].to_numpy()
     y_raw = df3.iloc[:,1].to_numpy()
+
+    print(x_raw)
+    print(y_raw)
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
+    print(z_raw)
 
     boolArrayOfGoodVals = reject_outliers(z_raw)
     #boolArrayOfGoodVals = reject_outliers_median(z_raw)
