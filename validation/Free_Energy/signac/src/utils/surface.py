@@ -29,8 +29,15 @@ def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None
 		art3d.pathpatch_2d_to_3d(p, z=z0, zdir=a)
 		i = i + 1
 
+#https://stackoverflow.com/questions/11686720/is-there-a-numpy-builtin-to-reject-outliers-from-a-list
 def reject_outliers(data, m=2):
     return [abs(data - np.mean(data)) < m * np.std(data)]
+
+def reject_outliers_median(data, m = 2.):
+    d = np.abs(data - np.median(data))
+    mdev = np.median(d)
+    s = d/mdev if mdev else 0.
+    return data[s<m]
 
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     if (wolfKind != "VLUGT" or potential != "DSF"):
@@ -52,7 +59,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
 
-    boolArrayOfGoodVals = reject_outliers(z_raw)
+    #boolArrayOfGoodVals = reject_outliers(z_raw)
+    boolArrayOfGoodVals = reject_outliers_median(z_raw)
     print("XMIN", x_raw.min())
     print("YMIN", y_raw.min())
     print("ZMIN", z_raw.min())
@@ -100,9 +108,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdanx_auc = {}
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
-    F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    #F2 = interpolate.interp2d(x, y, z, kind='cubic')
     # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
-    #F2 = interpolate.interp2d(x, y, z, kind='quintic')
+    F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
     X,Y = np.meshgrid(xi,yi)
 
