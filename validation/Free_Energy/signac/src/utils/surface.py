@@ -33,6 +33,7 @@ def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None
 def reject_outliers(data, m=2):
     return [abs(data - np.mean(data)) < m * np.std(data)]
 
+# Bad function, doesn't work
 def reject_outliers_median(data, m = 2.):
     d = np.abs(data - np.median(data))
     mdev = np.median(d)
@@ -57,8 +58,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
 
-    #boolArrayOfGoodVals = reject_outliers(z_raw)
-    boolArrayOfGoodVals = reject_outliers_median(z_raw)
+    boolArrayOfGoodVals = reject_outliers(z_raw)
+    #boolArrayOfGoodVals = reject_outliers_median(z_raw)
     print("XMIN", x_raw.min())
     print("YMIN", y_raw.min())
     print("ZMIN", z_raw.min())
