@@ -63,7 +63,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
 
-    z_raw = np.reshape(z_raw, (-1, len(y_raw)))
+    z_raw = np.reshape(z_raw, (len(y_raw), len(x_raw)))
 
     print(x_raw)
     print(y_raw)
@@ -136,7 +136,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdanx_auc = {}
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
-    F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
+    #F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
+    F2 = interpolate.RegularGridInterpolator((x_raw,y_raw), z_raw)
 
     #F2 = interpolate.interp2d(x, y, z, kind='cubic')
     #F2 = interp2d(x, y, z)  # radial basis function interpolator instance
