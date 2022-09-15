@@ -146,7 +146,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     X,Y = np.meshgrid(xi,yi)
 
-    Z2 = F2(xi, yi)
+    #Z2 = F2(xi, yi)
     bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(*x))
     bf = brute(f, rranges, full_output=True, finish=None)
