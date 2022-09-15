@@ -17,8 +17,6 @@ import plotly.io as pio
 import plotly.graph_objects as go
 from scipy.interpolate import griddata
 from scipy.interpolate import Rbf
-from scipy.interpolate import LinearNDInterpolator
-
 def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None):
 	xy_len, z_len = ax.get_figure().get_size_inches()
 	axis_length = [x[1] - x[0] for x in [ax.get_xbound(), ax.get_ybound(), ax.get_zbound()]]
@@ -55,18 +53,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df3 = pd.DataFrame(pointsSplit.tolist(), columns=['rcut','alpha'], dtype=np.float64)
     df4 = pd.DataFrame(dfMean.values, columns=['err'], dtype=np.float64)
 
-    print(df3)
-    print(df4)
-
     x_raw = df3.iloc[:,0].to_numpy()
     y_raw = df3.iloc[:,1].to_numpy()
-
-    print(x_raw)
-    print(y_raw)
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
-    print(z_raw)
 
     boolArrayOfGoodVals = reject_outliers(z_raw)
     #boolArrayOfGoodVals = reject_outliers_median(z_raw)
@@ -116,26 +107,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptde_auc = {}
     sptdanx_auc = {}
     sptdenx_auc = {}
-
-    # Create coordinate pairs
-    cartcoord = list(zip(x, y))
-
-
-    X = np.linspace(min(x), max(x))
-    Y = np.linspace(min(y), max(y))
-    X, Y = np.meshgrid(X, Y)
-
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.interp2d(x, y, z, kind='cubic')
+    F2 = Rbf(x, y, z)  # radial basis function interpolator instance
     # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
-    F2 = interpolate.interp2d(x, y, z, kind='quintic')
-
-    F2_LinearNDInterpolator = LinearNDInterpolator(cartcoord, z, fill_value=0)
-    Z0 = F2_LinearNDInterpolator(X, Y)
-    plt.figure()
-    plt.pcolormesh(X, Y, Z0)
-    plt.colorbar() # Color Bar
-    #plt.savefig('foo.png')
+    #F2 = interpolate.interp2d(x, y, z, kind='quintic')
 
     X,Y = np.meshgrid(xi,yi)
 
@@ -377,20 +353,17 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
-        #xi_forplotting = np.linspace(x.min(), x.max(), 1000)
-        #yi = np.linspace(y.min(), y.max(), 1000)
-        xi_forplotting = np.linspace(x.min(), x.max())
-        yi_forplotting = np.linspace(y.min(), y.max())
-        X_forplotting, Y_forplotting = np.meshgrid(xi_forplotting, yi_forplotting)
+        xi_forplotting = np.linspace(x.min(), x.max(), 1000)
+        yi_forplotting = np.linspace(y.min(), y.max(), 1000)
 
-        Z2_forplotting = F2(X_forplotting[0, :], Y_forplotting[:, 0])
+        Z2_forplotting = F2(xi_forplotting, yi_forplotting)
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
 
-        plt.savefig(fname=plotPath+"_ND.png")
+        #fig.savefig(fname=plotPath+".png")
         iteractivefig = go.Figure()
-        iteractivefig.add_surface(x=X_forplotting[0, :],y=Y_forplotting[0, :],z=Z2_forplotting)
+        iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=True, 
         margin=dict(l=65, r=65, b=65, t=65))
         iteractivefig.update_layout(layout)
