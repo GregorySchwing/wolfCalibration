@@ -323,6 +323,33 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     goMethods["danx"] = danx_mins
     goMethods["denx"] = denx_mins
 
+    goAUCs = {}
+    # AUC of single points are not what I'm using here.
+    """
+    goAUCs["sptbf"] = sptbf_auc
+    goAUCs["sptgd"] = sptgd_auc
+    goAUCs["sptshgo"] = sptshgo_auc
+    goAUCs["sptda"] = sptda_auc
+    goAUCs["sptde"] = sptde_auc
+    goAUCs["sptdanx"] = sptdanx_auc
+    goAUCs["sptdenx"] = sptdenx_auc
+    """
+    goAUCs["bf"] = bf_auc
+    goAUCs["gd"] = gd_auc
+    goAUCs["shgo"] = shgo_auc
+    goAUCs["da"] = da_auc
+    goAUCs["de"] = de_auc
+    goAUCs["danx"] = danx_auc
+    goAUCs["denx"] = denx_auc
+
+    smallestAUC = 100000000
+    winningOptimizer = ""
+    for key, value in goAUCs.items():
+        print("method",key, value)
+        if (value[0.01] < smallestAUC):
+            winningOptimizer = key
+            smallestAUC = value[0.01]
+
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
         xi_forplotting = np.linspace(x.min(), x.max(), 1000)
@@ -372,4 +399,4 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # Using any of the single point BF/GD methods is obviously a bad idea.
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
     # The question is which of the above optimizations to use.  For now, I am going with 0.01 AUC as the metric.
-    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
+    return ( ("GD_rcut",goMethods[winningOptimizer][0]), ("GD_alpha",goMethods[winningOptimizer][1]), ("GD_relerr",F2(goMethods[winningOptimizer][0], goMethods[winningOptimizer][1])[0]), ("GD_AUC_100",goAUCs[winningOptimizer][0.01]), ("WINNING_OPT",winningOptimizer) )

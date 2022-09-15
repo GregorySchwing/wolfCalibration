@@ -1148,6 +1148,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         bestModel = ""
         smallestRelErr = 1.0
         smallestGradient = 1.0
+        smallestAUC = 1000000000
         bestRCut = 0
         bestAlpha = 0
         """
@@ -1163,18 +1164,22 @@ def part_4b_job_gomc_wolf_parameters_found(job):
                 bestRCut =  model2BestWolfAlphaRCut[model]['BF_rcut']  
                 bestAlpha =  model2BestWolfAlphaRCut[model]['BF_alpha'] 
         """
+        print("Replica :", job.sp.replica)
         for model in model2BestWolfAlphaRCut:
             print("Model :", model)
-            print("grad mag :", np.linalg.norm([model2BestWolfAlphaRCut[model]['GD_jac_rcut'],model2BestWolfAlphaRCut[model]['GD_jac_alpha']]))
-            if (np.linalg.norm([model2BestWolfAlphaRCut[model]['GD_jac_rcut'],model2BestWolfAlphaRCut[model]['GD_jac_alpha']])  < smallestGradient):
+            print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
+            print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC_100'])
+            print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
+            if (model2BestWolfAlphaRCut[model]['GD_AUC_100']  < smallestAUC):
                 bestModel = model
                 smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                smallestGradient = np.linalg.norm([model2BestWolfAlphaRCut[model]['GD_jac_rcut'],model2BestWolfAlphaRCut[model]['GD_jac_alpha']])
+                smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC_100']                
                 bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                 bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']    
         print("bestModel :", bestModel)
         print("smallestRelErr :", smallestRelErr)
-        print("smallestGradient :", smallestGradient)
+        #print("smallestGradient :", smallestGradient)
+        print("smallestAUC :", smallestAUC)
         print("bestRCut :", bestRCut)
         print("bestAlpha :", bestAlpha)
 
@@ -2638,7 +2643,7 @@ def part_4b_job_gomc_calibration_find_minimum(job):
                     box = groups.group(3)
                     tupleMin = find_minimum(job.fn(file), job.sp.solute, wolfKind, potential, box, True)
                     # Use smaller error, either BF or Grad Desc
-                    #model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
+                    model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
         quit()
         with open(bestValueFileName+".pickle", 'wb') as handle:
             pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
