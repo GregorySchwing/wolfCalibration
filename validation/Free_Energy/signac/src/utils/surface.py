@@ -59,6 +59,26 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # I wonder if interpolation has problem with abs value
     z_raw = df4.iloc[:,0].to_numpy()
 
+    print(x_raw)
+    print(y_raw)
+    print(z_raw)
+
+    xy_raw = df3.iloc[:,0:1].to_numpy()
+    ind = np.lexsort((xy_raw[:,1],xy_raw[:,0]))    
+    print("sort by x then y")
+
+    x_sorted = x_raw[ind]
+    y_sorted = y_raw[ind]
+    z_sorted = z_raw[ind]
+
+    print(x_sorted)
+    print(y_sorted)
+    print(z_sorted)
+
+    x_raw = x_sorted
+    y_raw = y_sorted
+    z_raw = z_sorted
+
     boolArrayOfGoodVals = reject_outliers(z_raw)
     #boolArrayOfGoodVals = reject_outliers_median(z_raw)
     print("XMIN", x_raw.min())
