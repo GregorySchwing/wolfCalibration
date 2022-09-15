@@ -1137,6 +1137,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 def part_4b_job_gomc_wolf_parameters_found(job):
     if (not job.isfile("bestWolfParameters.pickle")):
         return False
+    return job.isfile("winningWolfParameters.pickle")
 
     try:
         import pickle as pickle
