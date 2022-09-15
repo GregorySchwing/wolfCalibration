@@ -63,7 +63,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # I wonder if interpolation has problem with abs value
     z = df4.iloc[:,0].to_numpy()
 
-    z = np.reshape(z, (len(y), len(x)))
+    z = np.reshape(z, (len(x),len(y)))
 
     print(x)
     print(y)
