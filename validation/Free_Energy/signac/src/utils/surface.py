@@ -53,21 +53,21 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df3 = pd.DataFrame(pointsSplit.tolist(), columns=['rcut','alpha'], dtype=np.float64)
     df4 = pd.DataFrame(dfMean.values, columns=['err'], dtype=np.float64)
 
-    x_raw = df3.iloc[:,0].to_numpy()
-    y_raw = df3.iloc[:,1].to_numpy()
+    x = df3.iloc[:,0].to_numpy()
+    y = df3.iloc[:,1].to_numpy()
 
-    x_raw = np.unique(x_raw)
-    y_raw = np.unique(y_raw)
+    x = np.unique(x)
+    y = np.unique(y)
 
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
-    z_raw = df4.iloc[:,0].to_numpy()
+    z = df4.iloc[:,0].to_numpy()
 
-    z_raw = np.reshape(z_raw, (len(y_raw), len(x_raw)))
+    z = np.reshape(z, (len(y), len(x)))
 
-    print(x_raw)
-    print(y_raw)
-    print(z_raw)
+    print(x)
+    print(y)
+    print(z)
     """
     xy_raw = df3.iloc[:,0:1].to_numpy()
     ind = np.lexsort((xy_raw[:,1],xy_raw[:,0]))    
@@ -137,7 +137,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
-    F2 = interpolate.RegularGridInterpolator((x_raw,y_raw), z_raw)
+    F2 = interpolate.RegularGridInterpolator((x,y), z)
 
     #F2 = interpolate.interp2d(x, y, z, kind='cubic')
     #F2 = interp2d(x, y, z)  # radial basis function interpolator instance
