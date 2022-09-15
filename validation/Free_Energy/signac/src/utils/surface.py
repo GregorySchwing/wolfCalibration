@@ -40,8 +40,6 @@ def reject_outliers_median(data, m = 2.):
     return data[s<m]
 
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
-    if (wolfKind != "VLUGT" or potential != "DSF"):
-        return
     df = pd.read_csv(path,sep='\t',index_col=0)
     df = df.iloc[: , :-1]
     dfMean = df.mean()
