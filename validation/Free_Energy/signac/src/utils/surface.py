@@ -311,4 +311,4 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("GD_relerr",goAUCs[winningOptimizer]["REF"] )
     print("GD_grad",smallestGrad) 
     print("WINNING_OPT",winningOptimizer)
-    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_relerr",goAUCs[winningOptimizer]["REF"][0]), ("GD_grad",smallestGrad),  ("WINNING_OPT",winningOptimizer) )
+    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_relerr",goAUCs[winningOptimizer]["REF"]), ("GD_grad",smallestGrad),  ("WINNING_OPT",winningOptimizer) )
