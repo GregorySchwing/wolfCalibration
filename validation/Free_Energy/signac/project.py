@@ -1148,6 +1148,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
             model2BestWolfAlphaRCut = pickle.load(handle)
         
         bestModel = ""
+        bestOpt = ""
         smallestRelErr = 1.0
         smallestGrad = 1000000000
         bestRCut = 0
@@ -1164,14 +1165,16 @@ def part_4b_job_gomc_wolf_parameters_found(job):
                 smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
                 smallestGrad = model2BestWolfAlphaRCut[model]['GD_grad']                
                 bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']    
+                bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']  
         print("bestModel :", bestModel)
+        print("bestOpt :", bestOpt)
+
         print("smallestRelErr :", smallestRelErr)
-        #print("smallestGradient :", smallestGradient)
         print("smallestGrad :", smallestGrad)
         print("bestRCut :", bestRCut)
         print("bestAlpha :", bestAlpha)
-
+        
         Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
         "Alpha":bestAlpha}
         with open("winningWolfParameters.pickle", 'wb') as handle:
