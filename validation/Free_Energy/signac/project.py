@@ -1158,8 +1158,10 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         for model in model2BestWolfAlphaRCut:
             print("Model :", model)
             print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
-            print("AUC :", model2BestWolfAlphaRCut[model]['GD_grad'])
+            print("Grad :", model2BestWolfAlphaRCut[model]['GD_grad'])
             print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
+            print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
+            print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
             if (model2BestWolfAlphaRCut[model]['GD_grad']  < smallestGrad):
                 bestModel = model
                 smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   

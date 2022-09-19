@@ -90,29 +90,15 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
-    F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=False, fill_value=None)
+    F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=True, fill_value=None)
     
-   
-    """
-    fig = plt.figure()
+    # For gradient, make sure there is enough room to create the grid of points.
+    sizeOfRegionScale = 0.001
+    sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
+    sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
 
-    ax = fig.add_subplot(projection='3d')
+    bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
     
-    xx = np.linspace(x.min(), x.max(), 650)
-    yy = np.linspace(y.min(), y.max(), 650)
-
-    X, Y = np.meshgrid(xx, yy, indexing='ij')
-    ax.plot_wireframe(X, Y, F2((X, Y), method='linear'), rstride=3, cstride=3,
-                  alpha=0.4, color='m', label='linear interp')
-
-
-    plt.legend()
-
-    plt.show()
-    """
-
-
-    bounds = [(x.min(), x.max()),(y.min(), y.max())]
     f = lambda x: np.abs(F2(xi= x, method='linear'))
     bf = brute(f, rranges, full_output=True, finish=None)
     bfXY = np.array(bf[0])
@@ -230,8 +216,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     winningOptimizer = ""
     sizeOfRegionScale = 0.001
     for key, value in goMethods.items():
-        sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
-        sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
+        #sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
+        #sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
     
         xxx = np.linspace(value["REF"][0]-sizeOfRegionX, value["REF"][0]+sizeOfRegionX, 10)
         yyy = np.linspace(value["REF"][1]-sizeOfRegionY, value["REF"][1]+sizeOfRegionY, 10)
