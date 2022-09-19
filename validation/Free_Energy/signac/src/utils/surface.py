@@ -68,53 +68,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(x)
     print(y)
     print(z)
-    """
-    xy_raw = df3.iloc[:,0:1].to_numpy()
-    ind = np.lexsort((xy_raw[:,1],xy_raw[:,0]))    
-    print("sort by x then y")
-
-    x_sorted = x_raw[ind]
-    y_sorted = y_raw[ind]
-    z_sorted = z_raw[ind]
-
-    print(x_sorted)
-    print(y_sorted)
-    print(z_sorted)
-
-    x_raw = x_sorted
-    y_raw = y_sorted
-    z_raw = z_sorted
-    """
-
-    """
-    #boolArrayOfGoodVals = reject_outliers(z_raw)
-    print("XMIN", x_raw.min())
-    print("YMIN", y_raw.min())
-    print("ZMIN", z_raw.min())
-    print("XMAX", x_raw.max())
-    print("YMAX", y_raw.max())
-    print("ZMAX", z_raw.max())
-    print("len(x_raw)", len(x_raw))
-    print("len(y_raw)", len(y_raw))
-    print("len(z_raw)", len(z_raw))
-    #print(boolArrayOfGoodVals)
-    print("remove outliers")
-    x = x_raw[tuple(boolArrayOfGoodVals)]
-    y = y_raw[tuple(boolArrayOfGoodVals)]
-    z = z_raw[tuple(boolArrayOfGoodVals)]
-    print("XMIN", x.min())
-    print("YMIN", y.min())
-    print("ZMIN", z.min())
-    print("XMAX", x.max())
-    print("YMAX", y.max())
-    print("ZMAX", z.max())
-    print("len(x)", len(x))
-    print("len(y)", len(y))
-    print("len(z)", len(z))
-    """
-    xi = np.linspace(x.min(), x.max(), 6500)
-    yi = np.linspace(y.min(), y.max(), 6500)
-    zi = np.linspace(z.min(), z.max(), 6500)
 
     rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
     print(rranges)
@@ -137,24 +90,37 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
-    F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear')
+    F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=False, fill_value=None)
+    
+   
+    """
+    fig = plt.figure()
 
-    #F2 = interpolate.interp2d(x, y, z, kind='cubic')
-    #F2 = interp2d(x, y, z)  # radial basis function interpolator instance
-    # Quintic interpolation performs terribles at the borders (Think 1E6 times too large!)
-    #F2 = interpolate.interp2d(x, y, z, kind='quintic')
+    ax = fig.add_subplot(projection='3d')
+    
+    xx = np.linspace(x.min(), x.max(), 650)
+    yy = np.linspace(y.min(), y.max(), 650)
 
-    X,Y = np.meshgrid(xi,yi)
+    X, Y = np.meshgrid(xx, yy, indexing='ij')
+    ax.plot_wireframe(X, Y, F2((X, Y), method='linear'), rstride=3, cstride=3,
+                  alpha=0.4, color='m', label='linear interp')
 
-    Z2 = F2(xi, yi)
+
+    plt.legend()
+
+    plt.show()
+    """
+
+
     bounds = [(x.min(), x.max()),(y.min(), y.max())]
-    f = lambda x: np.abs(F2(*x))
+    f = lambda x: np.abs(F2(xi= x, method='linear'))
     bf = brute(f, rranges, full_output=True, finish=None)
     bfXY = np.array(bf[0])
-    print(bfXY[0])
-    print(bfXY[1])
-    x0 = (12, 0.12)
-#    x0 = (bfXY[0], bfXY[1])
+    print("best rcut", bfXY[0])
+    print("best alpha", bfXY[1])
+  
+    #x0 = (12, 0.12)
+    x0 = (bfXY[0], bfXY[1])
     gd = minimize(f, x0, method='SLSQP', bounds=bounds)
     print(gd)
     gdXY = np.array(gd.x)
@@ -163,15 +129,15 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     gdJacXY = np.array(gd.jac)
     print(gdJacXY[0])
     print(gdJacXY[1])
-    
+
     sptbf_mins["REF"] = bfXY
     sptbf_auc["REF"] = bf[1]
     sptgd_mins["REF"] = gd.x
     sptgd_auc["REF"] = gd.fun
 
 
-    ZBF = F2(bfXY[0], bfXY[1])
-    ZGD = F2(gdXY[0], gdXY[1])
+    ZBF = F2(bfXY, method='linear')
+    ZGD = F2(gd.x, method='linear')
 
     d = {'x': [gdXY[0]], 'y': [gdXY[1]], 'z':[ZGD]}
 
@@ -204,6 +170,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdifferential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
     sptdifferential_evolutionOutNox0 = differential_evolution(f, bounds=bounds)
     print(sptdifferential_evolutionOut)  
+    print("sptdifferential_evolutionOut.keys()", sptdifferential_evolutionOut.keys())  
     print(sptdifferential_evolutionOut.keys())   
     print("Calling differential_evolutionX0")
     print(sptdifferential_evolutionOutNox0) 
@@ -221,93 +188,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("ZBF : ", ZBF)
     print("ZGD : ", ZGD)
 
-
-    scales = [0.01]
-    #scales = [0.1, 0.01, 0.001]
-    bf_mins = {}
-    gd_mins = {}
-    shgo_mins = {}
-    da_mins = {}
-    de_mins = {}
-    danx_mins = {}
-    denx_mins = {}
-
-    bf_auc = {}
-    gd_auc = {}
-    shgo_auc = {}
-    da_auc = {}
-    de_auc = {}
-    danx_auc = {}
-    denx_auc = {}
-    for sizeOfRegionScale in scales:
-        sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
-        sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
-        #f = lambda x: np.abs(F2(*x))
-        f = lambda x: np.sum(np.abs(F2(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10),np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))))
-
-
-        bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
-        rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, ((x.max()-sizeOfRegionX) - (x.min()+sizeOfRegionX))/650), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY, ((y.max()-sizeOfRegionY) - (y.min()+sizeOfRegionY))/650)
-        bf = brute(f, rranges, full_output=True, finish=None)
-        bfXY = np.array(bf[0])
-        bf_mins[sizeOfRegionScale] = bfXY
-        bf_auc[sizeOfRegionScale] = bf[1]
-
-        print("x0[0]", bfXY[0])
-        print("x0[1]", bfXY[1])
-        x0 = (12, 0.12)
-        #    x0 = (bfXY[0], bfXY[1])
-        gd = minimize(f, x0, method='SLSQP', bounds=bounds)
-        print(gd)
-        gdXY = np.array(gd.x)
-        gd_mins[sizeOfRegionScale] = gd.x
-        gd_auc[sizeOfRegionScale] = gd.fun
-        print(gdXY[0])
-        print(gdXY[1])
-        gdJacXY = np.array(gd.jac)
-        print(gdJacXY[0])
-        print(gdJacXY[1])
-        
-
-        print("Calling shgo")
-        # Default method is SLSQP
-        #shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
-        # Doesnt work for shgo
-        #bounds = [(x.min(), x.max()),(y.min(), y.max())]
-        # TypeError: shgo() got multiple values for argument 'bounds'
-        # Derivative-free, so can't use gradient here to rank.
-        shgoOut = shgo(f, bounds=bounds)
-        print(shgoOut)
-        shgo_mins[sizeOfRegionScale] = shgoOut.x
-        shgo_auc[sizeOfRegionScale] = shgoOut.fun
-        
-        print("Calling dual_annealing")
-        dual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
-        dual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
-        print(dual_annealingOut)    
-        print("Calling dual_annealingNoX0")
-        print(dual_annealingOutNoX0)    
-        da_mins[sizeOfRegionScale] = dual_annealingOut.x
-        danx_mins[sizeOfRegionScale] = dual_annealingOutNoX0.x
-
-        da_auc[sizeOfRegionScale] = dual_annealingOut.fun
-        danx_auc[sizeOfRegionScale] = dual_annealingOutNoX0.fun
-
-        print("Calling differential_evolution")
-        differential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
-        differential_evolutionOutNox0 = differential_evolution(f, bounds=bounds)
-        print(differential_evolutionOut)  
-        print(differential_evolutionOut.keys())   
-        print("Calling differential_evolutionX0")
-        print(differential_evolutionOutNox0) 
-        de_mins[sizeOfRegionScale] = differential_evolutionOut.x
-        denx_mins[sizeOfRegionScale] = differential_evolutionOutNox0.x
-
-        de_auc[sizeOfRegionScale] = differential_evolutionOut.fun
-        denx_auc[sizeOfRegionScale] = differential_evolutionOutNox0.fun
-        
-
-    
     print("sptbf_mins", sptbf_mins)
     print("sptgd_mins", sptgd_mins)
     print("sptshgo_mins", sptshgo_mins)
@@ -315,13 +195,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("sptde_mins", sptde_mins)
     print("sptdanx_mins", sptdanx_mins)
     print("sptdenx_mins", sptdenx_mins)
-    print("bf_mins", bf_mins)
-    print("gd_mins", gd_mins)
-    print("shgo_mins", shgo_mins)
-    print("da_mins", da_mins)
-    print("de_mins", de_mins)
-    print("danx_mins", danx_mins)
-    print("denx_mins", denx_mins)
+
 
     print("sptbf_auc", sptbf_auc)
     print("sptgd_auc", sptgd_auc)
@@ -330,14 +204,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("sptde_auc", sptde_auc)
     print("sptdanx_auc", sptdanx_auc)
     print("sptdenx_auc", sptdenx_auc)
-    print("bf_auc", bf_auc)
-    print("gd_auc", gd_auc)
-    print("shgo_auc", shgo_auc)
-    print("da_auc", da_auc)
-    print("de_auc", de_auc)
-    print("danx_auc", danx_auc)
-    print("denx_auc", denx_auc)
-    
 
     goMethods = {}
     goMethods["sptbf"] = sptbf_mins
@@ -347,17 +213,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     goMethods["sptde"] = sptde_mins
     goMethods["sptdanx"] = sptdanx_mins
     goMethods["sptdenx"] = sptdenx_mins
-    goMethods["bf"] = bf_mins
-    goMethods["gd"] = gd_mins
-    goMethods["shgo"] = shgo_mins
-    goMethods["da"] = da_mins
-    goMethods["de"] = de_mins
-    goMethods["danx"] = danx_mins
-    goMethods["denx"] = denx_mins
 
     goAUCs = {}
+
     # AUC of single points are not what I'm using here.
-    """
+
     goAUCs["sptbf"] = sptbf_auc
     goAUCs["sptgd"] = sptgd_auc
     goAUCs["sptshgo"] = sptshgo_auc
@@ -365,38 +225,51 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     goAUCs["sptde"] = sptde_auc
     goAUCs["sptdanx"] = sptdanx_auc
     goAUCs["sptdenx"] = sptdenx_auc
-    """
-    goAUCs["bf"] = bf_auc
-    goAUCs["gd"] = gd_auc
-    goAUCs["shgo"] = shgo_auc
-    goAUCs["da"] = da_auc
-    goAUCs["de"] = de_auc
-    goAUCs["danx"] = danx_auc
-    goAUCs["denx"] = denx_auc
 
-    smallestAUC = 100000000
+    smallestGrad = 100000000
     winningOptimizer = ""
-    for key, value in goAUCs.items():
-        print("method",key, value)
-        if (value[0.01] < smallestAUC):
-            winningOptimizer = key
-            smallestAUC = value[0.01]
+    sizeOfRegionScale = 0.001
+    for key, value in goMethods.items():
+        sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
+        sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
+    
+        xxx = np.linspace(value["REF"][0]-sizeOfRegionX, value["REF"][0]+sizeOfRegionX, 10)
+        yyy = np.linspace(value["REF"][1]-sizeOfRegionY, value["REF"][1]+sizeOfRegionY, 10)
 
+
+        Xpoint, Ypoint = np.meshgrid(xxx, yyy, indexing='ij')
+        print("method",key, value)
+        print("calculating gradient of points centered at ",value["REF"][0], " " , value["REF"][1])
+
+        print(Xpoint.ravel())
+        print(Ypoint.ravel())
+        print(F2((Xpoint, Ypoint), method='linear').ravel())
+        grad = np.gradient(np.stack([Xpoint.ravel(), Ypoint.ravel(), F2((Xpoint, Ypoint), method='linear').ravel()]))
+        print("gradient of ", key, " : ", grad)
+        gradNorm = LA.norm(grad)
+        print("LA.norm(grad) ", gradNorm)
+        
+        if (gradNorm < smallestGrad):
+            winningOptimizer = key
+            smallestGrad = gradNorm
+
+        
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
-        xi_forplotting = np.linspace(x.min(), x.max(), 1000)
-        yi_forplotting = np.linspace(y.min(), y.max(), 1000)
-
-        Z2_forplotting = F2(xi_forplotting, yi_forplotting)
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
+        xx_forplotting = np.linspace(x.min(), x.max(), 1000)
+        yy_forplotting = np.linspace(y.min(), y.max(), 1000)
 
-        #fig.savefig(fname=plotPath+".png")
+        X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting, indexing='xy')
+
         iteractivefig = go.Figure()
-        iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
-        layout = go.Layout(title=title,autosize=True, 
-        margin=dict(l=65, r=65, b=65, t=65))
+        #iteractivefig.add_surface(autocolorscale=True, x=X, y=Y, z=F2((X, Y), method='linear'))
+        iteractivefig.add_surface(autocolorscale=True, x=xx_forplotting, y=yy_forplotting, z=F2((X_forplotting, Y_forplotting), method='linear'))
+        #iteractivefig.add_surface(autocolorscale=True, x=X.ravel(), y=Y.ravel(), z=F2((X, Y), method='linear').ravel())
+        #iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
+        layout = go.Layout(title=title,autosize=True, margin=dict(l=65, r=65, b=65, t=65))
         iteractivefig.update_layout(layout)
         iteractivefig.update_layout(scene = dict(
                     xaxis_title='RCut',
@@ -406,14 +279,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     margin=dict(r=20, b=10, l=10, t=10))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
-
+        
         for key, value in goMethods.items():
             print("method",key, value)
             xvals = [item[0] for item in value.values()]
             yvals = [item[1] for item in value.values()]
             zvals = []
             for x,y in zip(xvals,yvals):
-                zvals.append(F2(x, y)[0])
+                zvals.append(F2((x, y), method='linear'))
             print("x:", xvals)
             print("y:", yvals)
             print("z:", zvals)
@@ -426,15 +299,16 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                             hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                             showlegend=True)
             )
+        
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
-    # The question is which of the above optimizations to use.  For now, I am going with 0.01 AUC as the metric.
-    print("winningOptimizer ", winningOptimizer)
-    print("GD_rcut",goMethods[winningOptimizer][0.01][0])
-    print("GD_alpha",goMethods[winningOptimizer][0.01][1])
-    print("GD_relerr",F2(goMethods[winningOptimizer][0.01][0], goMethods[winningOptimizer][0.01][1])[0])
-    print("GD_AUC_100",goAUCs[winningOptimizer][0.01]), 
+    # The question is which of the above optimizations to use.  For now, I am going with "REF" AUC as the metric.
+
+    print("GD_rcut",goMethods[winningOptimizer]["REF"][0])
+    print("GD_alpha",goMethods[winningOptimizer]["REF"][1])
+    print("GD_relerr",goAUCs[winningOptimizer]["REF"] )
+    print("GD_grad",smallestGrad) 
     print("WINNING_OPT",winningOptimizer)
-    return ( ("GD_rcut",goMethods[winningOptimizer][0.01][0]), ("GD_alpha",goMethods[winningOptimizer][0.01][1]), ("GD_relerr",F2(goMethods[winningOptimizer][0.01][0], goMethods[winningOptimizer][0.01][1])[0]), ("GD_AUC_100",goAUCs[winningOptimizer][0.01]), ("WINNING_OPT",winningOptimizer) )
+    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_relerr",goAUCs[winningOptimizer]["REF"][0]), ("GD_grad",smallestGrad),  ("WINNING_OPT",winningOptimizer) )
