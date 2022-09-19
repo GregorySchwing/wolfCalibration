@@ -1149,39 +1149,26 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         
         bestModel = ""
         smallestRelErr = 1.0
-        smallestGradient = 1.0
-        smallestAUC = 1000000000
+        smallestGrad = 1000000000
         bestRCut = 0
         bestAlpha = 0
-        """
-        for model in model2BestWolfAlphaRCut:
-            if (model2BestWolfAlphaRCut[model]['GD_relerr'] < smallestRelErr):
-                bestModel = model
-                smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']    
-            if (model2BestWolfAlphaRCut[model]['BF_relerr'] < smallestRelErr):
-                bestModel = model
-                smallestRelErr = model2BestWolfAlphaRCut[model]['BF_relerr']
-                bestRCut =  model2BestWolfAlphaRCut[model]['BF_rcut']  
-                bestAlpha =  model2BestWolfAlphaRCut[model]['BF_alpha'] 
-        """
+
         print("Replica :", job.sp.replica)
         for model in model2BestWolfAlphaRCut:
             print("Model :", model)
             print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
-            print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC_100'])
+            print("AUC :", model2BestWolfAlphaRCut[model]['GD_grad'])
             print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
-            if (model2BestWolfAlphaRCut[model]['GD_AUC_100']  < smallestAUC):
+            if (model2BestWolfAlphaRCut[model]['GD_grad']  < smallestGrad):
                 bestModel = model
                 smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC_100']                
+                smallestGrad = model2BestWolfAlphaRCut[model]['GD_grad']                
                 bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                 bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']    
         print("bestModel :", bestModel)
         print("smallestRelErr :", smallestRelErr)
         #print("smallestGradient :", smallestGradient)
-        print("smallestAUC :", smallestAUC)
+        print("smallestGrad :", smallestGrad)
         print("bestRCut :", bestRCut)
         print("bestAlpha :", bestAlpha)
 
