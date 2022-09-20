@@ -1425,7 +1425,29 @@ def part_5b_analysis_replica_averages_completed(*jobs):
 
     return all_file_written_bool_pass
 
+# check if analysis for averages of all the replicates is completed
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.label
+def part_5b_preliminary_analysis_replica_averages_completed(*jobs):
+    """Check that the simulation replicate average and std. dev. files are written."""
+    file_written_bool_list = []
+    all_file_written_bool_pass = False
+    for job in jobs:
+        file_written_bool = False
 
+        if (
+            job.isfile(
+                f"../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}"
+            )
+        ):
+            file_written_bool = True
+
+        file_written_bool_list.append(file_written_bool)
+
+    if False not in file_written_bool_list:
+        all_file_written_bool_pass = True
+
+    return all_file_written_bool_pass
 # ******************************************************
 # ******************************************************
 # check if GOMC anaylsis is completed properly (end)
@@ -2998,7 +3020,7 @@ def part_5b_preliminary_analysis_replica_averages(*jobs):
                              f"\n"
 
 
-    write_file_path_and_name_box_0 = f'analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'
+    write_file_path_and_name_box_0 = f'analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'
     if os.path.isfile(write_file_path_and_name_box_0):
         box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
     else:
