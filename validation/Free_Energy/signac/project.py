@@ -3038,7 +3038,7 @@ def part_5b_preliminary_analysis_replica_averages(*jobs):
         # *************************
         # drawing in data from single file and extracting specific rows from box 0 (start)
         # *************************
-        reading_file_box_box_0 = job.fn(output_replicate_txt_file_name_box_0)
+        reading_file_box_box_0 = job.fn(preliminary_output_replicate_txt_file_name_box_0)
 
         data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
         data_box_box_0 = pd.DataFrame(data_box_box_0)
