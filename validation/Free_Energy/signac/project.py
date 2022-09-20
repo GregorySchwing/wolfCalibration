@@ -879,6 +879,7 @@ def part_part_3c_output_gomc_production_run_started(job):
         return True
     except:
         return False
+
 # ******************************************************
 # ******************************************************
 # check if GOMC simulations started (end)
@@ -2724,7 +2725,6 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
     @Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-    @Project.post(not part_part_3c_output_gomc_production_run_started)
     @Project.post(part_part_3c_output_gomc_production_run_started)
     @Project.post(part_4c_job_production_run_completed_properly)
     @Project.operation.with_directives(
