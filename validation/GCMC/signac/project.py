@@ -437,7 +437,9 @@ def initial_parameters(job):
     job.doc.N_liquid_solvent = 1
     job.doc.N_liquid_solute = 1
 
-    job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
+    padding = 10
+
+    job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
 
     job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
     job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
@@ -1568,7 +1570,7 @@ def build_charmm(job, write_files=True):
     with open(template, 'r') as file :
         filedata = file.read()
 
-    radius = 10
+    radius = job.sp.shell_radius
     padding = 10
 	# Replace the target string
     filedata = filedata.replace("R_ARG", str(radius))
@@ -1584,6 +1586,23 @@ def build_charmm(job, write_files=True):
     print("Making solvated sphere", job)
     ions = evaltcl("source " + job.fn("filled_template.tcl"))
     ionsList = ions.split()
+
+    print("Edit forcefields to use atom types from vmd solvate", job)
+    import re
+    import fileinput
+    with fileinput.FileInput(job.fn(f"{namd_ff_filename_str}.inp"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"\b%s\b" % "A", "NE", l)
+            l = re.sub(r"\b%s\b" % "B", "HT", l)
+            l = re.sub(r"\b%s\b" % "C", "OT", l)
+            print(l)
+
+    with fileinput.FileInput(job.fn(f"{gomc_ff_filename_str}.inp"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"\b%s\b" % "A", "NE", l)
+            l = re.sub(r"\b%s\b" % "B", "HT", l)
+            l = re.sub(r"\b%s\b" % "C", "OT", l)
+            print(l)
 
     return [namd_charmm, gomc_charmm]
 
