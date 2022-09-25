@@ -986,6 +986,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     if(job.sp.electrostatic_method != "Wolf"):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             control_file_name_str = "wolf_calibration"
@@ -996,7 +997,20 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                 return False
             else:
                 return True
-
+    elif(job.sp.replica_number_int != 0):
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            control_file_name_str = "wolf_calibration"
+            if gomc_sim_completed_properly(
+                ewald_job,
+                control_file_name_str,
+            ) is False:
+                return False
+            else:
+                return True
     try:
         control_file_name_str = "wolf_calibration"
         if gomc_sim_completed_properly(
@@ -1138,9 +1152,15 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
-    if (not job.isfile("bestWolfParameters.pickle")):
-        return False
-
+    if(job.sp.replica_number_int != 0):
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            if (not ewald_job.isfile("bestWolfParameters.pickle")):
+                return False
+            return ewald_job.isfile("winningWolfParameters.pickle")
     try:
         import pickle as pickle
         import re
@@ -1257,10 +1277,20 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
     import pickle as pickle
+
+    if(job.sp.replica_number_int != 0):
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            with open(ewald_job.fn("winningWolfParameters.pickle"), 'rb') as handle:
+                winningWolf = pickle.load(handle)
+    else:
+        with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
+            winningWolf = pickle.load(handle)
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-    with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
-        winningWolf = pickle.load(handle)
     box = "0"
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
@@ -2611,7 +2641,7 @@ def run_wolf_sanity_run_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf" and j.sp.replica_number_int == 0)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
@@ -2646,7 +2676,7 @@ def run_calibration_run_gomc_command(job):
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf" and j.sp.replica_number_int == 0)
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
 @Project.operation.with_directives(
