@@ -1551,10 +1551,10 @@ def build_charmm(job, write_files=True):
     residues_list = [solute.name, solvent.name]
     print("residues_list  = " +str(residues_list ))
 
-    if job.doc.solvent in ["TIP4", "TIP3"]:
-        gomc_fix_bonds_angles_residues_list = [solvent.name]
-    else:
-        gomc_fix_bonds_angles_residues_list  = None
+    #if job.doc.solvent in ["TIP4", "TIP3"]:
+    gomc_fix_bonds_angles_residues_list = [solvent.name]
+    #else:
+    #    gomc_fix_bonds_angles_residues_list  = None
 
     print('Running: filling liquid box')
     box_0 = mb.fill_box(compound=[solute, solvent],
