@@ -95,7 +95,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sizeOfRegionScale = 0.001
     sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
     sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
-    rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, (x.max()-sizeOfRegionX - x.min()+sizeOfRegionX)/650), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionX, (y.max()-sizeOfRegionX - y.min()+sizeOfRegionY)/650)
+    rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, (x.max()-sizeOfRegionX - x.min()+sizeOfRegionX)/100), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionX, (y.max()-sizeOfRegionX - y.min()+sizeOfRegionY)/100)
     print(rranges)
     bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
     
@@ -214,32 +214,18 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     goAUCs["sptdanx"] = sptdanx_auc
     goAUCs["sptdenx"] = sptdenx_auc
 
-    smallestGrad = 100000000
+    smallestAUC = 100000000
     winningOptimizer = ""
     sizeOfRegionScale = 0.001
-    for key, value in goMethods.items():
+    for key, value in goAUCs.items():
         #sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
         #sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
     
-        xxx = np.linspace(value["REF"][0]-sizeOfRegionX, value["REF"][0]+sizeOfRegionX, 10)
-        yyy = np.linspace(value["REF"][1]-sizeOfRegionY, value["REF"][1]+sizeOfRegionY, 10)
-
-
-        Xpoint, Ypoint = np.meshgrid(xxx, yyy, indexing='ij')
         print("method",key, value)
-        print("calculating gradient of points centered at ",value["REF"][0], " " , value["REF"][1])
-
-        print(Xpoint.ravel())
-        print(Ypoint.ravel())
-        print(F2((Xpoint, Ypoint), method='linear').ravel())
-        grad = np.gradient(np.stack([Xpoint.ravel(), Ypoint.ravel(), F2((Xpoint, Ypoint), method='linear').ravel()]))
-        print("gradient of ", key, " : ", grad)
-        gradNorm = LA.norm(grad)
-        print("LA.norm(grad) ", gradNorm)
         
-        if (gradNorm < smallestGrad):
+        if (value["REF"] < smallestAUC):
             winningOptimizer = key
-            smallestGrad = gradNorm
+            smallestAUC = value["REF"]
 
         
     if(plotSuface):
@@ -297,6 +283,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("GD_rcut",goMethods[winningOptimizer]["REF"][0])
     print("GD_alpha",goMethods[winningOptimizer]["REF"][1])
     print("GD_relerr",goAUCs[winningOptimizer]["REF"] )
-    print("GD_grad",smallestGrad) 
+    print("GD_AUC",smallestAUC) 
     print("WINNING_OPT",winningOptimizer)
-    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_relerr",goAUCs[winningOptimizer]["REF"]), ("GD_grad",smallestGrad),  ("WINNING_OPT",winningOptimizer) )
+    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_relerr",goAUCs[winningOptimizer]["REF"]), ("GD_AUC",smallestAUC),  ("WINNING_OPT",winningOptimizer) )
