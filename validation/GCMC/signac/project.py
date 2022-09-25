@@ -1560,8 +1560,6 @@ def build_charmm(job, write_files=True):
 
     if write_files == True:
         gomc_charmm.write_inp()
-        gomc_charmm.write_psf()
-        gomc_charmm.write_pdb()
 
         namd_charmm.write_inp()
 
@@ -1572,7 +1570,7 @@ def build_charmm(job, write_files=True):
     print("#**********************")
     print("Completed: GOMC Charmm Object")
     print("#**********************")
-
+    import sys
     from vmd import evaltcl
     template = get_sphere_builder_path()
 	# Read in the file
@@ -1667,14 +1665,26 @@ def build_charmm(job, write_files=True):
             l = re.sub(r"\b%s\b" % "A", "HT", l)
             l = re.sub(r"\b%s\b" % "B", "NE", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
-            print(l)
+            sys.stdout.write(l)
 
     with fileinput.FileInput(job.fn(f"{gomc_ff_filename_str}.inp"), inplace=True) as f:
         for l in f:
             l = re.sub(r"\b%s\b" % "A", "HT", l)
             l = re.sub(r"\b%s\b" % "B", "NE", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
-            print(l)
+            sys.stdout.write(l)
+
+    # GOMC checks the resname in GCMC
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "NE1", "Ne ", l)
+            sys.stdout.write(l)
+
+    # GOMC checks the resname in GCMC
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "NE1", "Ne ", l)
+            sys.stdout.write(l)
 
     return [namd_charmm, gomc_charmm]
 
