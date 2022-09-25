@@ -23,7 +23,7 @@ from flow.environment import DefaultSlurmEnvironment
 from src.utils.forcefields import get_ff_path
 from src.utils.forcefields import get_molecule_path
 from templates.NAMD_conf_template import generate_namd_equilb_control_file
-from templates.sphere_builder_template import get_sphere_builder_path
+from templates.sphere_builder_template import get_sphere_builder_path, get_pdb2bincoords_path, get_pdb2xsc_path
 from src.topologies.topology import get_topology_path
 
 
@@ -57,13 +57,13 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
-#gomc_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #gomc_binary_path = "/home6/greg/GOMC/bin"
-#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
+namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 
@@ -108,7 +108,7 @@ gomc_ff_filename_str = "in_gomc_FF"
 # initial mosdef structure and coordinates
 # Note: do not add extensions
 mosdef_structure_box_0_name_str = "mosdef_box_0"
-
+mosdef_structure_box_1_name_str = "mosdef_box_1"
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
 namd_equilb_NPT_control_file_name_str = "namd_equilb_NPT"
@@ -153,7 +153,7 @@ forcefield_residue_to_ff_filename_dict = {
     "MSPCE": "mspce_trappe.xml",
     "SPCE": "spce_trappe.xml",
     "SPC": "spc_trappe.xml",
-    "TIP3": "tip3.xml",
+    "TIP3": "tip3p.xml",
     "TIP4": "tip4p_2005.xml",
     "Ne": "nobel_gas_vrabec_LB_mixing.xml",
     "Rn": "nobel_gas_vrabec_LB_mixing.xml",
@@ -415,8 +415,8 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    equilibration_ensemble = "NPT"
-    production_ensemble = "NVT"
+    equilibration_ensemble = "GCMC"
+    production_ensemble = "GCMC"
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
     job.doc.equilibration_ensemble = equilibration_ensemble
     job.doc.production_ensemble = production_ensemble
@@ -521,9 +521,12 @@ def initial_parameters(job):
     elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
+    elif equilibration_ensemble == "GCMC":
+        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
+        job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GCMC"
     else:
         raise ValueError(
-            "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
+            "ERROR: The 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
         )
     
 
@@ -531,9 +534,11 @@ def initial_parameters(job):
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
     elif production_ensemble == "NVT":
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
+    elif production_ensemble == "GCMC":
+        job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GCMC"
     else:
         raise ValueError(
-            "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
+            "ERROR: The 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
         )
 
 
@@ -1474,7 +1479,6 @@ def build_charmm(job, write_files=True):
                       smiles=smiles_or_mol2[job.doc.solvent]['use_smiles']
                       )
     solvent.name = job.doc.solvent
-
     #if job.doc.solvent not in ["TIP4"]:
         #solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
 
@@ -1519,40 +1523,45 @@ def build_charmm(job, write_files=True):
                         seed=mbuild_box_seed_no
                         )
     print('Completed: filling liquid box')
-
+    box_1 = mb.fill_box(compound=[solute, solvent],
+                        n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
+                        box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                             ],
+                        seed=mbuild_box_seed_no
+                        )
     print('Running: GOMC FF file, and the psf and pdb files')
-    if job.doc.production_ensemble in ["NVT", "NPT"]:
-        print('Running: namd_charmm')
-        namd_charmm = mf_charmm.Charmm(
-            box_0,
-            mosdef_structure_box_0_name_str,
-            structure_box_1=None,
-            filename_box_1=None,
-            ff_filename= namd_ff_filename_str,
-            forcefield_selection=minimal_forcefield_dict,
-            residues=residues_list,
-            bead_to_atom_name_dict=bead_to_atom_name_dict,
-            gomc_fix_bonds_angles=None,
-        )
+    print('Running: namd_charmm')
+    namd_charmm = mf_charmm.Charmm(
+        box_0,
+        mosdef_structure_box_0_name_str,
+        structure_box_1=None,
+        filename_box_1=None,
+        ff_filename= namd_ff_filename_str,
+        forcefield_selection=minimal_forcefield_dict,
+        residues=residues_list,
+        bead_to_atom_name_dict=bead_to_atom_name_dict,
+        gomc_fix_bonds_angles=None,
+    )
 
-        print('Running: gomc_charmm')
-        gomc_charmm = mf_charmm.Charmm(
-            box_0,
-            mosdef_structure_box_0_name_str,
-            structure_box_1=None,
-            filename_box_1=None,
-            ff_filename=  gomc_ff_filename_str,
-            forcefield_selection=minimal_forcefield_dict,
-            residues=residues_list,
-            bead_to_atom_name_dict=bead_to_atom_name_dict,
-            gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
-        )
-
-    else:
-        raise ValueError("ERROR: The GCMC and GEMC ensembles are not supported in this script.")
+    print('Running: gomc_charmm')
+    gomc_charmm = mf_charmm.Charmm(
+        box_0,
+        mosdef_structure_box_0_name_str,
+        structure_box_1=box_1,
+        filename_box_1=mosdef_structure_box_1_name_str,
+        ff_filename=  gomc_ff_filename_str,
+        forcefield_selection=minimal_forcefield_dict,
+        residues=residues_list,
+        bead_to_atom_name_dict=bead_to_atom_name_dict,
+        gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
+    )
 
     if write_files == True:
         gomc_charmm.write_inp()
+        gomc_charmm.write_psf()
+        gomc_charmm.write_pdb()
 
         namd_charmm.write_inp()
 
@@ -1577,15 +1586,56 @@ def build_charmm(job, write_files=True):
     filedata = filedata.replace("PADDING_ARG", str(padding))
     filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
 
+	# Write the file out again
+    with open(job.fn("filled_template.tcl"), 'w') as file:
+        file.write(filedata)
+
+    print("Making solvated sphere", job)
+    ions = evaltcl("source " + job.fn("filled_template.tcl"))
+    ionsList = ions.split()
+
+    template = get_pdb2bincoords_path()
+	# Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+
+    radius = job.sp.shell_radius
+    padding = 10
+	# Replace the target string
+    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
 
 	# Write the file out again
     with open(job.fn("filled_template.tcl"), 'w') as file:
         file.write(filedata)
 
+    print("Making solvated sphere", job)
+    ions = evaltcl("source " + job.fn("filled_template.tcl"))
+    ionsList = ions.split()
+
+    template = get_pdb2xsc_path()
+	# Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+
+    radius = job.sp.shell_radius
+    padding = 10
+	# Replace the target string
+    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+
+	# Write the file out again
+    with open(job.fn("filled_template.tcl"), 'w') as file:
+        file.write(filedata)
 
     print("Making solvated sphere", job)
     ions = evaltcl("source " + job.fn("filled_template.tcl"))
     ionsList = ions.split()
+
+
+
+
 
     print("Edit forcefields to use atom types from vmd solvate", job)
     import re
@@ -1647,13 +1697,24 @@ def build_psf_pdb_ff_gomc_conf(job):
     Structure_box_0 = "{}.psf".format(
         namd_restart_pdb_psf_file_name_str
     )
+    Coordinates_box_1 = "{}.pdb".format(
+        mosdef_structure_box_1_name_str
+    )
+    Structure_box_1 = "{}.psf".format(
+        mosdef_structure_box_1_name_str
+    )
     binCoordinates_box_0 = "{}.restart.coor".format(
         restart_control_file_name_str
     )
     extendedSystem_box_0 = "{}.restart.xsc".format(
         restart_control_file_name_str
     )
-
+    binCoordinates_box_1 = "{}.coor".format(
+        mosdef_structure_box_1_name_str
+    )
+    extendedSystem_box_1 = "{}.xsc".format(
+        mosdef_structure_box_1_name_str
+    )
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
 
@@ -1669,7 +1730,12 @@ def build_psf_pdb_ff_gomc_conf(job):
     Single_state_gomc_eq_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
-
+    Single_state_gomc_eq_binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
+        Single_state_gomc_eq_control_file_name
+    )
+    Single_state_gomc_eq_extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
+        Single_state_gomc_eq_control_file_name
+    )
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
@@ -1679,12 +1745,18 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
             job.doc.path_to_ref_pdb =  ref_job.fn(Coordinates_box_0)
             job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
+            job.doc.path_to_ref_pdb_box_1 =  ref_job.fn(Coordinates_box_1)
+            job.doc.path_to_ref_psf_box_1 =  ref_job.fn(Structure_box_1)
             job.doc.path_to_ref_binCoordinates =  ref_job.fn(binCoordinates_box_0)
             job.doc.path_to_ref_extendedSystem =  ref_job.fn(extendedSystem_box_0)
+            job.doc.path_to_ref_binCoordinates_box_1 =  ref_job.fn(binCoordinates_box_1)
+            job.doc.path_to_ref_extendedSystem_box_1 =  ref_job.fn(extendedSystem_box_1)     
             job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
             job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
             job.doc.path_to_sseq_binCoordinates =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_0)
             job.doc.path_to_sseq_extendedSystem =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_0)
+            job.doc.path_to_sseq_binCoordinates_box_1 =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_1)
+            job.doc.path_to_sseq_extendedSystem_box_1 =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_1)
             job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
        
     else:
@@ -1692,11 +1764,17 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_ref_pdb =  job.fn(Coordinates_box_0)
         job.doc.path_to_ref_psf =  job.fn(Structure_box_0)
         job.doc.path_to_ref_binCoordinates =  job.fn(binCoordinates_box_0)
-        job.doc.path_to_ref_extendedSystem =  job.fn(extendedSystem_box_0)     
+        job.doc.path_to_ref_extendedSystem =  job.fn(extendedSystem_box_0)  
+        job.doc.path_to_ref_pdb_box_1 =  job.fn(Coordinates_box_1)
+        job.doc.path_to_ref_psf_box_1 =  job.fn(Structure_box_1)
+        job.doc.path_to_ref_binCoordinates_box_1 =  job.fn(binCoordinates_box_1)
+        job.doc.path_to_ref_extendedSystem_box_1 =  job.fn(extendedSystem_box_1)     
         job.doc.path_to_sseq_pdb =  job.fn(Single_state_gomc_eq_Coordinates_box_0)
         job.doc.path_to_sseq_psf =  job.fn(Single_state_gomc_eq_Structure_box_0)
         job.doc.path_to_sseq_binCoordinates =  job.fn(Single_state_gomc_eq_binCoordinates_box_0)
         job.doc.path_to_sseq_extendedSystem =  job.fn(Single_state_gomc_eq_extendedSystem_box_0)
+        job.doc.path_to_sseq_binCoordinates_box_1 =  job.fn(Single_state_gomc_eq_binCoordinates_box_1)
+        job.doc.path_to_sseq_extendedSystem_box_1 =  job.fn(Single_state_gomc_eq_extendedSystem_box_1)
         job.doc.path_to_sseq_console =  job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
@@ -1811,7 +1889,15 @@ def build_psf_pdb_ff_gomc_conf(job):
             DisFreq = (0.39,)
             RotFreq = (0.3,)
             RegrowthFreq = (0.3,)
-
+        elif job.doc.equilibration_ensemble in ["GCMC"]:
+            VolFreq = (None,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.01,)
+            CrankShaftFreq = (None,)
+            SwapFreq = (0.2,)
+            DisFreq = (0.39,)
+            RotFreq = (0.1,)
+            RegrowthFreq = (0.3,)
         else:
             raise ValueError(
                 "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -1844,6 +1930,15 @@ def build_psf_pdb_ff_gomc_conf(job):
             RotFreq = (0.2,)
             RegrowthFreq = (0.20,)
 
+        elif job.doc.equilibration_ensemble in ["GCMC"]:
+            VolFreq = (None,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.01,)
+            CrankShaftFreq = (None,)
+            SwapFreq = (0.2,)
+            DisFreq = (0.39,)
+            RotFreq = (0.1,)
+            RegrowthFreq = (0.3,)
         else:
             raise ValueError(
                 "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -1870,10 +1965,10 @@ def build_psf_pdb_ff_gomc_conf(job):
         binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
         extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
         binVelocities_box_0=None,
-        Coordinates_box_1=None,
-        Structure_box_1=None,
-        binCoordinates_box_1=None,
-        extendedSystem_box_1=None,
+        Coordinates_box_1=Coordinates_box_1,
+        Structure_box_1=Structure_box_1,
+        binCoordinates_box_1=job.doc.path_to_ref_binCoordinates_box_1,
+        extendedSystem_box_1=job.doc.path_to_ref_extendedSystem_box_1,
         binVelocities_box_1=None,
         input_variables_dict={
             "PRNG": seed_no,
@@ -1908,11 +2003,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
             "CBMC_Dih": CBMC_Dih[-1],
-            #"FreeEnergyCalc": NoFreeEnergyCalc,
-            #"MoleculeType": MoleculeType,
-            #"InitialState": initial_state_sims_i,
-            #"LambdaVDW": list(job.doc.LambdaVDW_list),
-            #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+            "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
         },
     )
 
@@ -1943,10 +2034,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
             binVelocities_box_0=None,
-            Coordinates_box_1=None,
-            Structure_box_1=None,
-            binCoordinates_box_1=None,
-            extendedSystem_box_1=None,
+            Coordinates_box_1=Coordinates_box_1,
+            Structure_box_1=Structure_box_1,
+            binCoordinates_box_1=job.doc.path_to_ref_binCoordinates_box_1,
+            extendedSystem_box_1=job.doc.path_to_ref_extendedSystem_box_1,
             binVelocities_box_1=None,
             input_variables_dict={
                 "PRNG": seed_no,
@@ -1981,11 +2072,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"FreeEnergyCalc": NoFreeEnergyCalc,
-                #"MoleculeType": MoleculeType,
-                #"InitialState": initial_state_sims_i,
-                #"LambdaVDW": list(job.doc.LambdaVDW_list),
-                #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+                "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
             },
         )
 
@@ -2056,6 +2143,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RotFreq = (0.3,)
                 RegrowthFreq = (0.3,)
 
+            elif job.doc.equilibration_ensemble in ["GCMC"]:
+                VolFreq = (None,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.01,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (0.2,)
+                DisFreq = (0.39,)
+                RotFreq = (0.1,)
+                RegrowthFreq = (0.3,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2088,6 +2184,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
 
+            elif job.doc.equilibration_ensemble in ["GCMC"]:
+                VolFreq = (None,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.01,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (0.2,)
+                DisFreq = (0.39,)
+                RotFreq = (0.1,)
+                RegrowthFreq = (0.3,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2107,15 +2212,15 @@ def build_psf_pdb_ff_gomc_conf(job):
             Restart= False if job.sp.skipEq == "True" else True,
             RestartCheckpoint=True,
             ExpertMode=False,
-            Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
+            Coordinates_box_0=Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
             Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
             binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
-            Coordinates_box_1=None,
-            Structure_box_1=None,
-            binCoordinates_box_1=None,
-            extendedSystem_box_1=None,
+            Coordinates_box_1=Coordinates_box_1 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb_box_1,
+            Structure_box_1=Structure_box_1 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf_box_1,
+            binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
+            extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
             binVelocities_box_1=None,
             input_variables_dict={
                 "PRNG": seed_no,
@@ -2150,11 +2255,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "FreeEnergyCalc": FreeEnergyCalc,
-                "MoleculeType": MoleculeType,
-                "InitialState": initial_state_sims_i,
-                "LambdaVDW": list(job.doc.LambdaVDW_list),
-                "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+                "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
             },
         )
         print("#**********************")
@@ -2241,6 +2342,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RotFreq = (0.3,)
                 RegrowthFreq = (0.3,)
 
+            elif job.doc.equilibration_ensemble in ["GCMC"]:
+                VolFreq = (None,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.01,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (0.2,)
+                DisFreq = (0.39,)
+                RotFreq = (0.1,)
+                RegrowthFreq = (0.3,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2273,6 +2383,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
 
+            elif job.doc.equilibration_ensemble in ["GCMC"]:
+                VolFreq = (None,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.01,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (0.2,)
+                DisFreq = (0.39,)
+                RotFreq = (0.1,)
+                RegrowthFreq = (0.3,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2292,6 +2411,18 @@ def build_psf_pdb_ff_gomc_conf(job):
             restart_control_file_name_str
         )
 
+        Prod_Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
+            restart_control_file_name_str
+        )
+        Prod_Structure_box_1 = "{}_BOX_1_restart.psf".format(
+            restart_control_file_name_str
+        )
+        Prod_binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
+            restart_control_file_name_str
+        )
+        Prod_extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
+            restart_control_file_name_str
+        )
         gomc_control.write_gomc_control_file(
             gomc_charmm_object_with_files,
             output_name_control_file_name,
@@ -2309,10 +2440,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             binCoordinates_box_0=Prod_binCoordinates_box_0,
             extendedSystem_box_0=Prod_extendedSystem_box_0,
             binVelocities_box_0=None,
-            Coordinates_box_1=None,
-            Structure_box_1=None,
-            binCoordinates_box_1=None,
-            extendedSystem_box_1=None,
+            Coordinates_box_1=Prod_Coordinates_box_1,
+            Structure_box_1=Prod_Structure_box_1,
+            binCoordinates_box_1=Prod_binCoordinates_box_1,
+            extendedSystem_box_1=Prod_extendedSystem_box_1,
             binVelocities_box_1=None,
             input_variables_dict={
                 "PRNG": seed_no,
@@ -2347,11 +2478,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "FreeEnergyCalc": FreeEnergyCalc,
-                "MoleculeType": MoleculeType,
-                "InitialState": initial_state_sims_i,
-                "LambdaVDW": list(job.doc.LambdaVDW_list),
-                "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+                "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
             },
         )
 
@@ -2394,6 +2521,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                     RotFreq = (0.3,)
                     RegrowthFreq = (0.3,)
 
+                elif job.doc.equilibration_ensemble in ["GCMC"]:
+                    VolFreq = (None,)
+                    MultiParticleFreq = (None,)
+                    IntraSwapFreq = (0.01,)
+                    CrankShaftFreq = (None,)
+                    SwapFreq = (0.2,)
+                    DisFreq = (0.39,)
+                    RotFreq = (0.1,)
+                    RegrowthFreq = (0.3,)
                 else:
                     raise ValueError(
                         "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2426,6 +2562,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                     RotFreq = (0.2,)
                     RegrowthFreq = (0.20,)
 
+                elif job.doc.equilibration_ensemble in ["GCMC"]:
+                    VolFreq = (None,)
+                    MultiParticleFreq = (None,)
+                    IntraSwapFreq = (0.01,)
+                    CrankShaftFreq = (None,)
+                    SwapFreq = (0.2,)
+                    DisFreq = (0.39,)
+                    RotFreq = (0.1,)
+                    RegrowthFreq = (0.3,)
                 else:
                     raise ValueError(
                         "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2449,10 +2594,10 @@ def build_psf_pdb_ff_gomc_conf(job):
                 binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
                 extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
                 binVelocities_box_0=None,
-                Coordinates_box_1=None,
-                Structure_box_1=None,
-                binCoordinates_box_1=None,
-                extendedSystem_box_1=None,
+                Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
+                Structure_box_1=job.doc.path_to_ref_psf_box_1,
+                binCoordinates_box_1=job.doc.path_to_ref_binCoordinates_box_1,
+                extendedSystem_box_1=job.doc.path_to_ref_extendedSystem_box_1,
                 binVelocities_box_1=None,
                 input_variables_dict={
                     "PRNG": seed_no,
@@ -2487,11 +2632,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": CBMC_Nth[-1],
                     "CBMC_Ang": CBMC_Ang[-1],
                     "CBMC_Dih": CBMC_Dih[-1],
-                    "FreeEnergyCalc": FreeEnergyCalc,
-                    "MoleculeType": MoleculeType,
-                    "InitialState": initial_state_sims_i,
-                    "LambdaVDW": list(job.doc.LambdaVDW_list),
-                    "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+                    "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
                 },
             )
             append_wolf_calibration_parameters(job)

@@ -16,7 +16,7 @@ skipEq = ["False"] # ["Ne", "Rn"]
 solute = ["Ne"] # ["Ne", "Rn"]
 #solute = ["ETOH"] # ["Ne", "Rn"]
 #solute = ["Ne", "ETOH"] # ["Ne", "Rn"]
-solvent = ["SPC"] # ["Ne", "Rn"]
+solvent = ["TIP3"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 
