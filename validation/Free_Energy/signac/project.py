@@ -415,6 +415,8 @@ def initial_parameters(job):
     job.doc.InitialState_list = InitialState_list
     equilibration_ensemble = "NPT"
     production_ensemble = "NVT"
+    production_ensemble = "NPT"
+
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
     job.doc.equilibration_ensemble = equilibration_ensemble
     job.doc.production_ensemble = production_ensemble
