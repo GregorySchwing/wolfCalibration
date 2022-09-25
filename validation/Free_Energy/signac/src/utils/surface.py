@@ -69,8 +69,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(y)
     print(z)
 
-    rranges = slice(x.min(), x.max(), (x.max() - x.min())/650), slice(y.min(), y.max(), (y.max() - y.min())/650)
-    print(rranges)
+
 
     sptbf_mins = {}
     sptgd_mins = {}
@@ -96,10 +95,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sizeOfRegionScale = 0.001
     sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
     sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
-
+    rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, (x.max()-sizeOfRegionX - x.min()+sizeOfRegionX)/650), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionX, (y.max()-sizeOfRegionX - y.min()+sizeOfRegionY)/650)
+    print(rranges)
     bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
     
-    f = lambda x: np.abs(F2(xi= x, method='linear'))
+    #f = lambda x: np.abs(F2(xi= x, method='linear'))
+    f = lambda x: np.sum(np.abs(F2(xi=tuple(np.meshgrid(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10), np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))), method='linear')))
+
     bf = brute(f, rranges, full_output=True, finish=None)
     bfXY = np.array(bf[0])
     print("best rcut", bfXY[0])
