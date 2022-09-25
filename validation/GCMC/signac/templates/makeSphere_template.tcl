@@ -52,6 +52,12 @@ set all [atomselect top "all"]
 package require pbctools
 pbc set $listOf2BoxHalfAx -all
 $all moveby $listOfBoxHalfAx
+
+set wat [atomselect top "water"]
+$wat set beta 0.0
+set Ne [atomselect top "not water"]
+$Ne set beta 1.0
+
 $all writepsf $output_pdb_psf_file_name.psf
 $all writepdb $output_pdb_psf_file_name.pdb
 
