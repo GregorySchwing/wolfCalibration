@@ -1,0 +1,10 @@
+set pdb PDB_FILE
+set psf PSF_FILE
+#***************************************************************************
+
+
+# load solute molecule
+set solute [mol new $psf.psf waitfor all]
+mol addfile $pdb.pdb mol $solute waitfor all
+set all [atomselect top all]
+$all writenamdbin $psf.coor

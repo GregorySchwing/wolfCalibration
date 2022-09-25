@@ -1,7 +1,7 @@
 set r R_ARG
 set padding PADDING_ARG
 # Name it this so I can reuse the current signac script
-set output_pdb_psf_file_name mosdef_box_0
+set output_pdb_psf_file_name OUTPUT
 
 set r2 [expr $r*$r]
 set r_box [expr $r+$padding]

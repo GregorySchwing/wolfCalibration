@@ -23,7 +23,7 @@ from flow.environment import DefaultSlurmEnvironment
 from src.utils.forcefields import get_ff_path
 from src.utils.forcefields import get_molecule_path
 from templates.NAMD_conf_template import generate_namd_equilb_control_file
-from templates.sphere_builder_template import get_sphere_builder_path, get_pdb2bincoords_path, get_pdb2xsc_path
+from templates.sphere_builder_template import get_sphere_builder_path, get_pdb2bincoords_path, get_pdb2xsc_path, get_water_box_builder_path
 from src.topologies.topology import get_topology_path
 
 
@@ -1585,6 +1585,28 @@ def build_charmm(job, write_files=True):
     filedata = filedata.replace("R_ARG", str(radius))
     filedata = filedata.replace("PADDING_ARG", str(padding))
     filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
+    filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_0_name_str))
+
+	# Write the file out again
+    with open(job.fn("filled_template.tcl"), 'w') as file:
+        file.write(filedata)
+
+    print("Making solvated sphere", job)
+    ions = evaltcl("source " + job.fn("filled_template.tcl"))
+    ionsList = ions.split()
+
+    template = get_water_box_builder_path()
+	# Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+
+    radius = job.sp.shell_radius
+    padding = 10
+	# Replace the target string
+    filedata = filedata.replace("R_ARG", str(radius))
+    filedata = filedata.replace("PADDING_ARG", str(padding))
+    filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
+    filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_1_name_str))
 
 	# Write the file out again
     with open(job.fn("filled_template.tcl"), 'w') as file:
@@ -1642,15 +1664,15 @@ def build_charmm(job, write_files=True):
     import fileinput
     with fileinput.FileInput(job.fn(f"{namd_ff_filename_str}.inp"), inplace=True) as f:
         for l in f:
-            l = re.sub(r"\b%s\b" % "A", "NE", l)
-            l = re.sub(r"\b%s\b" % "B", "HT", l)
+            l = re.sub(r"\b%s\b" % "A", "HT", l)
+            l = re.sub(r"\b%s\b" % "B", "NE", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
             print(l)
 
     with fileinput.FileInput(job.fn(f"{gomc_ff_filename_str}.inp"), inplace=True) as f:
         for l in f:
-            l = re.sub(r"\b%s\b" % "A", "NE", l)
-            l = re.sub(r"\b%s\b" % "B", "HT", l)
+            l = re.sub(r"\b%s\b" % "A", "HT", l)
+            l = re.sub(r"\b%s\b" % "B", "NE", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
             print(l)
 
