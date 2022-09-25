@@ -1626,7 +1626,6 @@ def build_charmm(job, write_files=True):
 	# Replace the target string
     filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
     filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
-    filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
 
 	# Write the file out again
     with open(job.fn("filled_template.tcl"), 'w') as file:
@@ -1646,6 +1645,7 @@ def build_charmm(job, write_files=True):
 	# Replace the target string
     filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
     filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
 
 	# Write the file out again
     with open(job.fn("filled_template.tcl"), 'w') as file:
