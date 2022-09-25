@@ -1140,8 +1140,6 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 def part_4b_job_gomc_wolf_parameters_found(job):
     if (not job.isfile("bestWolfParameters.pickle")):
         return False
-    # Remove this later.
-    return job.isfile("winningWolfParameters.pickle")
 
     try:
         import pickle as pickle
@@ -1153,33 +1151,50 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         bestModel = ""
         bestOpt = ""
         smallestRelErr = 1.0
-        smallestGrad = 1000000000
+        smallestAUC = 1000000000
+        largestAUC = 0
+
         bestRCut = 0
         bestAlpha = 0
 
-        print("Replica :", job.sp.replica)
+        #print("Replica :", job.sp.replica)
         for model in model2BestWolfAlphaRCut:
             print("Model :", model)
             print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
-            print("Grad :", model2BestWolfAlphaRCut[model]['GD_grad'])
+            print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
             print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
             print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
             print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
-            if (model2BestWolfAlphaRCut[model]['GD_grad']  < smallestGrad):
+            if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
                 bestModel = model
                 smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                smallestGrad = model2BestWolfAlphaRCut[model]['GD_grad']                
+                smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
                 bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                 bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']  
+                bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
+            if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
+                worstModel = model
+                largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
+        print("worstModel :", worstModel)
+        print("worstOpt :", worstOpt)
+
+        print("largestRelErr :", largestRelErr)
+        print("largestAUC :", largestAUC)
+        print("worstRCut :", worstRCut)
+        print("worstAlpha :", worstAlpha)
+
         print("bestModel :", bestModel)
         print("bestOpt :", bestOpt)
 
         print("smallestRelErr :", smallestRelErr)
-        print("smallestGrad :", smallestGrad)
+        print("smallestAUC :", smallestAUC)
         print("bestRCut :", bestRCut)
         print("bestAlpha :", bestAlpha)
-        
+
         Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
         "Alpha":bestAlpha}
         with open("winningWolfParameters.pickle", 'wb') as handle:
