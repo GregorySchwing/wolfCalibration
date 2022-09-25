@@ -1308,8 +1308,8 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                     myfile.write(defRCutLine)
 
     regex = re.compile("wolf_sanity.conf")
-    with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
-        winningWolf = pickle.load(handle)
+    #with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
+    #    winningWolf = pickle.load(handle)
     box = "0"
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
