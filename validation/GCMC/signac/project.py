@@ -1483,7 +1483,7 @@ def build_charmm(job, write_files=True):
         #solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-        solute = mb.Compound(name=job.doc.solute)
+            solute = mb.Compound(name=job.doc.solute)
     else:
         solute = mb.load(smiles_or_mol2[job.sp.solute]['smiles_or_mol2'],
                          smiles=smiles_or_mol2[job.sp.solute]['use_smiles']
@@ -1508,10 +1508,10 @@ def build_charmm(job, write_files=True):
     residues_list = [solute.name, solvent.name]
     print("residues_list  = " +str(residues_list ))
 
-    if job.doc.solvent in ["TIP4", "TIP3", "MSPCE", "SPCE", "SPC"]:
-        gomc_fix_bonds_angles_residues_list = [solvent.name]
-    else:
-        gomc_fix_bonds_angles_residues_list  = None
+    #if job.doc.solvent in ["TIP4", "TIP3", "MSPCE", "SPCE", "SPC"]:
+    gomc_fix_bonds_angles_residues_list = [solvent.name]
+    #else:
+    #    gomc_fix_bonds_angles_residues_list  = None
 
     print('Running: filling liquid box')
     box_0 = mb.fill_box(compound=[solute, solvent],
@@ -1558,108 +1558,121 @@ def build_charmm(job, write_files=True):
         gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
     )
 
-    if write_files == True:
-        gomc_charmm.write_inp()
+    gomc_charmm.write_inp()
 
-        namd_charmm.write_inp()
+    namd_charmm.write_inp()
+
+    print("#**********************")
+    print("Completed: GOMC Charmm Object")
+    print("#**********************")
+
+    #if write_files == True:
+    import sys
+    import fileinput
+    import re
+
+    if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
 
         namd_charmm.write_psf()
 
         namd_charmm.write_pdb()
 
-    print("#**********************")
-    print("Completed: GOMC Charmm Object")
-    print("#**********************")
-    import sys
-    from vmd import evaltcl
-    template = get_sphere_builder_path()
-	# Read in the file
-    with open(template, 'r') as file :
-        filedata = file.read()
 
-    radius = job.sp.shell_radius
-    padding = 10
-	# Replace the target string
-    filedata = filedata.replace("R_ARG", str(radius))
-    filedata = filedata.replace("PADDING_ARG", str(padding))
-    filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
-    filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_0_name_str))
+        from vmd import evaltcl
+        template = get_sphere_builder_path()
+        # Read in the file
+        with open(template, 'r') as file :
+            filedata = file.read()
 
-	# Write the file out again
-    with open(job.fn("filled_template.tcl"), 'w') as file:
-        file.write(filedata)
+        radius = job.sp.shell_radius
+        padding = 10
+        # Replace the target string
+        filedata = filedata.replace("R_ARG", str(radius))
+        filedata = filedata.replace("PADDING_ARG", str(padding))
+        filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
+        filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_0_name_str))
 
-    print("Making solvated sphere", job)
-    ions = evaltcl("source " + job.fn("filled_template.tcl"))
-    ionsList = ions.split()
+        # Write the file out again
+        with open(job.fn("filled_template.tcl"), 'w') as file:
+            file.write(filedata)
 
-    template = get_water_box_builder_path()
-	# Read in the file
-    with open(template, 'r') as file :
-        filedata = file.read()
+        print("Making solvated sphere", job)
+        ions = evaltcl("source " + job.fn("filled_template.tcl"))
+        ionsList = ions.split()
 
-    radius = job.sp.shell_radius
-    padding = 10
-	# Replace the target string
-    filedata = filedata.replace("R_ARG", str(radius))
-    filedata = filedata.replace("PADDING_ARG", str(padding))
-    filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
-    filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_1_name_str))
+        template = get_water_box_builder_path()
+        # Read in the file
+        with open(template, 'r') as file :
+            filedata = file.read()
 
-	# Write the file out again
-    with open(job.fn("filled_template.tcl"), 'w') as file:
-        file.write(filedata)
+        radius = job.sp.shell_radius
+        padding = 10
+        # Replace the target string
+        filedata = filedata.replace("R_ARG", str(radius))
+        filedata = filedata.replace("PADDING_ARG", str(padding))
+        filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
+        filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_1_name_str))
 
-    print("Making solvated sphere", job)
-    ions = evaltcl("source " + job.fn("filled_template.tcl"))
-    ionsList = ions.split()
+        # Write the file out again
+        with open(job.fn("filled_template.tcl"), 'w') as file:
+            file.write(filedata)
 
-    template = get_pdb2bincoords_path()
-	# Read in the file
-    with open(template, 'r') as file :
-        filedata = file.read()
+        print("Making solvated sphere", job)
+        ions = evaltcl("source " + job.fn("filled_template.tcl"))
+        ionsList = ions.split()
 
-    radius = job.sp.shell_radius
-    padding = 10
-	# Replace the target string
-    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
-    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+        template = get_pdb2bincoords_path()
+        # Read in the file
+        with open(template, 'r') as file :
+            filedata = file.read()
 
-	# Write the file out again
-    with open(job.fn("filled_template.tcl"), 'w') as file:
-        file.write(filedata)
+        radius = job.sp.shell_radius
+        padding = 10
+        # Replace the target string
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
 
-    print("Making solvated sphere", job)
-    ions = evaltcl("source " + job.fn("filled_template.tcl"))
-    ionsList = ions.split()
+        # Write the file out again
+        with open(job.fn("filled_template.tcl"), 'w') as file:
+            file.write(filedata)
 
-    template = get_pdb2xsc_path()
-	# Read in the file
-    with open(template, 'r') as file :
-        filedata = file.read()
+        print("Making solvated sphere", job)
+        ions = evaltcl("source " + job.fn("filled_template.tcl"))
+        ionsList = ions.split()
 
-    radius = job.sp.shell_radius
-    padding = 10
-	# Replace the target string
-    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
-    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
-    filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
+        template = get_pdb2xsc_path()
+        # Read in the file
+        with open(template, 'r') as file :
+            filedata = file.read()
 
-	# Write the file out again
-    with open(job.fn("filled_template.tcl"), 'w') as file:
-        file.write(filedata)
+        radius = job.sp.shell_radius
+        padding = 10
+        # Replace the target string
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
 
-    print("Making solvated sphere", job)
-    ions = evaltcl("source " + job.fn("filled_template.tcl"))
-    ionsList = ions.split()
+        # Write the file out again
+        with open(job.fn("filled_template.tcl"), 'w') as file:
+            file.write(filedata)
 
+        print("Making solvated sphere", job)
+        ions = evaltcl("source " + job.fn("filled_template.tcl"))
+        ionsList = ions.split()
 
+        # GOMC checks the resname in GCMC
+        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
+            for l in f:
+                l = re.sub(r"%s" % "NE1", "Ne ", l)
+                sys.stdout.write(l)
 
-
+        # GOMC checks the resname in GCMC
+        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
+            for l in f:
+                l = re.sub(r"%s" % "NE1", "Ne ", l)
+                sys.stdout.write(l)
 
     print("Edit forcefields to use atom types from vmd solvate", job)
-    import re
-    import fileinput
     with fileinput.FileInput(job.fn(f"{namd_ff_filename_str}.inp"), inplace=True) as f:
         for l in f:
             l = re.sub(r"\b%s\b" % "A", "HT", l)
@@ -1672,18 +1685,6 @@ def build_charmm(job, write_files=True):
             l = re.sub(r"\b%s\b" % "A", "HT", l)
             l = re.sub(r"\b%s\b" % "B", "NE", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
-            sys.stdout.write(l)
-
-    # GOMC checks the resname in GCMC
-    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
-        for l in f:
-            l = re.sub(r"%s" % "NE1", "Ne ", l)
-            sys.stdout.write(l)
-
-    # GOMC checks the resname in GCMC
-    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
-        for l in f:
-            l = re.sub(r"%s" % "NE1", "Ne ", l)
             sys.stdout.write(l)
 
     return [namd_charmm, gomc_charmm]
@@ -1723,30 +1724,52 @@ def build_psf_pdb_ff_gomc_conf(job):
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
     restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
 
+    prefix = ""
+    if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
+        prefix = job.fn("")
+    else:
+        ref_sp = job.statepoint()
+        ref_sp['electrostatic_method']="Ewald"
+        ref_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ref_sp))
+        for ref_job in jobs:
+            prefix = ref_job.fn("")
+
     Coordinates_box_0 = "{}.pdb".format(
-        namd_restart_pdb_psf_file_name_str
+        prefix+namd_restart_pdb_psf_file_name_str
     )
     Structure_box_0 = "{}.psf".format(
-        namd_restart_pdb_psf_file_name_str
+        prefix+namd_restart_pdb_psf_file_name_str
     )
     Coordinates_box_1 = "{}.pdb".format(
-        mosdef_structure_box_1_name_str
+        prefix+mosdef_structure_box_1_name_str
     )
     Structure_box_1 = "{}.psf".format(
-        mosdef_structure_box_1_name_str
+        prefix+mosdef_structure_box_1_name_str
     )
     binCoordinates_box_0 = "{}.restart.coor".format(
-        restart_control_file_name_str
+        prefix+restart_control_file_name_str
     )
     extendedSystem_box_0 = "{}.restart.xsc".format(
-        restart_control_file_name_str
+        prefix+restart_control_file_name_str
     )
     binCoordinates_box_1 = "{}.coor".format(
-        mosdef_structure_box_1_name_str
+        prefix+mosdef_structure_box_1_name_str
     )
     extendedSystem_box_1 = "{}.xsc".format(
-        mosdef_structure_box_1_name_str
+        prefix+mosdef_structure_box_1_name_str
     )
+
+    job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
+    job.doc.path_to_ref_pdb =  Coordinates_box_0
+    job.doc.path_to_ref_psf =  Structure_box_0
+    job.doc.path_to_ref_binCoordinates =  binCoordinates_box_0
+    job.doc.path_to_ref_extendedSystem =  extendedSystem_box_0  
+    job.doc.path_to_ref_pdb_box_1 =  Coordinates_box_1
+    job.doc.path_to_ref_psf_box_1 =  Structure_box_1
+    job.doc.path_to_ref_binCoordinates_box_1 =  binCoordinates_box_1
+    job.doc.path_to_ref_extendedSystem_box_1 =  extendedSystem_box_1 
+
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
 
@@ -1768,6 +1791,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     Single_state_gomc_eq_extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
+
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
@@ -1775,14 +1799,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
             job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
-            job.doc.path_to_ref_pdb =  ref_job.fn(Coordinates_box_0)
-            job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
-            job.doc.path_to_ref_pdb_box_1 =  ref_job.fn(Coordinates_box_1)
-            job.doc.path_to_ref_psf_box_1 =  ref_job.fn(Structure_box_1)
-            job.doc.path_to_ref_binCoordinates =  ref_job.fn(binCoordinates_box_0)
-            job.doc.path_to_ref_extendedSystem =  ref_job.fn(extendedSystem_box_0)
-            job.doc.path_to_ref_binCoordinates_box_1 =  ref_job.fn(binCoordinates_box_1)
-            job.doc.path_to_ref_extendedSystem_box_1 =  ref_job.fn(extendedSystem_box_1)     
             job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
             job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
             job.doc.path_to_sseq_binCoordinates =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_0)
@@ -1791,16 +1807,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_sseq_extendedSystem_box_1 =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_1)
             job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
        
-    else:
-        job.doc.path_to_namd_console =  job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
-        job.doc.path_to_ref_pdb =  job.fn(Coordinates_box_0)
-        job.doc.path_to_ref_psf =  job.fn(Structure_box_0)
-        job.doc.path_to_ref_binCoordinates =  job.fn(binCoordinates_box_0)
-        job.doc.path_to_ref_extendedSystem =  job.fn(extendedSystem_box_0)  
-        job.doc.path_to_ref_pdb_box_1 =  job.fn(Coordinates_box_1)
-        job.doc.path_to_ref_psf_box_1 =  job.fn(Structure_box_1)
-        job.doc.path_to_ref_binCoordinates_box_1 =  job.fn(binCoordinates_box_1)
-        job.doc.path_to_ref_extendedSystem_box_1 =  job.fn(extendedSystem_box_1)     
+    else:    
         job.doc.path_to_sseq_pdb =  job.fn(Single_state_gomc_eq_Coordinates_box_0)
         job.doc.path_to_sseq_psf =  job.fn(Single_state_gomc_eq_Structure_box_0)
         job.doc.path_to_sseq_binCoordinates =  job.fn(Single_state_gomc_eq_binCoordinates_box_0)
@@ -1896,7 +1903,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     # if you calibrate wolf using the restart files from namd
     # therefore a single state npt equilibration is performed
     # in gomc before wolf calibration.
-    if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+    if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
         useCoul = False
         CBMC_First = (12,)
         CBMC_Nth = (10,)
@@ -2035,7 +2042,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
             "CBMC_Dih": CBMC_Dih[-1],
-            "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
+            "ChemPot" : {"TIP3" : -4166, "DUM" : -8000}
         },
     )
 
@@ -2149,7 +2156,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             int(gomc_output_data_every_X_steps),
         ]
 
-        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
             useCoul = False
             CBMC_First = (12,)
             CBMC_Nth = (10,)
@@ -2348,7 +2355,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             int(gomc_output_data_every_X_steps),
         ]
         
-        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
             useCoul = False
             CBMC_First = (12,)
             CBMC_Nth = (10,)
@@ -2527,7 +2534,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 output_name_control_file_calibration_name, initial_state_sims_i
             )
 
-            if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
                 useCoul = False
                 CBMC_First = (12,)
                 CBMC_Nth = (10,)
@@ -2774,6 +2781,7 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.post(part_3b_output_gomc_wolf_sanity_started)
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
