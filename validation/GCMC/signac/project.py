@@ -1903,7 +1903,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     # if you calibrate wolf using the restart files from namd
     # therefore a single state npt equilibration is performed
     # in gomc before wolf calibration.
-    if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
+    if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
         useCoul = False
         CBMC_First = (12,)
         CBMC_Nth = (10,)
@@ -2042,7 +2042,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
             "CBMC_Dih": CBMC_Dih[-1],
-            "ChemPot" : {"TIP3" : -4166, "DUM" : -8000}
+            "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
         },
     )
 
@@ -2156,7 +2156,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             int(gomc_output_data_every_X_steps),
         ]
 
-        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
             useCoul = False
             CBMC_First = (12,)
             CBMC_Nth = (10,)
@@ -2355,7 +2355,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             int(gomc_output_data_every_X_steps),
         ]
         
-        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
             useCoul = False
             CBMC_First = (12,)
             CBMC_Nth = (10,)
@@ -2534,7 +2534,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 output_name_control_file_calibration_name, initial_state_sims_i
             )
 
-            if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn", "DUM"]:
+            if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
                 useCoul = False
                 CBMC_First = (12,)
                 CBMC_Nth = (10,)
