@@ -59,9 +59,10 @@ gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
-#gomc_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin"
+# Potoff cluster bin paths
+#gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #gomc_binary_path = "/home6/greg/GOMC/bin"
-#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore-CUDA/"
+#namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 
@@ -71,11 +72,11 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 10 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 
-gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
@@ -247,7 +248,7 @@ def append_wolf_calibration_parameters(job):
 
     WolfCutoffCoulombLowerBoundList = [10]
     WolfCutoffCoulombUpperBoundList = [15]
-    WolfCutoffCoulombIntervalList = [0.5]
+    WolfCutoffCoulombIntervalList = [0.1]
 
     WolfAlphaLowerBoundList = [0.0]
     WolfAlphabUpperBoundList = [0.5]
@@ -256,7 +257,7 @@ def append_wolf_calibration_parameters(job):
     wolfCalFreq = 1000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
-        defPotLine = "Wolf\tTrue\n"
+        defPotLine = "Wolf\tFalse\n"
         myfile.write(defPotLine)
         defPotLine = "WolfPotential\t{pot}\n".format(pot=WolfDefaultPotential)
         myfile.write(defPotLine)
@@ -949,8 +950,6 @@ def namd_sim_completed_properly(job, control_filename_str):
 @Project.label
 @flow.with_job
 def part_4a_job_namd_equilb_NPT_completed_properly(job):
-    if (job.sp.skipEq == "True"):
-        return True
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1078,8 +1077,8 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     # for now make it wait until I get cal sorted out.
     #if(job.sp.electrostatic_method != "Wolf"):
     #    return true
-    if (job.sp.skipEq == "True"):
-        return True
+    #if (job.sp.skipEq == "True"):
+    #    return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     wolf_sanity_control_file_name = "wolf_sanity"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1777,8 +1776,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     # namd_equilb_NPT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
     # ******************************************************
     MC_steps = int(gomc_steps_equilb_design_ensemble)
-    Calibration_MC_steps = 100000
-    EqSteps = 1000
+    Calibration_MC_steps = 1000
+    EqSteps = 500
 
     # output all data and calc frequecy
     output_true_list_input = [
@@ -2111,7 +2110,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             ff_psf_pdb_file_directory=None,
             check_input_files_exist=False,
             Parameters="{}.inp".format(gomc_ff_filename_str),
-            Restart= False if job.sp.skipEq == "True" else True,
+            Restart= True,
             RestartCheckpoint=True,
             ExpertMode=False,
             Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
@@ -2448,7 +2447,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 ff_psf_pdb_file_directory=None,
                 check_input_files_exist=False,
                 Parameters="{}.inp".format(gomc_ff_filename_str),
-                Restart= False if job.sp.skipEq == "True" else True,
+                Restart=True,
                 RestartCheckpoint=True,
                 ExpertMode=False,
                 Coordinates_box_0=job.doc.path_to_ref_pdb,
@@ -2464,7 +2463,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 input_variables_dict={
                     "PRNG": seed_no,
                     "Pressure": production_pressure_bar,
-                    "Ewald": False,
+                    "Ewald": True,
                     "ElectroStatic": use_ElectroStatics,
                     "VDWGeometricSigma": VDWGeometricSigma,
                     "Rcut": job.doc.Rcut_ang,
@@ -2523,7 +2522,6 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_3a_output_namd_equilb_NPT_hasnt_started)
