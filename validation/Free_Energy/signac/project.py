@@ -72,11 +72,11 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 10 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 
-gomc_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
@@ -2115,8 +2115,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             ExpertMode=False,
             Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
             Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
-            binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
-            extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
+            binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
+            extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
             binVelocities_box_0=None,
             Coordinates_box_1=None,
             Structure_box_1=None,
