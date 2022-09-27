@@ -60,10 +60,12 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
-#gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #gomc_binary_path = "/home6/greg/GOMC/bin"
-#namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
+
+# local bin paths
+#gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
 
 # brads workstation binary paths
@@ -254,7 +256,7 @@ def append_wolf_calibration_parameters(job):
     WolfAlphabUpperBoundList = [0.5]
     WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = 1000
+    wolfCalFreq = 10000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
         defPotLine = "Wolf\tFalse\n"
@@ -521,9 +523,11 @@ def initial_parameters(job):
     if equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
     elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
     else:
         raise ValueError(
             "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
@@ -1776,8 +1780,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     # namd_equilb_NPT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
     # ******************************************************
     MC_steps = int(gomc_steps_equilb_design_ensemble)
-    Calibration_MC_steps = 1000
-    EqSteps = 500
+    Calibration_MC_steps = 100000
+    EqSteps = 1000
 
     # output all data and calc frequecy
     output_true_list_input = [
@@ -2649,8 +2653,8 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
-        "ngpu": lambda job: job.doc.gomc_ngpu,
+        "np": 1,
+        "ngpu": 1,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
     }
@@ -2664,7 +2668,7 @@ def run_calibration_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(job.doc.gomc_calibration_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
