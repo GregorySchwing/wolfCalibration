@@ -92,8 +92,8 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
-Calibration_MC_steps = 100000
-EqSteps = 1000
+Calibration_MC_steps = 10000
+Calibration_MC_Eq_Steps = 1000
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -256,7 +256,7 @@ def append_wolf_calibration_parameters(job):
     WolfAlphabUpperBoundList = [0.5]
     WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = 10000
+    wolfCalFreq = 1000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
         defPotLine = "Wolf\tFalse\n"
@@ -1081,8 +1081,8 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     # for now make it wait until I get cal sorted out.
     #if(job.sp.electrostatic_method != "Wolf"):
     #    return true
-    #if (job.sp.skipEq == "True"):
-    #    return True
+    if (job.sp.skipEq == "True"):
+        return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     wolf_sanity_control_file_name = "wolf_sanity"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1780,8 +1780,6 @@ def build_psf_pdb_ff_gomc_conf(job):
     # namd_equilb_NPT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
     # ******************************************************
     MC_steps = int(gomc_steps_equilb_design_ensemble)
-    Calibration_MC_steps = 100000
-    EqSteps = 1000
 
     # output all data and calc frequecy
     output_true_list_input = [
@@ -2456,8 +2454,8 @@ def build_psf_pdb_ff_gomc_conf(job):
                 ExpertMode=False,
                 Coordinates_box_0=job.doc.path_to_ref_pdb,
                 Structure_box_0=job.doc.path_to_ref_psf,
-                binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
-                extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
+                binCoordinates_box_0=job.doc.job.doc.path_to_sseq_binCoordinates,
+                extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
                 binVelocities_box_0=None,
                 Coordinates_box_1=None,
                 Structure_box_1=None,
@@ -2481,7 +2479,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "RotFreq": RotFreq[-1],
                     "RegrowthFreq": RegrowthFreq[-1],
                     "OutputName": output_name_control_file_calibration_name,
-                    "EqSteps": EqSteps,
+                    "EqSteps": Calibration_MC_Eq_Steps,
                     "PressureCalc": output_false_list_input,
                     "RestartFreq": output_true_list_input,
                     "CheckpointFreq": output_true_list_input,
