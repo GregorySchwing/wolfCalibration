@@ -92,6 +92,7 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
+EqSteps = 1000
 Calibration_MC_steps = 10000
 Calibration_MC_Eq_Steps = 1000
 # Free energy calcs: set free energy data in doc
@@ -2212,7 +2213,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
         # calc MC steps
         MC_steps = int(gomc_steps_lamda_production)
-        EqSteps = 1000
+        
 
 
         # output all data and calc frequecy
