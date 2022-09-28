@@ -1238,7 +1238,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
     success = True
-
+    atLeastOneMatchExists = False
     if (job.sp.electrostatic_method == "Ewald"):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Wolf"
@@ -1247,6 +1247,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                 for root, dirs, files in os.walk(ewald_job.fn("")):
                     for file in files:
                         if regex.match(file):
+                            atLeastOneMatchExists = True
                             with open(ewald_job.fn(file), "r") as openedfile:
                                 last_line = openedfile.readlines()[-1]
                             if ("RcutCoulomb" in last_line):
@@ -1259,13 +1260,14 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
+                atLeastOneMatchExists = True
                 with open(file, "r") as openedfile:
                     last_line = openedfile.readlines()[-1]
                 if ("RcutCoulomb" in last_line):
                     continue
                 else:
                     success = success and False
-    return success
+    return success and atLeastOneMatchExists
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
