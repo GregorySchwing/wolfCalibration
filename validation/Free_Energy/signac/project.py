@@ -2732,8 +2732,8 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
         {
-            "np": lambda job: 1 if job.sp.electrostatic_method == "Ewald" else job.doc.gomc_ncpu,
-            "ngpu": lambda job: 1 if job.sp.electrostatic_method == "Ewald" else 0,
+            "np": lambda job: job.doc.gomc_ncpu,
+            "ngpu": lambda job: job.doc.gomc_ngpu,
             "memory": memory_needed,
             "walltime": walltime_gomc_equilbrium_hr,
         },
@@ -2750,8 +2750,8 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
         print(f"Running simulation job id {job}")
         run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
             str(gomc_binary_path),
-            str(job.doc.gomc_calibration_gomc_binary_file) if job.sp.electrostatic_method == "Ewald" else str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
-            str(1) if job.sp.electrostatic_method == "Ewald" else str(job.doc.gomc_ncpu),
+            str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+            str(job.doc.gomc_ncpu),
             str(control_file_name_str),
             str(control_file_name_str),
         )
