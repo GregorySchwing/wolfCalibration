@@ -2126,11 +2126,11 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"FreeEnergyCalc": NoFreeEnergyCalc,
-                #"MoleculeType": MoleculeType,
-                #"InitialState": initial_state_sims_i,
-                #"LambdaVDW": list(job.doc.LambdaVDW_list),
-                #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+                "FreeEnergyCalc": FreeEnergyCalc,
+                "MoleculeType": MoleculeType,
+                "InitialState": 18,
+                "LambdaVDW": list(job.doc.LambdaVDW_list),
+                "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
             },
         )
         append_wolf_calibration_parameters(job)
