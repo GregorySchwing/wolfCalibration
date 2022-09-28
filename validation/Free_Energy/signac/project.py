@@ -487,7 +487,7 @@ def initial_parameters(job):
     job.doc.namd_node_ngpu = 1
     #job.doc.namd_node_ngpu = 0
 
-    job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+    job.doc.gomc_ncpu = 8  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     #job.doc.gomc_ngpu = 1
     job.doc.gomc_ngpu = 0
 
@@ -2670,7 +2670,7 @@ def run_calibration_run_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_calibration_gomc_binary_file),
-        str(job.doc.gomc_ncpu),
+        str(4),
         str(control_file_name_str),
         str(control_file_name_str),
     )
