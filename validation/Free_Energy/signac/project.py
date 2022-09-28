@@ -2085,7 +2085,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             ExpertMode=False,
             Coordinates_box_0=job.doc.path_to_ref_pdb,
             Structure_box_0=job.doc.path_to_ref_psf,
-            binCoordinates_box_0=job.doc.job.doc.path_to_sseq_binCoordinates,
+            binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
             Coordinates_box_1=None,
