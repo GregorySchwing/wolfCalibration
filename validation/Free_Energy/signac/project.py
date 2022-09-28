@@ -2605,8 +2605,7 @@ def run_sseq_run_gomc_command(job):
     return run_command
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.skipEq == "False")
-@Project.pre(False)
+@Project.pre(lambda j: j.sp.skipEq == "False" and j.sp.skipEq != "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
