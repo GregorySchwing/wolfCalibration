@@ -2126,7 +2126,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "FreeEnergyCalc": FreeEnergyCalc,
+                "FreeEnergyCalc": NoFreeEnergyCalc,
                 "MoleculeType": MoleculeType,
                 "InitialState": len(list(job.doc.LambdaVDW_list))-1,
                 "LambdaVDW": list(job.doc.LambdaVDW_list),
