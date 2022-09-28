@@ -2128,7 +2128,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Dih": CBMC_Dih[-1],
                 "FreeEnergyCalc": FreeEnergyCalc,
                 "MoleculeType": MoleculeType,
-                "InitialState": 18,
+                "InitialState": len(list(job.doc.LambdaVDW_list)),
                 "LambdaVDW": list(job.doc.LambdaVDW_list),
                 "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
             },
