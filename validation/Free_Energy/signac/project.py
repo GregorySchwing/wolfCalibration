@@ -418,7 +418,7 @@ def initial_parameters(job):
     job.doc.InitialState_list = InitialState_list
     equilibration_ensemble = "NPT"
     production_ensemble = "NVT"
-    production_ensemble = "NPT"
+    production_ensemble = "NVT"
 
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
     job.doc.equilibration_ensemble = equilibration_ensemble
@@ -2608,6 +2608,7 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
+@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.post(part_3b_output_gomc_wolf_sanity_started)
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
