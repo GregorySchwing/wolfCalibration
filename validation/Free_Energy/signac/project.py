@@ -2003,7 +2003,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         print("#**********************")
         print("Finished: Wolf Sanity GOMC control file writing")
         print("#**********************")
-
+    #
     if (job.sp.electrostatic_method == "Wolf"):
         output_name_control_file_calibration_name = "wolf_calibration"
 
