@@ -1082,8 +1082,8 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     # for now make it wait until I get cal sorted out.
     #if(job.sp.electrostatic_method != "Wolf"):
     #    return true
-    if (job.sp.skipEq == "True"):
-        return True
+    #if (job.sp.skipEq == "True"):
+    return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     wolf_sanity_control_file_name = "wolf_sanity"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
