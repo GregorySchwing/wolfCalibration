@@ -990,7 +990,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method != "Wolf"):
-        print("job.sp.electrostatic_method != "Wolf"")
+        print("electrostatic_method != Wolf")
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
         ewald_sp['replica_number_int']=0
