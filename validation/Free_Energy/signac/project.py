@@ -775,6 +775,7 @@ def part_3b_output_gomc_equilb_design_ensemble_started(job):
 @flow.with_job
 def part_3b_output_gomc_calibration_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
+    return True
     try:
 #This will cause Ewald sims to wait for Wolf calibration to complete.
         #This will cause Ewald sims to wait for Wolf calibration to complete.
