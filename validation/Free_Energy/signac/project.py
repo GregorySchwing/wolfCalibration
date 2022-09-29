@@ -988,6 +988,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     # This will let ewald start before wolf cal is done
     # for now make it wait until I get cal sorted out.
     #if(job.sp.electrostatic_method != "Wolf"):
+    return True
 
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method != "Wolf"):
@@ -2732,7 +2733,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
     @Project.pre(part_4b_job_gomc_sseq_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-    @Project.pre(part_4b_job_gomc_calibration_completed_properly)
+#    @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 #    @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
