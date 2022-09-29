@@ -1272,6 +1272,9 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
+@Project.pre(part_2c_gomc_production_control_file_written)
+@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
