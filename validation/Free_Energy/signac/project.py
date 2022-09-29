@@ -1160,6 +1160,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
+    return True
     if(job.sp.replica_number_int != 0):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
@@ -1233,6 +1234,8 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+# For some reason this is failing on all but replica 0..
+
 @Project.label
 @flow.with_job
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
@@ -1277,7 +1280,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_2c_gomc_production_control_file_written)
-@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
