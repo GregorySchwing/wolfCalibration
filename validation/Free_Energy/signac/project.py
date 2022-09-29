@@ -958,9 +958,10 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method == "Wolf"):
+    if(job.sp.replica_number_int != 0):
         wolf_sp = job.statepoint()
         wolf_sp['electrostatic_method']="Ewald"
+        wolf_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(wolf_sp))
         for wolf_job in jobs:
             if namd_sim_completed_properly(
