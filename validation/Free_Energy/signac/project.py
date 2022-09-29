@@ -988,7 +988,6 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     # This will let ewald start before wolf cal is done
     # for now make it wait until I get cal sorted out.
     #if(job.sp.electrostatic_method != "Wolf"):
-    return True
 
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method != "Wolf"):
