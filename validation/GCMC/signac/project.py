@@ -73,11 +73,11 @@ namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 10 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
+gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
 
-gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
@@ -91,14 +91,10 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
-Calibration_MC_steps = 100000
+Calibration_MC_steps = 10000
+Calibration_MC_Eq_Steps = 1000
 EqSteps = 1000
-# Free energy calcs: set free energy data in doc
-# this number will generate the lamdas
-# set the number of lambda spacings, which includes 0 to 1
-#number_of_lambda_spacing_including_zero_int = 11
-number_of_lambda_spacing_including_zero_int = 23
-
+number_of_lambda_spacing_including_zero_int = 1
 
 # force field (FF) file for all simulations in that job
 # Note: do not add extensions
@@ -347,60 +343,9 @@ def initial_parameters(job):
     # Free energy calcs
     # lamda generator
 
-    LambdaVDW_list = []
-    LambdaCoul_list = []
-    InitialState_list = []
-    if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-        for lamda_i in range(0, int(number_of_lambda_spacing_including_zero_int)):
-            lambda_space_increments = 1 / int(number_of_lambda_spacing_including_zero_int - 1)
-            LambdaVDW_list.append(np.round(lamda_i * lambda_space_increments, decimals=8))
-            InitialState_list.append(lamda_i)
-
-        """
-        To calculate the free energy of solvation in water and
-        1-octanol, 23 intermediate lambda states, as shown in
-        Figure 1, were used:
-        λ coul,LJ ∈ {
-        (0.0, 0.0), (0.0, 0.05), (0.0, 0.1), (0.0, 0.15),
-        (0.0, 0.2), (0.0, 0.25), (0.0, 0.3), (0.0, 0.35),
-        (0.0, 0.4), (0.0, 0.45), (0.0, 0.5), (0.0, 0.6),
-        (0.0, 0.7), (0.0, 0.8), (0.0, 0.9), (0.0, 1.0),
-        (0.2, 1.0), (0.4, 1.0), (0.6, 1.0), (0.7, 1.0),
-        (0.8, 1.0), (0.9, 1.0), (1.0, 1.0) }
-        """
-    elif job.sp.solute in ["ETOH"]:
-        counter = 0
-        # Append 16 0.0's
-        for x in range(0, 16):
-            LambdaCoul_list.append(0.0)
-            InitialState_list.append(counter)
-            counter = counter + 1
-        # Append 0.2, 0.4, 0.6
-        for x in range(2, 8, 2):
-            LambdaCoul_list.append(round(x*0.1,2))
-            InitialState_list.append(counter)
-            counter = counter + 1
-        # Append 0.7, 0.8, 0.9, 1.0
-        for x in range(7, 11, 1):
-            LambdaCoul_list.append(round(x*0.1,2))
-            InitialState_list.append(counter)
-            counter = counter + 1
-
-        # 0.0-0.5, by 0.5
-        for x in range(0, 55, 5):
-            LambdaVDW_list.append(round(x*0.01,2))
-            #InitialState_list.append(counter)
-            #counter = counter + 1
-        # 0.6-0.9
-        for x in range(6, 10, 1):
-            LambdaVDW_list.append(round(x*0.1,2))
-            #InitialState_list.append(counter)
-            #counter = counter + 1
-        # Append 7 1.0's
-        for x in range(0, 8, 1):
-            LambdaVDW_list.append(1.0)    
-            #InitialState_list.append(counter)
-            #counter = counter + 1
+    LambdaVDW_list = [0]
+    LambdaCoul_list = [0]
+    InitialState_list = [0]
 
     print("*********************")
     print("*********************")
@@ -408,10 +353,6 @@ def initial_parameters(job):
     print("LambdaCoul_list = " + str(LambdaCoul_list))
     print("InitialState_list = " + str(InitialState_list))
     print("*********************")
-    print("*********************")
-    if LambdaVDW_list[0] != 0 and LambdaVDW_list[-1] != 1 :
-        raise ValueError("ERROR: The selected lambda list values do not start with a 0 and end 1.")
-
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
@@ -425,13 +366,9 @@ def initial_parameters(job):
 
     """
 
-    Liquid phase systems contained one solute in a solvent
-    box of 200 1-octanol, 150 n-hexadecane, or 1000 water
-    molecules. Initial cubic box sizes were selected to produce
-    densities that were close to equilibrium, with a side length
-    of 37.6, 41.6, and 31.3 Å for 1-octanol, n-hexadecane,
-    and water, respectively.
-
+    Liquid phase systems contained a spheres with varying radii of dummy atoms, 1 atom thick,
+    with a 10 angstrom padding of water outside of the sphere in x,y,z axes.
+    and solvated internally.  starting density is defaulted by vmd solvate.
     """
 
     job.doc.N_liquid_solvent = 1
@@ -863,29 +800,23 @@ def part_3b_output_gomc_wolf_sanity_started(job):
 @flow.with_job
 def part_part_3c_output_gomc_production_run_started(job):
     """Check to see if the gomc production run simulation is started (set temperature)."""
+
     try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                if job.isfile(
-                    "out_{}.dat".format(
-                        job.doc.gomc_production_run_ensemble_dict[
-                            str(initial_state_i)
-                        ]["output_name_control_file_name"]
-                    )
-                ):
-                    gomc_simulation_started(
-                        job,
-                        job.doc.gomc_production_run_ensemble_dict[
-                            str(initial_state_i)
-                        ]["output_name_control_file_name"],
-                    )
-                else:
-                    return False
-            except:
-                return False
-        return True
+        if job.isfile(
+            "out_{}.dat".format(
+                job.doc.gomc_production_run_ensemble_dict["output_name_control_file_name"]
+            )
+        ):
+            return gomc_simulation_started(
+                job,
+                job.doc.gomc_production_run_ensemble_dict["output_name_control_file_name"],
+            )
+        else:
+            return False
     except:
         return False
+    return True
+
 
 # ******************************************************
 # ******************************************************
@@ -952,8 +883,6 @@ def namd_sim_completed_properly(job, control_filename_str):
 @Project.label
 @flow.with_job
 def part_4a_job_namd_equilb_NPT_completed_properly(job):
-    if (job.sp.skipEq == "True"):
-        return True
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -982,15 +911,11 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    #    return true
-
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method != "Wolf"):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             control_file_name_str = "wolf_calibration"
@@ -1021,12 +946,6 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_sseq_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    #    return true
-    if (job.sp.skipEq == "True"):
-        return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     Single_state_gomc_eq_control_file_name = "single_state_eq"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1063,18 +982,13 @@ def part_4b_job_gomc_sseq_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    #    return true
-    if (job.sp.skipEq == "True"):
-        return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     wolf_sanity_control_file_name = "wolf_sanity"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Ewald"):
         wolf_sp = job.statepoint()
+        wolf_sp['replica']=0
         wolf_sp['electrostatic_method']="Wolf"
         jobs = list(pr.find_jobs(wolf_sp))
         for ewald_job in jobs:
@@ -1101,53 +1015,20 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.label
-@flow.with_job
-def part_4b_job_gomc_calibration_completed_properly(job):
-    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    #    return true
-
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method != "Wolf"):
-        ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
-            control_file_name_str = "wolf_calibration"
-            if gomc_sim_completed_properly(
-                ewald_job,
-                control_file_name_str,
-            ) is False:
-                return False
-            else:
-                return True
-
-    try:
-        control_file_name_str = "wolf_calibration"
-        if gomc_sim_completed_properly(
-            job,
-            control_file_name_str,
-        ) is False:
-            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-            return False
-        else:
-            return True
-    except:
-        return False
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
-    if (not job.isfile("bestWolfParameters.pickle")):
-        return False
-    # Remove this later.
-    return job.isfile("winningWolfParameters.pickle")
-
+    return True
+    if(job.sp.replica != 0):
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            if (not ewald_job.isfile("bestWolfParameters.pickle")):
+                return False
+            return ewald_job.isfile("winningWolfParameters.pickle")
     try:
         import pickle as pickle
         import re
@@ -1158,33 +1039,50 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         bestModel = ""
         bestOpt = ""
         smallestRelErr = 1.0
-        smallestGrad = 1000000000
+        smallestAUC = 1000000000
+        largestAUC = 0
+
         bestRCut = 0
         bestAlpha = 0
 
-        print("Replica :", job.sp.replica)
+        #print("Replica :", job.sp.replica)
         for model in model2BestWolfAlphaRCut:
             print("Model :", model)
             print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
-            print("Grad :", model2BestWolfAlphaRCut[model]['GD_grad'])
+            print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
             print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
             print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
             print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
-            if (model2BestWolfAlphaRCut[model]['GD_grad']  < smallestGrad):
+            if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
                 bestModel = model
                 smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                smallestGrad = model2BestWolfAlphaRCut[model]['GD_grad']                
+                smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
                 bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                 bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']  
+                bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
+            if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
+                worstModel = model
+                largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
+        print("worstModel :", worstModel)
+        print("worstOpt :", worstOpt)
+
+        print("largestRelErr :", largestRelErr)
+        print("largestAUC :", largestAUC)
+        print("worstRCut :", worstRCut)
+        print("worstAlpha :", worstAlpha)
+
         print("bestModel :", bestModel)
         print("bestOpt :", bestOpt)
 
         print("smallestRelErr :", smallestRelErr)
-        print("smallestGrad :", smallestGrad)
+        print("smallestAUC :", smallestAUC)
         print("bestRCut :", bestRCut)
         print("bestAlpha :", bestAlpha)
-        
+
         Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
         "Alpha":bestAlpha}
         with open("winningWolfParameters.pickle", 'wb') as handle:
@@ -1887,7 +1785,6 @@ def build_psf_pdb_ff_gomc_conf(job):
     # namd_equilb_NPT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
     # ******************************************************
     MC_steps = int(gomc_steps_equilb_design_ensemble)
-    Calibration_MC_steps = 100000
     EqSteps = 1000
 
     # output all data and calc frequecy
@@ -2655,7 +2552,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "RotFreq": RotFreq[-1],
                     "RegrowthFreq": RegrowthFreq[-1],
                     "OutputName": output_name_control_file_calibration_name,
-                    "EqSteps": EqSteps,
+                    "EqSteps": Calibration_MC_Eq_Steps,
                     "PressureCalc": output_false_list_input,
                     "RestartFreq": output_true_list_input,
                     "CheckpointFreq": output_true_list_input,

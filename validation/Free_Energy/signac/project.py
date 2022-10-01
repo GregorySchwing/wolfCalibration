@@ -1116,45 +1116,6 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     except:
         return False
 
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.label
-@flow.with_job
-def part_4b_job_gomc_calibration_completed_properly(job):
-    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    #    return true
-
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method != "Wolf"):
-        ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
-            control_file_name_str = "wolf_calibration"
-            if gomc_sim_completed_properly(
-                ewald_job,
-                control_file_name_str,
-            ) is False:
-                return False
-            else:
-                return True
-
-    try:
-        control_file_name_str = "wolf_calibration"
-        if gomc_sim_completed_properly(
-            job,
-            control_file_name_str,
-        ) is False:
-            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-            return False
-        else:
-            return True
-    except:
-        return False
-
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
