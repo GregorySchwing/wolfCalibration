@@ -1256,6 +1256,7 @@ def part_4c_job_production_run_completed_properly(job):
 @flow.with_job
 def part_5a_preliminary_analysis_individual_simulation_averages_completed(job):
     """Check that the individual simulation averages files are written ."""
+    return True
     file_written_bool = False
     if (
         job.isfile(
@@ -2914,6 +2915,8 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 @Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
 @flow.with_job
 def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
+
+    """
     # remove the total averaged replicate data and all analysis data after this,
     # as it is no longer valid when adding more simulations
     if os.path.isfile(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'):
@@ -2995,6 +2998,7 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
             f"{delta_std_bar: <30} "
             f" \n"
         )
+    """
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
