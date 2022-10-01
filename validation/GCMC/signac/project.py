@@ -451,16 +451,19 @@ def initial_parameters(job):
             "or GPU selection is is not 0 or 1."
         )
 
-    # set the initial iteration number of the simulation
+        # set the initial iteration number of the simulation
     if equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
     elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
     elif equilibration_ensemble == "GCMC":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GCMC"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_GCMC"
     else:
         raise ValueError(
             "ERROR: The 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
@@ -1019,8 +1022,7 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
-    return True
-    if(job.sp.replica != 0):
+    if(job.sp.replica_number_int != 0):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
         ewald_sp['replica_number_int']=0
@@ -2737,7 +2739,7 @@ def run_calibration_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(job.doc.gomc_calibration_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
