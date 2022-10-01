@@ -1471,12 +1471,12 @@ def build_charmm(job, write_files=True):
     import fileinput
     import re
 
+    # Write mosdef_pdb/psf dummy files to pass status flag
+    namd_charmm.write_psf()
+
+    namd_charmm.write_pdb()
+
     if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
-
-        namd_charmm.write_psf()
-
-        namd_charmm.write_pdb()
-
 
         from vmd import evaltcl
         template = get_sphere_builder_path()
@@ -1636,10 +1636,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             prefix = ref_job.fn("")
 
     Coordinates_box_0 = "{}.pdb".format(
-        prefix+namd_restart_pdb_psf_file_name_str
+        prefix+mosdef_structure_box_0_name_str
     )
     Structure_box_0 = "{}.psf".format(
-        prefix+namd_restart_pdb_psf_file_name_str
+        prefix+mosdef_structure_box_0_name_str
     )
     Coordinates_box_1 = "{}.pdb".format(
         prefix+mosdef_structure_box_1_name_str
@@ -1685,6 +1685,12 @@ def build_psf_pdb_ff_gomc_conf(job):
     Single_state_gomc_eq_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
+    Single_state_gomc_eq_Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
+        Single_state_gomc_eq_control_file_name
+    )
+    Single_state_gomc_eq_Structure_box_1 = "{}_BOX_1_restart.psf".format(
+        Single_state_gomc_eq_control_file_name
+    )
     Single_state_gomc_eq_binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
         Single_state_gomc_eq_control_file_name
     )
@@ -1701,6 +1707,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
             job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
             job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
+            job.doc.path_to_sseq_pdb_box_1 =  job.fn(Single_state_gomc_eq_Coordinates_box_1)
+            job.doc.path_to_sseq_psf_box_1 =  job.fn(Single_state_gomc_eq_Structure_box_1)
             job.doc.path_to_sseq_binCoordinates =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_0)
             job.doc.path_to_sseq_extendedSystem =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_0)
             job.doc.path_to_sseq_binCoordinates_box_1 =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_1)
@@ -1710,6 +1718,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     else:    
         job.doc.path_to_sseq_pdb =  job.fn(Single_state_gomc_eq_Coordinates_box_0)
         job.doc.path_to_sseq_psf =  job.fn(Single_state_gomc_eq_Structure_box_0)
+        job.doc.path_to_sseq_pdb_box_1 =  job.fn(Single_state_gomc_eq_Coordinates_box_1)
+        job.doc.path_to_sseq_psf_box_1 =  job.fn(Single_state_gomc_eq_Structure_box_1)
         job.doc.path_to_sseq_binCoordinates =  job.fn(Single_state_gomc_eq_binCoordinates_box_0)
         job.doc.path_to_sseq_extendedSystem =  job.fn(Single_state_gomc_eq_extendedSystem_box_0)
         job.doc.path_to_sseq_binCoordinates_box_1 =  job.fn(Single_state_gomc_eq_binCoordinates_box_1)
@@ -2150,13 +2160,13 @@ def build_psf_pdb_ff_gomc_conf(job):
             Restart= False if job.sp.skipEq == "True" else True,
             RestartCheckpoint=True,
             ExpertMode=False,
-            Coordinates_box_0=Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
-            Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
+            Coordinates_box_0=job.doc.path_to_sseq_pdb,
+            Structure_box_0=job.doc.path_to_sseq_psf,
             binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
-            Coordinates_box_1=Coordinates_box_1 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb_box_1,
-            Structure_box_1=Structure_box_1 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf_box_1,
+            Coordinates_box_1=job.doc.path_to_sseq_pdb_box_1,
+            Structure_box_1=job.doc.path_to_sseq_psf_box_1,
             binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
             extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
             binVelocities_box_1=None,
