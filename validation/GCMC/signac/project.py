@@ -951,9 +951,7 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     Single_state_gomc_eq_control_file_name = "single_state_eq"
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method == "Wolf"):
+    try:
         wolf_sp = job.statepoint()
         wolf_sp['electrostatic_method']="Ewald"
         jobs = list(pr.find_jobs(wolf_sp))
@@ -965,17 +963,6 @@ def part_4b_job_gomc_sseq_completed_properly(job):
                 return False
             else:
                 return True
-
-
-    try:
-        if gomc_sim_completed_properly(
-            job,
-            Single_state_gomc_eq_control_file_name,
-        ) is False:
-            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-            return False
-        else:
-            return True
     except:
         return False
 
@@ -1118,6 +1105,8 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda *jobs: all(mosdef_input_written(j)
+                               for j in jobs[0]._project))
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -2669,7 +2658,6 @@ def run_sseq_run_gomc_command(job):
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.skipEq == "False")
-@Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.post(part_3b_output_gomc_wolf_sanity_started)
@@ -2707,6 +2695,7 @@ def run_wolf_sanity_run_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
