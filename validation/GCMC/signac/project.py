@@ -91,8 +91,8 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
-Calibration_MC_steps = 10000
-Calibration_MC_Eq_Steps = 1000
+Calibration_MC_steps = 1000
+Calibration_MC_Eq_Steps = 500
 EqSteps = 1000
 number_of_lambda_spacing_including_zero_int = 1
 
@@ -2538,13 +2538,13 @@ def build_psf_pdb_ff_gomc_conf(job):
                 Restart= False if job.sp.skipEq == "True" else True,
                 RestartCheckpoint=True,
                 ExpertMode=False,
-                Coordinates_box_0=job.doc.path_to_ref_pdb,
-                Structure_box_0=job.doc.path_to_ref_psf,
+                Coordinates_box_0=job.doc.path_to_sseq_pdb,
+                Structure_box_0=job.doc.path_to_sseq_psf,
                 binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
                 extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
                 binVelocities_box_0=None,
-                Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
-                Structure_box_1=job.doc.path_to_ref_psf_box_1,
+                Coordinates_box_1=job.doc.path_to_sseq_pdb_box_1,
+                Structure_box_1=job.doc.path_to_sseq_psf_box_1,
                 binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
                 extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
                 binVelocities_box_1=None,
