@@ -144,7 +144,7 @@ preliminary_output_avg_std_of_replicates_txt_file_name_box_0 = "preliminary_anal
 walltime_mosdef_hr = 24
 walltime_namd_hr = 24
 walltime_gomc_equilbrium_hr = 96
-walltime_gomc_production_hr = 96
+walltime_gomc_production_hr = 24
 walltime_gomc_analysis_hr = 4
 memory_needed = 16
 
