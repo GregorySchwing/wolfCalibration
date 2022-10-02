@@ -7,6 +7,7 @@
 {% if gpus %}
 #SBATCH -q gpu
 #SBATCH --gres gpu:{{ gpus }}
+#SBATCH --prefer=v100
 {%- else %}
 #SBATCH -q primary
 {%- endif %}
