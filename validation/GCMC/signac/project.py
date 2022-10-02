@@ -898,9 +898,10 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method == "Wolf"):
+    if(job.sp.replica_number_int != 0):
         wolf_sp = job.statepoint()
         wolf_sp['electrostatic_method']="Ewald"
+        wolf_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(wolf_sp))
         for wolf_job in jobs:
             if namd_sim_completed_properly(
@@ -935,13 +936,11 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                 ewald_job,
                 control_file_name_str,
             ) is False:
-                print("Says wolf cal hasnt completed", job.fn(""))
                 return False
             else:
                 return True
 
     except:
-        print("exception Says wolf cal hasnt completed", job.fn(""))
         return False
 
 
@@ -2585,6 +2584,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
