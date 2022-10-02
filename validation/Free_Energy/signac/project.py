@@ -2557,8 +2557,8 @@ def run_sseq_run_gomc_command(job):
     # defining source and destination
     # paths
     #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-
-    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    #src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
     trg = job.fn("")
     files=os.listdir(src)
     
@@ -2642,7 +2642,7 @@ def run_wolf_sanity_run_gomc_command(job):
         "np": 1,
         "ngpu": 1,
         "memory": memory_needed,
-        "walltime": 30,
+        "walltime": 26,
     }
 )
 @flow.with_job
