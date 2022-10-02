@@ -67,6 +67,7 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
+ 
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -74,7 +75,7 @@ namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 10 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 5 * 10**6 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
@@ -93,8 +94,8 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 10000
-Calibration_MC_Eq_Steps = 1000
+Calibration_MC_steps = 2000000
+Calibration_MC_Eq_Steps = 10000
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -257,7 +258,7 @@ def append_wolf_calibration_parameters(job):
     WolfAlphabUpperBoundList = [0.5]
     WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = 1000
+    wolfCalFreq = 10000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
         defPotLine = "Wolf\tFalse\n"
@@ -718,6 +719,8 @@ def part_3a_output_namd_equilb_NPT_started(job):
     if(job.sp.electrostatic_method == "Wolf"):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
                 return namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
@@ -734,6 +737,8 @@ def part_3a_output_namd_equilb_NPT_hasnt_started(job):
     ewald_sp = job.statepoint()
     ewald_sp['replica_number_int']=0
     ewald_sp['electrostatic_method']="Ewald"
+    ewald_sp['wolf_model']="Ewald"
+    ewald_sp['wolf_potential']="Ewald"
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
         return not namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
@@ -774,34 +779,24 @@ def part_3b_output_gomc_equilb_design_ensemble_started(job):
 @flow.with_job
 def part_3b_output_gomc_calibration_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
-    return True
     try:
-#This will cause Ewald sims to wait for Wolf calibration to complete.
-        #This will cause Ewald sims to wait for Wolf calibration to complete.
+        ewald_sp = job.statepoint()
+        ewald_sp['replica_number_int']=0
+        ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['wolf_potential']="Calibrator"
+        ewald_sp['wolf_model']="Calibrator"
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            if ewald_job.isfile(
+                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+            ):
+                return True
+            else:
+                return False
 
-        if(job.sp.electrostatic_method != "Wolf"):
-            ewald_sp = job.statepoint()
-            ewald_sp['electrostatic_method']="Wolf"
-            jobs = list(pr.find_jobs(ewald_sp))
-            for ewald_job in jobs:
-                if ewald_job.isfile(
-                    "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
-                ):
-                    return True
-                else:
-                    return False
 
-
-        if job.isfile(
-            "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
-        ):
-            return True
-        else:
-            return False
     except:
         return False
-
-        return True
 
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
@@ -815,6 +810,8 @@ def part_3b_output_gomc_sseq_started(job):
         if(job.sp.electrostatic_method == "Wolf"):
             wolf_sp = job.statepoint()
             wolf_sp['electrostatic_method']="Ewald"
+            wolf_sp['wolf_model']="Ewald"
+            wolf_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(wolf_sp))
             for ewald_job in jobs:
                 if ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat"):
@@ -962,6 +959,8 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
         wolf_sp = job.statepoint()
         wolf_sp['electrostatic_method']="Ewald"
         wolf_sp['replica_number_int']=0
+        wolf_sp['wolf_model']="Ewald"
+        wolf_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(wolf_sp))
         for wolf_job in jobs:
             if namd_sim_completed_properly(
@@ -989,6 +988,8 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     try:
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['wolf_model']="Calibrator"        
+        ewald_sp['wolf_potential']="Calibrator"
         ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
@@ -998,11 +999,15 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                 control_file_name_str,
             ) is False:
                 return False
-            else:
+            elif ewald_job.isfile(
+                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+            ):
                 return True
-
+            else:
+                return False
     except:
         return False
+
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1015,6 +1020,8 @@ def part_4b_job_gomc_sseq_completed_properly(job):
         wolf_sp = job.statepoint()
         wolf_sp['electrostatic_method']="Ewald"
         wolf_sp['replica_number_int']=0
+        wolf_sp['wolf_model']="Ewald"
+        wolf_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(wolf_sp))
         for ewald_job in jobs:
             if gomc_sim_completed_properly(
@@ -1037,7 +1044,6 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     #if(job.sp.electrostatic_method != "Wolf"):
     #    return true
     #if (job.sp.skipEq == "True"):
-    return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     wolf_sanity_control_file_name = "wolf_sanity"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1069,81 +1075,81 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
         return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
-    if(job.sp.replica_number_int != 0):
-        ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['replica_number_int']=0
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
-            if (not ewald_job.isfile("bestWolfParameters.pickle")):
-                return False
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    for ewald_job in jobs:
+        if (not ewald_job.isfile("bestWolfParameters.pickle")):
+            return False
+        try:
+            import pickle as pickle
+            import re
+            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+            with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
+                model2BestWolfAlphaRCut = pickle.load(handle)
+            
+            bestModel = ""
+            bestOpt = ""
+            smallestRelErr = 1.0
+            smallestAUC = 1000000000
+            largestAUC = 0
+
+            bestRCut = 0
+            bestAlpha = 0
+
+            #print("Replica :", job.sp.replica)
+            for model in model2BestWolfAlphaRCut:
+                print("Model :", model)
+                print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
+                print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
+                print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
+                print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
+                print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
+                if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
+                    bestModel = model
+                    smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                    smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                    bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                    bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                    bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
+                if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
+                    worstModel = model
+                    largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                    largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                    worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                    worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                    worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
+            print("worstModel :", worstModel)
+            print("worstOpt :", worstOpt)
+
+            print("largestRelErr :", largestRelErr)
+            print("largestAUC :", largestAUC)
+            print("worstRCut :", worstRCut)
+            print("worstAlpha :", worstAlpha)
+
+            print("bestModel :", bestModel)
+            print("bestOpt :", bestOpt)
+
+            print("smallestRelErr :", smallestRelErr)
+            print("smallestAUC :", smallestAUC)
+            print("bestRCut :", bestRCut)
+            print("bestAlpha :", bestAlpha)
+
+            Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
+            "Alpha":bestAlpha}
+            with open("winningWolfParameters.pickle", 'wb') as handle:
+                pickle.dump(Dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
             return ewald_job.isfile("winningWolfParameters.pickle")
-    try:
-        import pickle as pickle
-        import re
-        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-        with open(job.fn("bestWolfParameters.pickle"), 'rb') as handle:
-            model2BestWolfAlphaRCut = pickle.load(handle)
-        
-        bestModel = ""
-        bestOpt = ""
-        smallestRelErr = 1.0
-        smallestAUC = 1000000000
-        largestAUC = 0
-
-        bestRCut = 0
-        bestAlpha = 0
-
-        #print("Replica :", job.sp.replica)
-        for model in model2BestWolfAlphaRCut:
-            print("Model :", model)
-            print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
-            print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
-            print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
-            print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
-            print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
-            if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
-                bestModel = model
-                smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
-                bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
-            if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
-                worstModel = model
-                largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
-                worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
-        print("worstModel :", worstModel)
-        print("worstOpt :", worstOpt)
-
-        print("largestRelErr :", largestRelErr)
-        print("largestAUC :", largestAUC)
-        print("worstRCut :", worstRCut)
-        print("worstAlpha :", worstAlpha)
-
-        print("bestModel :", bestModel)
-        print("bestOpt :", bestOpt)
-
-        print("smallestRelErr :", smallestRelErr)
-        print("smallestAUC :", smallestAUC)
-        print("bestRCut :", bestRCut)
-        print("bestAlpha :", bestAlpha)
-
-        Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
-        "Alpha":bestAlpha}
-        with open("winningWolfParameters.pickle", 'wb') as handle:
-            pickle.dump(Dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-        return job.isfile("winningWolfParameters.pickle")
-    except:
-        return False
+        except:
+            return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 # For some reason this is failing on all but replica 0..
@@ -1188,7 +1194,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     return success and atLeastOneMatchExists
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
@@ -1204,18 +1210,21 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
     import pickle as pickle
-
-    if(job.sp.replica_number_int != 0):
-        ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['replica_number_int']=0
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
+    testEachWolf = True
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"
+    ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    for ewald_job in jobs:
+        if (testEachWolf):
+            with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
+                winningWolf = pickle.load(handle)
+        else:
             with open(ewald_job.fn("winningWolfParameters.pickle"), 'rb') as handle:
                 winningWolf = pickle.load(handle)
-    else:
-        with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
-            winningWolf = pickle.load(handle)
+
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
     box = "0"
@@ -1223,35 +1232,58 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         for file in files:
             if regex.match(file):
                 with open(file, "a") as myfile:
-                    defWolfLine = "Wolf\tTrue\n"
-                    myfile.write(defWolfLine)
-                    defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
-                    myfile.write(defPotLine)
-                    defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
-                    myfile.write(defKindLine)
-                    defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
-                    myfile.write(defAlphaLine)
-                    defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
-                    myfile.write(defRCutLine)
+                    if (testEachWolf):
+                        defWolfLine = "Wolf\tTrue\n"
+                        myfile.write(defWolfLine)
+                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
+                        myfile.write(defPotLine)
+                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
+                        myfile.write(defKindLine)
+                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_alpha"])
+                        myfile.write(defAlphaLine)
+                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_rcut"])
+                        myfile.write(defRCutLine)
+                    else:
+                        defWolfLine = "Wolf\tTrue\n"
+                        myfile.write(defWolfLine)
+                        defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
+                        myfile.write(defPotLine)
+                        defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
+                        myfile.write(defKindLine)
+                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
+                        myfile.write(defAlphaLine)
+                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
+                        myfile.write(defRCutLine)
+
 
     regex = re.compile("wolf_sanity.conf")
-    #with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
-    #    winningWolf = pickle.load(handle)
     box = "0"
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
                 with open(file, "a") as myfile:
-                    defWolfLine = "Wolf\tTrue\n"
-                    myfile.write(defWolfLine)
-                    defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
-                    myfile.write(defPotLine)
-                    defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
-                    myfile.write(defKindLine)
-                    defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
-                    myfile.write(defAlphaLine)
-                    defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
-                    myfile.write(defRCutLine)
+                    if (testEachWolf):
+                        defWolfLine = "Wolf\tTrue\n"
+                        myfile.write(defWolfLine)
+                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
+                        myfile.write(defPotLine)
+                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
+                        myfile.write(defKindLine)
+                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_alpha"])
+                        myfile.write(defAlphaLine)
+                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_rcut"])
+                        myfile.write(defRCutLine)
+                    else:
+                        defWolfLine = "Wolf\tTrue\n"
+                        myfile.write(defWolfLine)
+                        defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
+                        myfile.write(defPotLine)
+                        defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
+                        myfile.write(defKindLine)
+                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
+                        myfile.write(defAlphaLine)
+                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
+                        myfile.write(defRCutLine)
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1605,9 +1637,13 @@ def build_psf_pdb_ff_gomc_conf(job):
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
+        ref_sp['wolf_model']="Ewald"
+        ref_sp['wolf_potential']="Ewald"
+
         jobs = list(pr.find_jobs(ref_sp))
+        print("jobs:", jobs)
         for ref_job in jobs:
-            #if (ref_job.isfile(f"{Coordinates_box_0}")):
+            print(ref_job.fn(""))
             job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
             job.doc.path_to_ref_pdb =  ref_job.fn(Coordinates_box_0)
             job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
@@ -2514,9 +2550,30 @@ def run_namd_equilb_NPT_gomc_command(job):
 @flow.cmd
 def run_sseq_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
+    from pathlib import Path
+    import shutil
+    import os
+    
+    # defining source and destination
+    # paths
+    #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+
+    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    trg = job.fn("")
+    files=os.listdir(src)
+    
+    # iterating over all the files in
+    # the source directory
+    for fname in files:
+        
+        # copying the files to the
+        # destination directory
+        shutil.copy2(os.path.join(src,fname), trg)
+
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
     print(f"Running simulation job id {job}")
+    """
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
@@ -2524,13 +2581,14 @@ def run_sseq_run_gomc_command(job):
         str(Single_state_gomc_eq_control_file_name),
         str(Single_state_gomc_eq_control_file_name),
     )
-
+    """
+    run_command = "echo sseqcopied"
     print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
-
+    
     return run_command
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.skipEq == "False" and j.sp.skipEq != "False")
+@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
@@ -2553,7 +2611,7 @@ def run_wolf_sanity_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(job.doc.gomc_calibration_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
@@ -2568,7 +2626,10 @@ def run_wolf_sanity_run_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf" and j.sp.replica_number_int == 0)
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
@@ -2605,7 +2666,10 @@ def run_calibration_run_gomc_command(job):
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf" and j.sp.replica_number_int == 0)
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
 @Project.operation.with_directives(
@@ -2651,6 +2715,9 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
     @Project.pre(part_4b_job_gomc_sseq_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
+    @Project.pre(lambda *jobs: all(part_4b_job_gomc_wolf_sanity_completed_properly(j)
+                                for j in jobs[0]._project))    
+    #@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
