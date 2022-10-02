@@ -803,22 +803,31 @@ def part_3b_output_gomc_wolf_sanity_started(job):
 @flow.with_job
 def part_part_3c_output_gomc_production_run_started(job):
     """Check to see if the gomc production run simulation is started (set temperature)."""
-
     try:
-        if job.isfile(
-            "out_{}.dat".format(
-                job.doc.gomc_production_run_ensemble_dict["output_name_control_file_name"]
-            )
-        ):
-            return gomc_simulation_started(
-                job,
-                job.doc.gomc_production_run_ensemble_dict["output_name_control_file_name"],
-            )
-        else:
-            return False
+        for initial_state_i in list(job.doc.InitialState_list):
+            try:
+                if job.isfile(
+                    "out_{}.dat".format(
+                        job.doc.gomc_production_run_ensemble_dict[
+                            str(initial_state_i)
+                        ]["output_name_control_file_name"]
+                    )
+                ):
+                    gomc_simulation_started(
+                        job,
+                        job.doc.gomc_production_run_ensemble_dict[
+                            str(initial_state_i)
+                        ]["output_name_control_file_name"],
+                    )
+
+                else:
+                    return False
+            except:
+                return False
+
+        return True
     except:
         return False
-    return True
 
 
 # ******************************************************
@@ -915,10 +924,10 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method != "Wolf"):
+    try:
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['replica']=0
+        ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             control_file_name_str = "wolf_calibration"
@@ -926,21 +935,13 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                 ewald_job,
                 control_file_name_str,
             ) is False:
+                print("Says wolf cal hasnt completed", job.fn(""))
                 return False
             else:
                 return True
 
-    try:
-        control_file_name_str = "wolf_calibration"
-        if gomc_sim_completed_properly(
-            job,
-            control_file_name_str,
-        ) is False:
-            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-            return False
-        else:
-            return True
     except:
+        print("exception Says wolf cal hasnt completed", job.fn(""))
         return False
 
 
@@ -987,34 +988,18 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     wolf_sanity_control_file_name = "wolf_sanity"
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method == "Ewald"):
-        wolf_sp = job.statepoint()
-        wolf_sp['replica']=0
-        wolf_sp['electrostatic_method']="Wolf"
-        jobs = list(pr.find_jobs(wolf_sp))
-        for ewald_job in jobs:
-            if gomc_sim_completed_properly(
-                ewald_job,
-                wolf_sanity_control_file_name,
-            ) is False:
-                return False
-            else:
-                return True
-
-
-    try:
+    wolf_sp = job.statepoint()
+    wolf_sp['replica_number_int']=0
+    wolf_sp['electrostatic_method']="Wolf"
+    jobs = list(pr.find_jobs(wolf_sp))
+    for ewald_job in jobs:
         if gomc_sim_completed_properly(
-            job,
+            ewald_job,
             wolf_sanity_control_file_name,
         ) is False:
-            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
             return False
         else:
             return True
-    except:
-        return False
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
@@ -1225,12 +1210,6 @@ def part_4c_job_production_run_completed_properly(job):
                     job,
                     filename_4c_iter,
                 ) is False:
-                    #print("Isn't finished ",filename_4c_iter)
-                    return False
-
-                # check specifically for the FE files
-                if job.isfile(f'Free_Energy_BOX_0_{filename_4c_iter}.dat') is False:
-                    #print("Isn't finished ",f'Free_Energy_BOX_0_{filename_4c_iter}.dat')
                     return False
 
             except:
@@ -2905,12 +2884,12 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-@FlowProject.pre(
-     lambda *jobs: all(
-         part_4b_job_gomc_equilb_design_ensemble_completed_properly(job)
-         for job in jobs
-     )
-)
+#@FlowProject.pre(
+#     lambda *jobs: all(
+#         part_4b_job_gomc_equilb_design_ensemble_completed_properly(job)
+#         for job in jobs
+#     )
+#)
 @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
 @Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
 @flow.with_job
@@ -3013,12 +2992,12 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-@FlowProject.pre(
-     lambda *jobs: all(
-         part_4c_job_production_run_completed_properly(job)
-         for job in jobs
-     )
-)
+#@FlowProject.pre(
+#     lambda *jobs: all(
+#         part_4c_job_production_run_completed_properly(job)
+#         for job in jobs
+#     )
+#)
 @Project.pre(part_4c_job_production_run_completed_properly)
 @Project.post(part_5a_analysis_individual_simulation_averages_completed)
 @flow.with_job
@@ -3027,7 +3006,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
     # as it is no longer valid when adding more simulations
     if os.path.isfile(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'):
         os.remove(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}')
-
+    """
     output_column_temp_title = 'temp_K'  # column title title for temp
     output_column_solute_title = 'solute'  # column title title for temp
     output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
@@ -3088,7 +3067,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
             f"{delta_std_bar: <30} "
             f" \n"
         )
-
+        """
 
 # ******************************************************
 # ******************************************************
