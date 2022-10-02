@@ -923,6 +923,10 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
 @Project.label
 @flow.with_job
 def part_4b_job_gomc_calibration_completed_properly(job):
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     try:
@@ -937,9 +941,12 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                 control_file_name_str,
             ) is False:
                 return False
-            else:
+            elif ewald_job.isfile(
+                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+            ):
                 return True
-
+            else:
+                return False
     except:
         return False
 
