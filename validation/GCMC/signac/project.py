@@ -1128,7 +1128,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     ref_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ref_sp))
     for ref_job in jobs:    
-        with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
+        with open(ref_job.fn("winningWolfParameters.pickle"), 'rb') as handle:
             winningWolf = pickle.load(handle)
 
     box = "0"
