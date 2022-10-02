@@ -55,8 +55,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -64,8 +64,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 # local bin paths
-#gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
 
 # brads workstation binary paths
@@ -77,7 +77,7 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
-
+gomc_console_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
@@ -731,14 +731,13 @@ def part_3a_output_namd_equilb_NPT_started(job):
 def part_3a_output_namd_equilb_NPT_hasnt_started(job):
     """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
-    if(job.sp.electrostatic_method == "Wolf"):
-            ewald_sp = job.statepoint()
-            ewald_sp['electrostatic_method']="Ewald"
-            jobs = list(pr.find_jobs(ewald_sp))
-            for ewald_job in jobs:
-                return not namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+    ewald_sp = job.statepoint()
+    ewald_sp['replica_number_int']=0
+    ewald_sp['electrostatic_method']="Ewald"
+    jobs = list(pr.find_jobs(ewald_sp))
+    for ewald_job in jobs:
+        return not namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
 
-    return not namd_simulation_started(job, namd_equilb_NPT_control_file_name_str)
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
 @flow.with_job
@@ -980,77 +979,42 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             job, namd_equilb_NPT_control_file_name_str
         )
 
+
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    return True
-
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method != "Wolf"):
-        ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['replica_number_int']=0
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
-            control_file_name_str = "wolf_calibration"
-            if gomc_sim_completed_properly(
-                ewald_job,
-                control_file_name_str,
-            ) is False:
-                return False
-            else:
-                return True
-    elif(job.sp.replica_number_int != 0):
-        ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['replica_number_int']=0
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
-            control_file_name_str = "wolf_calibration"
-            if gomc_sim_completed_properly(
-                ewald_job,
-                control_file_name_str,
-            ) is False:
-                return False
-            else:
-                return True
     try:
-        control_file_name_str = "wolf_calibration"
-        if gomc_sim_completed_properly(
-            job,
-            control_file_name_str,
-        ) is False:
-            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-            return False
-        else:
-            return True
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            control_file_name_str = "wolf_calibration"
+            if gomc_sim_completed_properly(
+                ewald_job,
+                control_file_name_str,
+            ) is False:
+                return False
+            else:
+                return True
+
     except:
         return False
-
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
 def part_4b_job_gomc_sseq_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    #    return true
-    if (job.sp.skipEq == "True"):
-        return True
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     Single_state_gomc_eq_control_file_name = "single_state_eq"
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.electrostatic_method == "Wolf"):
+    try:
         wolf_sp = job.statepoint()
         wolf_sp['electrostatic_method']="Ewald"
+        wolf_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(wolf_sp))
         for ewald_job in jobs:
             if gomc_sim_completed_properly(
@@ -1060,20 +1024,8 @@ def part_4b_job_gomc_sseq_completed_properly(job):
                 return False
             else:
                 return True
-
-
-    try:
-        if gomc_sim_completed_properly(
-            job,
-            Single_state_gomc_eq_control_file_name,
-        ) is False:
-            #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-            return False
-        else:
-            return True
     except:
         return False
-
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1121,7 +1073,6 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
-    return True
     if(job.sp.replica_number_int != 0):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
@@ -1753,6 +1704,10 @@ def build_psf_pdb_ff_gomc_conf(job):
     MC_steps = int(gomc_steps_equilb_design_ensemble)
 
     # output all data and calc frequecy
+    console_output_true_list_input = [
+        True,
+        int(gomc_console_output_data_every_X_steps),
+    ]    
     output_true_list_input = [
         True,
         int(gomc_output_data_every_X_steps),
@@ -1875,7 +1830,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "PressureCalc": output_false_list_input,
             "RestartFreq": output_true_list_input,
             "CheckpointFreq": output_true_list_input,
-            "ConsoleFreq": output_true_list_input,
+            "ConsoleFreq": console_output_true_list_input,
             "BlockAverageFreq": output_true_list_input,
             "HistogramFreq": output_false_list_input,
             "CoordinatesFreq": output_false_list_input,
@@ -1948,7 +1903,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "PressureCalc": output_false_list_input,
                 "RestartFreq": output_true_list_input,
                 "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": output_true_list_input,
+                "ConsoleFreq": console_output_true_list_input,
                 "BlockAverageFreq": output_true_list_input,
                 "HistogramFreq": output_false_list_input,
                 "CoordinatesFreq": output_false_list_input,
@@ -2082,7 +2037,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "PressureCalc": output_false_list_input,
                 "RestartFreq": output_true_list_input,
                 "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": output_true_list_input,
+                "ConsoleFreq": console_output_true_list_input,
                 "BlockAverageFreq": output_true_list_input,
                 "HistogramFreq": output_false_list_input,
                 "CoordinatesFreq": output_false_list_input,
@@ -2253,7 +2208,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "PressureCalc": output_false_list_input,
                 "RestartFreq": output_true_list_input,
                 "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": output_true_list_input,
+                "ConsoleFreq": console_output_true_list_input,
                 "BlockAverageFreq": output_true_list_input,
                 "HistogramFreq": output_false_list_input,
                 "CoordinatesFreq": output_false_list_input,
@@ -2450,7 +2405,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "PressureCalc": output_false_list_input,
                 "RestartFreq": output_true_list_input,
                 "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": output_true_list_input,
+                "ConsoleFreq": console_output_true_list_input,
                 "BlockAverageFreq": output_true_list_input,
                 "HistogramFreq": output_false_list_input,
                 "CoordinatesFreq": output_false_list_input,
@@ -2491,6 +2446,8 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_3a_output_namd_equilb_NPT_hasnt_started)
