@@ -1122,8 +1122,15 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     import pickle as pickle
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-    with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
-        winningWolf = pickle.load(handle)
+    
+    ref_sp = job.statepoint()
+    ref_sp['electrostatic_method']="Wolf"
+    ref_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ref_sp))
+    for ref_job in jobs:    
+        with open(job.fn("winningWolfParameters.pickle"), 'rb') as handle:
+            winningWolf = pickle.load(handle)
+
     box = "0"
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
