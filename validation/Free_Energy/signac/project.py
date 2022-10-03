@@ -2557,7 +2557,7 @@ def run_sseq_run_gomc_command(job):
     # defining source and destination
     # paths
     #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/equilibrated_replicates/" + job.sp.replica_number_int
     #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
     trg = job.fn("")
     files=os.listdir(src)
