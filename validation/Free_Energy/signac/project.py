@@ -55,8 +55,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -64,8 +64,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 # local bin paths
-#gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
  
 
@@ -1164,23 +1164,22 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     success = True
     atLeastOneMatchExists = False
     if (job.sp.electrostatic_method == "Ewald"):
-            ewald_sp = job.statepoint()
-            ewald_sp['electrostatic_method']="Wolf"
-            jobs = list(pr.find_jobs(ewald_sp))
-            for ewald_job in jobs:
-                for root, dirs, files in os.walk(ewald_job.fn("")):
-                    for file in files:
-                        if regex.match(file):
-                            atLeastOneMatchExists = True
-                            with open(ewald_job.fn(file), "r") as openedfile:
-                                last_line = openedfile.readlines()[-1]
-                            if ("RcutCoulomb" in last_line):
-                                continue
-                            else:
-                                success = success and False
-            return success
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            for root, dirs, files in os.walk(ewald_job.fn("")):
+                for file in files:
+                    if regex.match(file):
+                        atLeastOneMatchExists = True
+                        with open(ewald_job.fn(file), "r") as openedfile:
+                            last_line = openedfile.readlines()[-1]
+                        if ("RcutCoulomb" in last_line):
+                            continue
+                        else:
+                            success = success and False
 
-
+    regex = re.compile("wolf_sanity.conf")
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
@@ -1191,10 +1190,11 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                     continue
                 else:
                     success = success and False
+
     return success and atLeastOneMatchExists
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
@@ -2557,8 +2557,8 @@ def run_sseq_run_gomc_command(job):
     # defining source and destination
     # paths
     #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    #src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
     trg = job.fn("")
     files=os.listdir(src)
     
@@ -2587,8 +2587,10 @@ def run_sseq_run_gomc_command(job):
     
     return run_command
 
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
 @Project.pre(lambda j: j.sp.skipEq == "False")
+@Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
@@ -2649,6 +2651,27 @@ def run_wolf_sanity_run_gomc_command(job):
 @flow.cmd
 def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
+    from pathlib import Path
+    import shutil
+    import os
+    
+    # defining source and destination
+    # paths
+    #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/cal_full"
+    #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    trg = job.fn("")
+    files=os.listdir(src)
+    
+    # iterating over all the files in
+    # the source directory
+    for fname in files:
+        
+        # copying the files to the
+        # destination directory
+        shutil.copy2(os.path.join(src,fname), trg)
+    
+    """
     control_file_name_str = "wolf_calibration"
 
     print(f"Running simulation job id {job}")
@@ -2661,7 +2684,8 @@ def run_calibration_run_gomc_command(job):
     )
 
     print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
-
+    """
+    run_command = "echo copied_calibration_data"
     return run_command
 
 
