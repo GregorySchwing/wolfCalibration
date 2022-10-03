@@ -53,6 +53,7 @@ for solute_i in solute:
                         if (e_method == "Wolf"):
                             for wolfM in wolfModel:
                                 for wolfP in wolfPotential:
+                                        # Equivalent to VLUGT DSP
                                         if (wolfM == "VLUGTWINTRACUTOFF" and wolfP == "DSP"):
                                             continue
                                         statepoint = {
