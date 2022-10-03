@@ -1039,15 +1039,8 @@ def part_4b_job_gomc_sseq_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    # This will let ewald start before wolf cal is done
-    # for now make it wait until I get cal sorted out.
-    #if(job.sp.electrostatic_method != "Wolf"):
-    #    return true
-    #if (job.sp.skipEq == "True"):
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
     wolf_sanity_control_file_name = "wolf_sanity"
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    """
     if(job.sp.electrostatic_method == "Ewald"):
         wolf_sp = job.statepoint()
         wolf_sp['electrostatic_method']="Wolf"
@@ -1060,7 +1053,7 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
                 return False
             else:
                 return True
-
+    """
 
     try:
         if gomc_sim_completed_properly(
@@ -1087,69 +1080,11 @@ def part_4b_job_gomc_wolf_parameters_found(job):
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
         if (not ewald_job.isfile("bestWolfParameters.pickle")):
+            print("bestWolfParameters doesnt exist")
             return False
-        try:
-            import pickle as pickle
-            import re
-            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-            with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
-                model2BestWolfAlphaRCut = pickle.load(handle)
-            
-            bestModel = ""
-            bestOpt = ""
-            smallestRelErr = 1.0
-            smallestAUC = 1000000000
-            largestAUC = 0
-
-            bestRCut = 0
-            bestAlpha = 0
-
-            #print("Replica :", job.sp.replica)
-            for model in model2BestWolfAlphaRCut:
-                print("Model :", model)
-                print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
-                print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
-                print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
-                print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
-                print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
-                if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
-                    bestModel = model
-                    smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                    smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
-                    bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                    bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                    bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
-                if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
-                    worstModel = model
-                    largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                    largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
-                    worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                    worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                    worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
-            print("worstModel :", worstModel)
-            print("worstOpt :", worstOpt)
-
-            print("largestRelErr :", largestRelErr)
-            print("largestAUC :", largestAUC)
-            print("worstRCut :", worstRCut)
-            print("worstAlpha :", worstAlpha)
-
-            print("bestModel :", bestModel)
-            print("bestOpt :", bestOpt)
-
-            print("smallestRelErr :", smallestRelErr)
-            print("smallestAUC :", smallestAUC)
-            print("bestRCut :", bestRCut)
-            print("bestAlpha :", bestAlpha)
-
-            Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
-            "Alpha":bestAlpha}
-            with open("winningWolfParameters.pickle", 'wb') as handle:
-                pickle.dump(Dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-            return ewald_job.isfile("winningWolfParameters.pickle")
-        except:
-            return False
+        else:
+            return True
+        
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 # For some reason this is failing on all but replica 0..
@@ -1163,6 +1098,9 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
     success = True
     atLeastOneMatchExists = False
+    if (job.sp.electrostatic_method == "Ewald"):
+        return True
+    """
     if (job.sp.electrostatic_method == "Ewald"):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
@@ -1178,6 +1116,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                             continue
                         else:
                             success = success and False
+    """
 
     regex = re.compile("wolf_sanity.conf")
     for root, dirs, files in os.walk(job.fn("")):
@@ -1217,13 +1156,72 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     ewald_sp['wolf_potential']="Calibrator"
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
+    winningWolf = {}
     for ewald_job in jobs:
         if (testEachWolf):
             with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
                 winningWolf = pickle.load(handle)
         else:
-            with open(ewald_job.fn("winningWolfParameters.pickle"), 'rb') as handle:
-                winningWolf = pickle.load(handle)
+            try:
+                import pickle as pickle
+                import re
+                with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
+                    model2BestWolfAlphaRCut = pickle.load(handle)
+                
+                bestModel = ""
+                bestOpt = ""
+                smallestRelErr = 1.0
+                smallestAUC = 1000000000
+                largestAUC = 0
+
+                bestRCut = 0
+                bestAlpha = 0
+
+                #print("Replica :", job.sp.replica)
+                for model in model2BestWolfAlphaRCut:
+                    print("Model :", model)
+                    print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
+                    print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
+                    print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
+                    print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
+                    print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
+                    if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
+                        bestModel = model
+                        smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                        smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                        bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                        bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                        bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
+                    if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
+                        worstModel = model
+                        largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                        largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                        worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                        worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                        worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
+                print("worstModel :", worstModel)
+                print("worstOpt :", worstOpt)
+
+                print("largestRelErr :", largestRelErr)
+                print("largestAUC :", largestAUC)
+                print("worstRCut :", worstRCut)
+                print("worstAlpha :", worstAlpha)
+
+                print("bestModel :", bestModel)
+                print("bestOpt :", bestOpt)
+
+                print("smallestRelErr :", smallestRelErr)
+                print("smallestAUC :", smallestAUC)
+                print("bestRCut :", bestRCut)
+                print("bestAlpha :", bestAlpha)
+
+                winningWolf = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
+                "Alpha":bestAlpha}
+                with open("winningWolfParameters.pickle", 'wb') as handle:
+                    pickle.dump(winningWolf, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+            except:
+                return False
 
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
@@ -1891,77 +1889,76 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("#**********************")
 
 
-    if(job.sp.electrostatic_method == "Wolf"):
-        print("#**********************")
-        print("Started:  Wolf Sanity GOMC control file writing")
-        print("#**********************")
-        wolf_sanity_control_file_name = "wolf_sanity"
-        gomc_control.write_gomc_control_file(
-            gomc_charmm_object_with_files,
-            wolf_sanity_control_file_name,
-            job.doc.equilibration_ensemble,
-            MC_steps,
-            production_temperature_K,
-            ff_psf_pdb_file_directory=None,
-            check_input_files_exist=False,
-            Parameters="{}.inp".format(gomc_ff_filename_str),
-            Restart=True,
-            RestartCheckpoint=True,
-            ExpertMode=False,
-            Coordinates_box_0=job.doc.path_to_ref_pdb,
-            Structure_box_0=job.doc.path_to_ref_psf,
-            binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
-            extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
-            binVelocities_box_0=None,
-            Coordinates_box_1=None,
-            Structure_box_1=None,
-            binCoordinates_box_1=None,
-            extendedSystem_box_1=None,
-            binVelocities_box_1=None,
-            input_variables_dict={
-                "PRNG": seed_no,
-                "Pressure": production_pressure_bar,
-                "Ewald": False,
-                "ElectroStatic": use_ElectroStatics,
-                "VDWGeometricSigma": VDWGeometricSigma,
-                "Rcut": job.doc.Rcut_ang,
-                "Exclude": Exclude,
-                "VolFreq": VolFreq[-1],
-                "MultiParticleFreq": MultiParticleFreq[-1],
-                "IntraSwapFreq": IntraSwapFreq[-1],
-                "CrankShaftFreq": CrankShaftFreq[-1],
-                "SwapFreq": SwapFreq[-1],
-                "DisFreq": DisFreq[-1],
-                "RotFreq": RotFreq[-1],
-                "RegrowthFreq": RegrowthFreq[-1],
-                "OutputName": wolf_sanity_control_file_name,
-                "EqSteps": EqSteps,
-                "PressureCalc": output_false_list_input,
-                "RestartFreq": output_true_list_input,
-                "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": console_output_true_list_input,
-                "BlockAverageFreq": output_true_list_input,
-                "HistogramFreq": output_false_list_input,
-                "CoordinatesFreq": output_false_list_input,
-                "DCDFreq": output_true_list_input,
-                "Potential": cutoff_style,
-                "LRC": True,
-                "RcutLow": 0,
-                "CBMC_First": CBMC_First[-1],
-                "CBMC_Nth": CBMC_Nth[-1],
-                "CBMC_Ang": CBMC_Ang[-1],
-                "CBMC_Dih": CBMC_Dih[-1],
-                #"FreeEnergyCalc": NoFreeEnergyCalc,
-                #"MoleculeType": MoleculeType,
-                #"InitialState": initial_state_sims_i,
-                #"LambdaVDW": list(job.doc.LambdaVDW_list),
-                #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
-            },
-        )
+    print("#**********************")
+    print("Started:  Wolf Sanity GOMC control file writing")
+    print("#**********************")
+    wolf_sanity_control_file_name = "wolf_sanity"
+    gomc_control.write_gomc_control_file(
+        gomc_charmm_object_with_files,
+        wolf_sanity_control_file_name,
+        job.doc.equilibration_ensemble,
+        MC_steps,
+        production_temperature_K,
+        ff_psf_pdb_file_directory=None,
+        check_input_files_exist=False,
+        Parameters="{}.inp".format(gomc_ff_filename_str),
+        Restart=True,
+        RestartCheckpoint=True,
+        ExpertMode=False,
+        Coordinates_box_0=job.doc.path_to_ref_pdb,
+        Structure_box_0=job.doc.path_to_ref_psf,
+        binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
+        extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
+        binVelocities_box_0=None,
+        Coordinates_box_1=None,
+        Structure_box_1=None,
+        binCoordinates_box_1=None,
+        extendedSystem_box_1=None,
+        binVelocities_box_1=None,
+        input_variables_dict={
+            "PRNG": seed_no,
+            "Pressure": production_pressure_bar,
+            "Ewald": job.sp.electrostatic_method == "Wolf",
+            "ElectroStatic": use_ElectroStatics,
+            "VDWGeometricSigma": VDWGeometricSigma,
+            "Rcut": job.doc.Rcut_ang,
+            "Exclude": Exclude,
+            "VolFreq": VolFreq[-1],
+            "MultiParticleFreq": MultiParticleFreq[-1],
+            "IntraSwapFreq": IntraSwapFreq[-1],
+            "CrankShaftFreq": CrankShaftFreq[-1],
+            "SwapFreq": SwapFreq[-1],
+            "DisFreq": DisFreq[-1],
+            "RotFreq": RotFreq[-1],
+            "RegrowthFreq": RegrowthFreq[-1],
+            "OutputName": wolf_sanity_control_file_name,
+            "EqSteps": EqSteps,
+            "PressureCalc": output_false_list_input,
+            "RestartFreq": output_true_list_input,
+            "CheckpointFreq": output_true_list_input,
+            "ConsoleFreq": console_output_true_list_input,
+            "BlockAverageFreq": output_true_list_input,
+            "HistogramFreq": output_false_list_input,
+            "CoordinatesFreq": output_false_list_input,
+            "DCDFreq": output_true_list_input,
+            "Potential": cutoff_style,
+            "LRC": True,
+            "RcutLow": 0,
+            "CBMC_First": CBMC_First[-1],
+            "CBMC_Nth": CBMC_Nth[-1],
+            "CBMC_Ang": CBMC_Ang[-1],
+            "CBMC_Dih": CBMC_Dih[-1],
+            #"FreeEnergyCalc": NoFreeEnergyCalc,
+            #"MoleculeType": MoleculeType,
+            #"InitialState": initial_state_sims_i,
+            #"LambdaVDW": list(job.doc.LambdaVDW_list),
+            #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+        },
+    )
 
-        print("#**********************")
-        print("Finished: Wolf Sanity GOMC control file writing")
-        print("#**********************")
+    print("#**********************")
+    print("Finished: Wolf Sanity GOMC control file writing")
+    print("#**********************")
     #
     if (job.sp.electrostatic_method == "Wolf"):
         output_name_control_file_calibration_name = "wolf_calibration"
@@ -2504,9 +2501,29 @@ def run_namd_equilb_NPT_gomc_command(job):
     print("#**********************")
     print("# Started the run_namd_equilb_NPT_gomc_command.")
     print("#**********************")
+    """Run the gomc_calibration_run_ensemble simulation."""
+    from pathlib import Path
+    import shutil
+    import os
+    
+    # defining source and destination
+    # paths
+    #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/equilibrated_replicates/replicates/" + str(job.sp.replica_number_int)
+    #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
+    trg = job.fn("")
+    files=os.listdir(src)
+    
+    # iterating over all the files in
+    # the source directory
+    for fname in files:
+        
+        # copying the files to the
+        # destination directory
+        shutil.copy2(os.path.join(src,fname), trg)
 
     control_file_name_str = namd_equilb_NPT_control_file_name_str
-
+    """
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
@@ -2519,7 +2536,11 @@ def run_namd_equilb_NPT_gomc_command(job):
     print('namd run_command = ' + str(run_command))
 
     return run_command
-
+    """
+    run_command = "echo namdcopied"
+    print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
+    
+    return run_command
 
 # ******************************************************
 # ******************************************************
@@ -2549,7 +2570,7 @@ def run_namd_equilb_NPT_gomc_command(job):
 @flow.with_job
 @flow.cmd
 def run_sseq_run_gomc_command(job):
-    """Run the gomc_calibration_run_ensemble simulation."""
+
     from pathlib import Path
     import shutil
     import os
@@ -2557,7 +2578,7 @@ def run_sseq_run_gomc_command(job):
     # defining source and destination
     # paths
     #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/equilibrated_replicates/" + job.sp.replica_number_int
+    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/equilibrated_replicates/replicates/" + str(job.sp.replica_number_int)
     #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
     trg = job.fn("")
     files=os.listdir(src)
@@ -2727,6 +2748,7 @@ def part_4b_job_gomc_calibration_find_minimum(job):
                     model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
         with open(bestValueFileName+".pickle", 'wb') as handle:
             pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 # ******************************************************
 # ******************************************************
