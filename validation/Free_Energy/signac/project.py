@@ -1067,6 +1067,86 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     except:
         return False
 
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    return job.isfile('wolf_sanity_averages_{}.csv'.format(job.id))
+
+
+@Project.operation.with_directives(
+     {
+         "np": 1,
+         "ngpu": 0,
+         "memory": memory_needed,
+         "walltime": walltime_gomc_analysis_hr,
+     }
+)
+@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
+@Project.post(part_4b_wolf_sanity_individual_simulation_averages_completed)
+@flow.with_job
+def part_4b_wolf_sanity_individual_simulation_averages(*jobs):
+    import re
+    EnRegex = re.compile("ENER_0")
+    DensRegex = re.compile("STAT_0")
+
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_energy_title = 'total_energy'  # column title title for delta_MBAR
+    output_column_energy_std_title = 'total_energy_std'  # column title title for ds_MBAR
+    output_column_density_title = 'density'  # column title title for delta_MBAR
+    output_column_density_std_title = 'density_std'  # column title title for ds_MBAR
+
+
+    # get the averages from each individual simulation and write the csv's.
+    for job in jobs:
+        files = []
+        blk_files = []
+        k_b = 1.9872036E-3  # kcal/mol/K
+        temperature = job.sp.production_temperature_K
+        k_b_T = temperature * k_b
+        dict_of_energies = {}
+        dict_of_densities = {}
+
+        blk_file = f'out_wolf_sanity.dat'
+        energies = []
+        densities = []
+        with open(blk_file, 'r', encoding='utf8') as f:
+            for line in f:
+                if EnRegex.match(line):
+                    #print('\n'.join(line.split()[1] for line in f))
+                    try:
+                        energies.append(float(line.split()[2]))
+                    except:
+                        print("An exception occurred") 
+                if DensRegex.match(line):
+                    #print('\n'.join(line.split()[1] for line in f))
+                    try:
+                        densities.append(float(line.split()[8]))
+                    except:
+                        print("An exception occurred") 
+
+        energies_np = np.array(energies)
+        print(energies_np.mean())
+        dict_of_energies[f'{job.sp.wolf_method}_{job.sp.wolf_potential}'] = [energies_np.mean()]
+
+        df1 = pd.DataFrame.from_dict(dict_of_energies)
+        df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
+
+        densities_np = np.array(densities)
+        print(densities_np.mean())
+        dict_of_densities[f'{job.sp.wolf_method}_{job.sp.wolf_potential}'] = [densities_np.mean()]
+
+        df2 = pd.DataFrame.from_dict(dict_of_energies)
+        df2.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
+# ******************************************************
+# ******************************************************
+# data analysis - get the average data from each individual simulation (start)
+# ******************************************************
+# ******************************************************
+
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
