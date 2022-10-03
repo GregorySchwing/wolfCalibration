@@ -1080,7 +1080,6 @@ def part_4b_job_gomc_wolf_parameters_found(job):
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
         if (not ewald_job.isfile("bestWolfParameters.pickle")):
-            print("bestWolfParameters doesnt exist")
             return False
         else:
             return True
