@@ -55,9 +55,6 @@ for solute_i in solute:
                                 for wolfP in wolfPotential:
                                         if (wolfM == "VLUGTWINTRACUTOFF" and wolfP == "DSP"):
                                             continue
-                                        if (wolfM == "GROSS" and wolfP == "DSF"):
-                                            continue
-
                                         statepoint = {
                                             "replica_number_int": replica_i,
                                             "solute": solute_i,
