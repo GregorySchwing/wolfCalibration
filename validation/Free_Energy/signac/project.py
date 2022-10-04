@@ -1042,6 +1042,9 @@ def part_4b_job_gomc_sseq_completed_properly(job):
 def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     wolf_sanity_control_file_name = "wolf_sanity"
+    
+    if(job.sp.wolf_model == "Calibrator"):
+        return True
     """
     if(job.sp.electrostatic_method == "Ewald"):
         wolf_sp = job.statepoint()
@@ -1075,6 +1078,9 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
 @flow.with_job
 def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    if(job.sp.wolf_model == "Calibrator"):
+        return True
+    
     return job.isfile('wolf_sanity_energies_{}.csv'.format(job.id))
 
 
@@ -1090,6 +1096,7 @@ def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
 @Project.post(part_4b_wolf_sanity_individual_simulation_averages_completed)
 @flow.with_job
 def part_4b_wolf_sanity_individual_simulation_averages(job):
+    
     import re
     EnRegex = re.compile("ENER_0")
     DensRegex = re.compile("STAT_0")
@@ -1111,6 +1118,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     dict_of_full_energies = {}
     dict_of_full_densities = {}
     blk_file = f'out_wolf_sanity.dat'
+    steps = []
     energies = []
     densities = []
     with open(blk_file, 'r', encoding='utf8') as f:
@@ -1118,6 +1126,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
             if EnRegex.match(line):
                 #print('\n'.join(line.split()[1] for line in f))
                 try:
+                    steps.append(float(line.split()[1]))
                     energies.append(float(line.split()[2]))
                 except:
                     print("An exception occurred") 
@@ -1127,31 +1136,135 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     densities.append(float(line.split()[8]))
                 except:
                     print("An exception occurred") 
-
+    steps_np = np.array(steps)
     energies_np = np.array(energies)
     print(energies_np.mean())
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
-
+    
+    dict_of_full_energies["steps"] = steps_np
     dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
 
     df1 = pd.DataFrame.from_dict(dict_of_energies)
     df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
     
     df2 = pd.DataFrame.from_dict(dict_of_full_energies)
-    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id))
+    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
     
     densities_np = np.array(densities)
     print(densities_np.mean())
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
+
+    dict_of_full_densities["steps"] = steps_np
     dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
 
     df3 = pd.DataFrame.from_dict(dict_of_densities)
     df3.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
 
     df4 = pd.DataFrame.from_dict(dict_of_full_densities)
-    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id))
+    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=False, index=False, sep=' ')
+
+@Project.label
+@flow.with_job
+def part_4b_wolf_sanity_analysis_completed(job):
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    for ewald_job in jobs:
+        if (not ewald_job.isfile("wolf_analysis.csv")):
+            return False
+        else:
+            return True
+            
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
+                               for j in jobs[0]._project))
+@Project.post(part_4b_wolf_sanity_analysis_completed)
+@flow.with_job
+def part_4b_wolf_sanity_analysis(job):
+    import re
+    EnRegex = re.compile("ENER_0")
+    DensRegex = re.compile("STAT_0")
+
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_energy_title = 'total_energy'  # column title title for delta_MBAR
+    output_column_energy_std_title = 'total_energy_std'  # column title title for ds_MBAR
+    output_column_density_title = 'density'  # column title title for delta_MBAR
+    output_column_density_std_title = 'density_std'  # column title title for ds_MBAR
+
+
+    # get the averages from each individual simulation and write the csv's.
+    k_b = 1.9872036E-3  # kcal/mol/K
+    temperature = job.sp.production_temperature_K
+    k_b_T = temperature * k_b
+    dict_of_energies = {}
+    dict_of_densities = {}
+    dict_of_full_energies = {}
+    dict_of_full_densities = {}
+    blk_file = f'out_wolf_sanity.dat'
+    steps = []
+    energies = []
+    densities = []
+    with open(blk_file, 'r', encoding='utf8') as f:
+        for line in f:
+            if EnRegex.match(line):
+                #print('\n'.join(line.split()[1] for line in f))
+                try:
+                    steps.append(float(line.split()[1]))
+                    energies.append(float(line.split()[2]))
+                except:
+                    print("An exception occurred") 
+            if DensRegex.match(line):
+                #print('\n'.join(line.split()[1] for line in f))
+                try:
+                    densities.append(float(line.split()[8]))
+                except:
+                    print("An exception occurred") 
+    steps_np = np.array(steps)
+    energies_np = np.array(energies)
+    print(energies_np.mean())
+    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
+    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
+    
+    dict_of_full_energies["steps"] = steps_np
+    dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
+
+    df1 = pd.DataFrame.from_dict(dict_of_energies)
+    df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
+    
+    df2 = pd.DataFrame.from_dict(dict_of_full_energies)
+    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
+    
+    densities_np = np.array(densities)
+    print(densities_np.mean())
+    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
+    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
+
+    dict_of_full_densities["steps"] = steps_np
+    dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
+
+    df3 = pd.DataFrame.from_dict(dict_of_densities)
+    df3.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
+
+    df4 = pd.DataFrame.from_dict(dict_of_full_densities)
+    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=False, index=False, sep=' ')
+
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
@@ -2853,7 +2966,8 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_job_gomc_sseq_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
     @Project.pre(lambda *jobs: all(part_4b_job_gomc_wolf_sanity_completed_properly(j)
-                                for j in jobs[0]._project))    
+                                for j in jobs[0]._project))  
+    @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     #@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
