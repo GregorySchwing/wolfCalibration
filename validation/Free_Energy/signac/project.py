@@ -1138,7 +1138,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     print("An exception occurred") 
     steps_np = np.array(steps)
     energies_np = np.array(energies)
-    print(energies_np.mean())
+    #print(energies_np.mean())
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
     
@@ -1149,10 +1149,11 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
     
     df2 = pd.DataFrame.from_dict(dict_of_full_energies)
-    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
+    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+    #df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
     
     densities_np = np.array(densities)
-    print(densities_np.mean())
+    #print(densities_np.mean())
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
 
@@ -1163,7 +1164,8 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     df3.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
 
     df4 = pd.DataFrame.from_dict(dict_of_full_densities)
-    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=False, index=False, sep=' ')
+    #df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=False, index=False, sep=' ')
+    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
 @Project.label
 @flow.with_job
@@ -1197,73 +1199,36 @@ def part_4b_wolf_sanity_analysis_completed(job):
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
-    import re
-    EnRegex = re.compile("ENER_0")
-    DensRegex = re.compile("STAT_0")
+    df1 = pd.DataFrame()
+    jobs = list(pr.find_jobs({"replica_number_int": 0}))
+    print(jobs)
+    for other_job in jobs:
+            print("reading wolf_sanity_full_energies_{}.csv".format(other_job.id))
+            try:
+                df2 = pd.read_csv (other_job.fn('wolf_sanity_full_energies_{}.csv'.format(other_job.id)), sep=' ')
+                #print(df2)
+                if (df1.empty):
+                    df1 = df2
+                else:
+                    df1 = df1.merge(df2, on="steps")
+            except:
+                print("failed to read dataframe")
 
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_energy_title = 'total_energy'  # column title title for delta_MBAR
-    output_column_energy_std_title = 'total_energy_std'  # column title title for ds_MBAR
-    output_column_density_title = 'density'  # column title title for delta_MBAR
-    output_column_density_std_title = 'density_std'  # column title title for ds_MBAR
+        
+    print(df1)
+    df1.to_csv('wolf_sanity_all_energies.csv')
 
+    statistics = pd.DataFrame()
 
-    # get the averages from each individual simulation and write the csv's.
-    k_b = 1.9872036E-3  # kcal/mol/K
-    temperature = job.sp.production_temperature_K
-    k_b_T = temperature * k_b
-    dict_of_energies = {}
-    dict_of_densities = {}
-    dict_of_full_energies = {}
-    dict_of_full_densities = {}
-    blk_file = f'out_wolf_sanity.dat'
-    steps = []
-    energies = []
-    densities = []
-    with open(blk_file, 'r', encoding='utf8') as f:
-        for line in f:
-            if EnRegex.match(line):
-                #print('\n'.join(line.split()[1] for line in f))
-                try:
-                    steps.append(float(line.split()[1]))
-                    energies.append(float(line.split()[2]))
-                except:
-                    print("An exception occurred") 
-            if DensRegex.match(line):
-                #print('\n'.join(line.split()[1] for line in f))
-                try:
-                    densities.append(float(line.split()[8]))
-                except:
-                    print("An exception occurred") 
-    steps_np = np.array(steps)
-    energies_np = np.array(energies)
-    print(energies_np.mean())
-    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
-    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
-    
-    dict_of_full_energies["steps"] = steps_np
-    dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
+    from scipy.stats import ttest_ind
+    listOfWolfMethods = df1.columns.tolist()
+    listOfWolfMethods = listOfWolfMethods.remove("steps")
+    #listOfWolfMethods = listOfWolfMethods.remove("Ewald_Ewald")
+    for wolf_method in listOfWolfMethods:
+        welchs_output = scipy.stats.ttest_ind(df1.loc["Ewald_Ewald"], df1.loc[wolf_method], equal_var=False)
+        statistics[wolf_method] = welchs_output
 
-    df1 = pd.DataFrame.from_dict(dict_of_energies)
-    df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
-    
-    df2 = pd.DataFrame.from_dict(dict_of_full_energies)
-    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
-    
-    densities_np = np.array(densities)
-    print(densities_np.mean())
-    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
-    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
-
-    dict_of_full_densities["steps"] = steps_np
-    dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
-
-    df3 = pd.DataFrame.from_dict(dict_of_densities)
-    df3.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
-
-    df4 = pd.DataFrame.from_dict(dict_of_full_densities)
-    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=False, index=False, sep=' ')
+    statistics.to_csv('wolf_statistics.csv')
 
 # ******************************************************
 # ******************************************************
