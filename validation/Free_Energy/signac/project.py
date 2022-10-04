@@ -1231,7 +1231,9 @@ def part_4b_wolf_sanity_analysis(job):
         statistics[method] = [df1[method].mean(), (df1[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
 
     # Change the row indexes
-    statistics.index = ['mean', 'relative error of mean','t-statistic', 'p-value']
+    statistics.index = ['mean', 'relative_error','t-statistic', 'p-value']
+    new_columns = statistics.columns[statistics.loc[statistics.last_valid_index()].argsort()[::-1]]    
+    statistics = statistics[new_columns]
     statistics.to_csv('wolf_statistics.csv', sep = ' ', )
     print(statistics)
 # ******************************************************
