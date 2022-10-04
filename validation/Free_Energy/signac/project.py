@@ -74,7 +74,8 @@ namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/
 #namd_binary_path = "/home/brad/Programs/NAMD/NAMD_2.14_RTX_3080_build_Source_CUDA"
 
 # number of simulation steps
-#gomc_steps_equilb_design_ensemble = 10 * 10**6 # set value for paper = 10 * 10**6
+#gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
+#gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
 gomc_steps_equilb_design_ensemble = 5 * 10**6 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
@@ -94,8 +95,9 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 2000000
+Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
+Wolf_Sanity_MC_steps = 1000000
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -491,7 +493,7 @@ def initial_parameters(job):
 
     job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     #job.doc.gomc_ngpu = 1
-    job.doc.gomc_ngpu = 0
+    job.doc.gomc_ngpu = 1
 
     # set rcut, ewalds
 
@@ -1087,7 +1089,7 @@ def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
 @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.post(part_4b_wolf_sanity_individual_simulation_averages_completed)
 @flow.with_job
-def part_4b_wolf_sanity_individual_simulation_averages(*jobs):
+def part_4b_wolf_sanity_individual_simulation_averages(job):
     import re
     EnRegex = re.compile("ENER_0")
     DensRegex = re.compile("STAT_0")
@@ -1101,46 +1103,52 @@ def part_4b_wolf_sanity_individual_simulation_averages(*jobs):
 
 
     # get the averages from each individual simulation and write the csv's.
-    for job in jobs:
-        files = []
-        blk_files = []
-        k_b = 1.9872036E-3  # kcal/mol/K
-        temperature = job.sp.production_temperature_K
-        k_b_T = temperature * k_b
-        dict_of_energies = {}
-        dict_of_densities = {}
+    k_b = 1.9872036E-3  # kcal/mol/K
+    temperature = job.sp.production_temperature_K
+    k_b_T = temperature * k_b
+    dict_of_energies = {}
+    dict_of_densities = {}
+    dict_of_full_energies = {}
+    dict_of_full_densities = {}
+    blk_file = f'out_wolf_sanity.dat'
+    energies = []
+    densities = []
+    with open(blk_file, 'r', encoding='utf8') as f:
+        for line in f:
+            if EnRegex.match(line):
+                #print('\n'.join(line.split()[1] for line in f))
+                try:
+                    energies.append(float(line.split()[2]))
+                except:
+                    print("An exception occurred") 
+            if DensRegex.match(line):
+                #print('\n'.join(line.split()[1] for line in f))
+                try:
+                    densities.append(float(line.split()[8]))
+                except:
+                    print("An exception occurred") 
 
-        blk_file = f'out_wolf_sanity.dat'
-        energies = []
-        densities = []
-        with open(blk_file, 'r', encoding='utf8') as f:
-            for line in f:
-                if EnRegex.match(line):
-                    #print('\n'.join(line.split()[1] for line in f))
-                    try:
-                        energies.append(float(line.split()[2]))
-                    except:
-                        print("An exception occurred") 
-                if DensRegex.match(line):
-                    #print('\n'.join(line.split()[1] for line in f))
-                    try:
-                        densities.append(float(line.split()[8]))
-                    except:
-                        print("An exception occurred") 
+    energies_np = np.array(energies)
+    print(energies_np.mean())
+    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = [energies_np.mean()]
+    dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
 
-        energies_np = np.array(energies)
-        print(energies_np.mean())
-        dict_of_energies[f'{job.sp.wolf_method}_{job.sp.wolf_potential}'] = [energies_np.mean()]
+    df1 = pd.DataFrame.from_dict(dict_of_energies)
+    df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
+    
+    df2 = pd.DataFrame.from_dict(dict_of_full_energies)
+    df2.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id))
+    
+    densities_np = np.array(densities)
+    print(densities_np.mean())
+    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = [densities_np.mean()]
+    dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
 
-        df1 = pd.DataFrame.from_dict(dict_of_energies)
-        df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
+    df3 = pd.DataFrame.from_dict(dict_of_densities)
+    df3.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
 
-        densities_np = np.array(densities)
-        print(densities_np.mean())
-        dict_of_densities[f'{job.sp.wolf_method}_{job.sp.wolf_potential}'] = [densities_np.mean()]
-
-        df2 = pd.DataFrame.from_dict(dict_of_energies)
-        df2.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
+    df4 = pd.DataFrame.from_dict(dict_of_full_densities)
+    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id))
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
@@ -1574,11 +1582,7 @@ def build_charmm(job, write_files=True):
 
     #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
 
-    # for tip4, currently unused
-    #bead_to_atom_name_dict = {
-    #    "_LP": "LP",
-    #}
-
+    # for trappe, currently unused
     bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
 
 
@@ -1976,7 +1980,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         gomc_charmm_object_with_files,
         wolf_sanity_control_file_name,
         job.doc.equilibration_ensemble,
-        MC_steps,
+        Wolf_Sanity_MC_steps,
         production_temperature_K,
         ff_psf_pdb_file_directory=None,
         check_input_files_exist=False,
@@ -2581,6 +2585,8 @@ def run_namd_equilb_NPT_gomc_command(job):
     print("# Started the run_namd_equilb_NPT_gomc_command.")
     print("#**********************")
     """Run the gomc_calibration_run_ensemble simulation."""
+    
+    """
     from pathlib import Path
     import shutil
     import os
@@ -2600,9 +2606,9 @@ def run_namd_equilb_NPT_gomc_command(job):
         # copying the files to the
         # destination directory
         shutil.copy2(os.path.join(src,fname), trg)
-
-    control_file_name_str = namd_equilb_NPT_control_file_name_str
     """
+    control_file_name_str = namd_equilb_NPT_control_file_name_str
+    
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
@@ -2620,6 +2626,7 @@ def run_namd_equilb_NPT_gomc_command(job):
     print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
     
     return run_command
+    """
 
 # ******************************************************
 # ******************************************************
@@ -2649,7 +2656,8 @@ def run_namd_equilb_NPT_gomc_command(job):
 @flow.with_job
 @flow.cmd
 def run_sseq_run_gomc_command(job):
-
+    
+    """
     from pathlib import Path
     import shutil
     import os
@@ -2669,11 +2677,11 @@ def run_sseq_run_gomc_command(job):
         # copying the files to the
         # destination directory
         shutil.copy2(os.path.join(src,fname), trg)
-
+    """
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
     print(f"Running simulation job id {job}")
-    """
+
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
@@ -2681,10 +2689,11 @@ def run_sseq_run_gomc_command(job):
         str(Single_state_gomc_eq_control_file_name),
         str(Single_state_gomc_eq_control_file_name),
     )
+
     """
     run_command = "echo sseqcopied"
     print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
-    
+    """
     return run_command
 
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
