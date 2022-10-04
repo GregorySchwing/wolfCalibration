@@ -1130,7 +1130,9 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
 
     energies_np = np.array(energies)
     print(energies_np.mean())
-    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = [energies_np.mean()]
+    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
+    dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
+
     dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
 
     df1 = pd.DataFrame.from_dict(dict_of_energies)
@@ -1141,7 +1143,8 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     
     densities_np = np.array(densities)
     print(densities_np.mean())
-    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = [densities_np.mean()]
+    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
+    dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
     dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
 
     df3 = pd.DataFrame.from_dict(dict_of_densities)
