@@ -1224,13 +1224,16 @@ def part_4b_wolf_sanity_analysis(job):
     listOfWolfMethods = list(df1.columns.values.tolist())
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
+    ref_mean = df1["Ewald_Ewald"].mean()
     for method in listOfWolfMethods:
         print("Comparing statistical identicallness of Ewald and", method)
         welchs_output = scipy.stats.ttest_ind(df1["Ewald_Ewald"], df1[method], equal_var=False)
-        statistics[method] = welchs_output
+        statistics[method] = [df1[method].mean(), (df1[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
 
-    statistics.to_csv('wolf_statistics.csv')
-
+    # Change the row indexes
+    statistics.index = ['mean', 'relative error of mean','t-statistic', 'p-value']
+    statistics.to_csv('wolf_statistics.csv', sep = ' ', )
+    print(statistics)
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
