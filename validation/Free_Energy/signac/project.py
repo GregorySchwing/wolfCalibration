@@ -1219,14 +1219,15 @@ def part_4b_wolf_sanity_analysis(job):
     df1.to_csv('wolf_sanity_all_energies.csv')
 
     statistics = pd.DataFrame()
-
+    import scipy
     from scipy.stats import ttest_ind
-    listOfWolfMethods = df1.columns.tolist()
-    listOfWolfMethods = listOfWolfMethods.remove("steps")
-    #listOfWolfMethods = listOfWolfMethods.remove("Ewald_Ewald")
-    for wolf_method in listOfWolfMethods:
-        welchs_output = scipy.stats.ttest_ind(df1.loc["Ewald_Ewald"], df1.loc[wolf_method], equal_var=False)
-        statistics[wolf_method] = welchs_output
+    listOfWolfMethods = list(df1.columns.values.tolist())
+    listOfWolfMethods.remove("steps")
+    print(listOfWolfMethods)
+    for method in listOfWolfMethods:
+        print("Comparing statistical identicallness of Ewald and", method)
+        welchs_output = scipy.stats.ttest_ind(df1["Ewald_Ewald"], df1[method], equal_var=False)
+        statistics[method] = welchs_output
 
     statistics.to_csv('wolf_statistics.csv')
 
