@@ -97,7 +97,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 1000000
+Wolf_Sanity_MC_steps = 5000000
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -1075,7 +1075,7 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
 @flow.with_job
 def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    return job.isfile('wolf_sanity_averages_{}.csv'.format(job.id))
+    return job.isfile('wolf_sanity_energies_{}.csv'.format(job.id))
 
 
 @Project.operation.with_directives(
@@ -1137,7 +1137,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
     
     df2 = pd.DataFrame.from_dict(dict_of_full_energies)
-    df2.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id))
+    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id))
     
     densities_np = np.array(densities)
     print(densities_np.mean())
