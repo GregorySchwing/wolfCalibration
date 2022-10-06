@@ -11,14 +11,15 @@ import unyt as u
 
 project=signac.init_project('nobel_gas_in_water')
 #skipEq = ["True", "False"] # ["Ne", "Rn"]
-skipEq = ["False"] # ["Ne", "Rn"]
+pure_solvent = ["True","False"] # ["Ne", "Rn"]
 wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
 wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
 
 #solute = ["Ne"] # ["Ne", "Rn"]
 solute = ["ETOH"] # ["Ne", "Rn"]
 #solute = ["Ne", "ETOH"] # ["Ne", "Rn"]
-solvent = ["SPC"] # ["Ne", "Rn"]
+solvent = ["MSPCE"] # ["Ne", "Rn"]
+#solvent = ["SPC"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 
@@ -49,7 +50,7 @@ for solute_i in solute:
         for replica_i in replicas:
             for prod_temp_i in production_temperatures:
                 for e_method in electrostatic_method:
-                    for useEq in skipEq:
+                    for pureSolv_i in pure_solvent:
                         if (e_method == "Wolf"):
                             for wolfM in wolfModel:
                                 for wolfP in wolfPotential:
@@ -64,7 +65,7 @@ for solute_i in solute:
                                             "wolf_potential": wolfP,
                                             "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                             "electrostatic_method": e_method,
-                                            "skipEq" : useEq
+                                            "pure_solvent" : pureSolv_i
                                         }
                                         total_statepoints.append(statepoint)
                         else:
@@ -76,7 +77,7 @@ for solute_i in solute:
                                 "electrostatic_method": e_method,
                                 "wolf_model": "Ewald",
                                 "wolf_potential": "Ewald",
-                                "skipEq" : useEq
+                                "pure_solvent" : pureSolv_i
                             }
                             total_statepoints.append(statepoint)
         # The calibration statepoint
@@ -88,7 +89,20 @@ for solute_i in solute:
                         "electrostatic_method": "Wolf",
                         "wolf_model": "Calibrator",
                         "wolf_potential": "Calibrator",
-                        "skipEq" : "False"
+                        "pure_solvent" : "True"
+                    }
+        total_statepoints.append(statepoint)
+
+        # The calibration statepoint
+        statepoint = {
+                        "replica_number_int": 0,
+                        "solute": solute_i,
+                        "solvent": solvent_i,
+                        "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                        "electrostatic_method": "Wolf",
+                        "wolf_model": "Calibrator",
+                        "wolf_potential": "Calibrator",
+                        "pure_solvent" : "False"
                     }
         total_statepoints.append(statepoint)
 

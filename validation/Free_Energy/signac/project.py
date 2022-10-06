@@ -168,7 +168,7 @@ forcefield_residue_to_ff_filename_dict = {
 
 # smiles of mol2 file input a .mol2 file or smiles as a string
 smiles_or_mol2_name_to_value_dict = {
-    "MSPCE": "O",
+    "MSPCE": "mspce.mol2",
     "SPCE": "O",
     "SPC": "O",
     "TIP3": "O",
@@ -406,7 +406,8 @@ def initial_parameters(job):
             LambdaVDW_list.append(1.0)    
             #InitialState_list.append(counter)
             #counter = counter + 1
-
+    else:
+        print("Didnt recognize solute", job.sp.solute)
     print("*********************")
     print("*********************")
     print("LambdaVDW_list = " + str(LambdaVDW_list))
@@ -442,7 +443,11 @@ def initial_parameters(job):
     """
 
     job.doc.N_liquid_solvent = 1000
-    job.doc.N_liquid_solute = 1
+    if (job.sp.pure_solvent == "True"):
+        job.doc.N_liquid_solute = 0
+    else:
+        job.doc.N_liquid_solute = 1
+
 
     job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
 
@@ -646,6 +651,12 @@ def part_2a_namd_equilb_NPT_control_file_written(job):
 def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
     """General check that the gomc_equilb_design_ensemble (run temperature) gomc control file is written."""
     try:
+        if (job.doc.N_liquid_solute == 0):
+            return True
+    except:
+        return False
+    
+    try:
         for initial_state_i in list(job.doc.InitialState_list):
             try:
                 gomc_control_file_written(
@@ -665,6 +676,11 @@ def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
 @flow.with_job
 def part_2c_gomc_production_control_file_written(job):
     """General check that the gomc_production_control_file (run temperature) is written."""
+    try:
+        if (job.doc.N_liquid_solute == 0):
+            return True
+    except:
+        return False
     try:
         for initial_state_i in list(job.doc.InitialState_list):
             try:
@@ -1686,43 +1702,81 @@ def build_charmm(job, write_files=True):
 
     #if job.doc.solvent not in ["TIP4"]:
         #solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
+    if (job.doc.N_liquid_solute > 0):
 
-    if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-        solute = mb.Compound(name=job.doc.solute)
+        if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            solute = mb.Compound(name=job.doc.solute)
+        else:
+            solute = mb.load(smiles_or_mol2[job.sp.solute]['smiles_or_mol2'],
+                            smiles=smiles_or_mol2[job.sp.solute]['use_smiles']
+                            )
+        solute.name = job.sp.solute
+
+        # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
+        minimal_forcefield_dict = {solute.name: forcefield_dict[solute.name],
+                                solvent.name: forcefield_dict[solvent.name]
+                                }
+
+        #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
+
+        # for trappe, currently unused
+        bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
+
+
+        residues_list = [solute.name, solvent.name]
+        print("residues_list  = " +str(residues_list ))
+
+        #if job.doc.solvent in ["TIP4", "TIP3"]:
+        gomc_fix_bonds_angles_residues_list = [solvent.name]
+        #else:
+        #    gomc_fix_bonds_angles_residues_list  = None
     else:
-        solute = mb.load(smiles_or_mol2[job.sp.solute]['smiles_or_mol2'],
-                         smiles=smiles_or_mol2[job.sp.solute]['use_smiles']
-                         )
-    solute.name = job.sp.solute
 
-    # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
-    minimal_forcefield_dict = {solute.name: forcefield_dict[solute.name],
-                               solvent.name: forcefield_dict[solvent.name]
-                               }
+        if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            solute = mb.Compound(name=job.doc.solute)
+        else:
+            solute = mb.load(smiles_or_mol2[job.sp.solute]['smiles_or_mol2'],
+                            smiles=smiles_or_mol2[job.sp.solute]['use_smiles']
+                            )
+        solute.name = job.sp.solute
 
-    #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
+        # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
+        minimal_forcefield_dict = {solvent.name: forcefield_dict[solvent.name]
+                                }
 
-    # for trappe, currently unused
-    bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
+        #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
+
+        # for trappe, currently unused
+        bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
 
 
-    residues_list = [solute.name, solvent.name]
-    print("residues_list  = " +str(residues_list ))
+        residues_list = [solvent.name]
+        print("residues_list  = " +str(residues_list ))
 
-    #if job.doc.solvent in ["TIP4", "TIP3"]:
-    gomc_fix_bonds_angles_residues_list = [solvent.name]
-    #else:
-    #    gomc_fix_bonds_angles_residues_list  = None
-
+        #if job.doc.solvent in ["TIP4", "TIP3"]:
+        gomc_fix_bonds_angles_residues_list = [solvent.name]
+        #else:
+        #    gomc_fix_bonds_angles_residues_list  = None
     print('Running: filling liquid box')
-    box_0 = mb.fill_box(compound=[solute, solvent],
-                        n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
-                        box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                             ],
-                        seed=mbuild_box_seed_no
-                        )
+    if (job.doc.N_liquid_solute > 0):
+        box_0 = mb.fill_box(compound=[solute, solvent],
+                            n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
+                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                ],
+                            seed=mbuild_box_seed_no
+                            )
+    else:
+        box_0 = mb.fill_box(compound=[solvent],
+                            n_compounds=[job.doc.N_liquid_solvent],
+                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                ],
+                            seed=mbuild_box_seed_no
+                            )
+
     print('Completed: filling liquid box')
 
     print('Running: GOMC FF file, and the psf and pdb files')
@@ -2285,11 +2339,6 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "FreeEnergyCalc": NoFreeEnergyCalc,
-                "MoleculeType": MoleculeType,
-                "InitialState": len(list(job.doc.LambdaVDW_list))-1,
-                "LambdaVDW": list(job.doc.LambdaVDW_list),
-                "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
             },
         )
         append_wolf_calibration_parameters(job)
@@ -2301,6 +2350,8 @@ def build_psf_pdb_ff_gomc_conf(job):
         print("#**********************")
 
 
+    if (job.doc.N_liquid_solute == 0):
+        return
     # ******************************************************
     # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (start)
     # Note: the control files are written for the max number of gomc_equilb_design_ensemble runs
@@ -2683,7 +2734,6 @@ def build_psf_pdb_ff_gomc_conf(job):
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_3a_output_namd_equilb_NPT_hasnt_started)
@@ -2759,7 +2809,6 @@ def run_namd_equilb_NPT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
@@ -2818,7 +2867,6 @@ def run_sseq_run_gomc_command(job):
 
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
-@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
