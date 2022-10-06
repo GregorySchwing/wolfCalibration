@@ -496,6 +496,8 @@ def initial_parameters(job):
     job.doc.gomc_ngpu = 1
 
     # set rcut, ewalds
+    job.doc.winningWolfPotential = ""
+    job.doc.winningWolfModel = ""
 
     # get the namd binary paths
     if job.doc.namd_node_ngpu == 0:
@@ -1081,7 +1083,9 @@ def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
     if(job.sp.wolf_model == "Calibrator"):
         return True
     
-    return job.isfile('wolf_sanity_energies_{}.csv'.format(job.id))
+    return job.isfile('wolf_sanity_energies_{}.csv'.format(job.id)) and \
+        job.isfile('wolf_sanity_full_energies_{}.csv'.format(job.id))
+
 
 
 @Project.operation.with_directives(
@@ -1138,7 +1142,20 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     print("An exception occurred") 
     steps_np = np.array(steps)
     energies_np = np.array(energies)
-    #print(energies_np.mean())
+    densities_np = np.array(densities)
+
+    from pymbar import timeseries
+    t0, g, Neff_max = timeseries.detectEquilibration(energies_np) # compute indices of uncorrelated timeseries
+    A_t_equil = energies_np[t0:]
+    A_t_equil_densities = densities_np[t0:]
+    A_t_equil_steps = steps_np[t0:]
+
+    indices = timeseries.subsampleCorrelatedData(A_t_equil, g=g)
+    steps_np = A_t_equil_steps[indices]
+    energies_np = A_t_equil[indices]
+    densities_np = A_t_equil_densities[indices]
+
+    print("Num equilibrated energy samples",np.shape(energies_np)[0])
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
     
@@ -1152,7 +1169,6 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
     #df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
     
-    densities_np = np.array(densities)
     #print(densities_np.mean())
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
@@ -1177,11 +1193,25 @@ def part_4b_wolf_sanity_analysis_completed(job):
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
-        if (not ewald_job.isfile("wolf_analysis.csv")):
-            return False
-        else:
+        if (ewald_job.isfile("wolf_statistics.csv")):
+            job.doc.winningWolfPotential = ewald_job.doc.winningWolfPotential
+            job.doc.winningWolfModel = ewald_job.doc.winningWolfModel
             return True
-            
+        else:
+            return False
+
+
+@Project.label
+@flow.with_job
+def part_4b_is_winning_wolf_model_or_ewald(job):
+    if (job.sp.electrostatic_method == "Ewald"):
+        return True
+    elif (job.sp.wolf_model == job.doc.winningWolfModel \
+        and job.sp.wolf_potential == job.doc.winningWolfPotential):
+        return True
+    else:
+        return False
+
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1210,7 +1240,8 @@ def part_4b_wolf_sanity_analysis(job):
                 if (df1.empty):
                     df1 = df2
                 else:
-                    df1 = df1.merge(df2, on="steps")
+                    #df1 = df1.merge(df2, on="steps")
+                    df1 = pd.merge(df1, df2, on='steps', how='outer')
             except:
                 print("failed to read dataframe")
 
@@ -1221,20 +1252,22 @@ def part_4b_wolf_sanity_analysis(job):
     statistics = pd.DataFrame()
     import scipy
     from scipy.stats import ttest_ind
+    from scipy.spatial.distance import jensenshannon
     listOfWolfMethods = list(df1.columns.values.tolist())
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df1["Ewald_Ewald"].mean()
     for method in listOfWolfMethods:
         print("Comparing statistical identicallness of Ewald and", method)
-        welchs_output = scipy.stats.ttest_ind(df1["Ewald_Ewald"], df1[method], equal_var=False)
-        statistics[method] = [df1[method].mean(), (df1[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
+        welchs_output = scipy.stats.ttest_ind(df1["Ewald_Ewald"], df1[method], equal_var=False, nan_policy='omit')
+        statistics[method] = [df1[method].mean(), df1[method].std(),(df1[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
 
     # Change the row indexes
-    statistics.index = ['mean', 'relative_error','t-statistic', 'p-value']
-    new_columns = statistics.columns[statistics.loc[statistics.last_valid_index()].argsort()[::-1]]    
-    statistics = statistics[new_columns]
+    statistics.index = ['mean', 'std', 'relative_error', 't-statistic', 'p-value']   
+    statistics = statistics.T.sort_values('p-value', ascending=False).T
     statistics.to_csv('wolf_statistics.csv', sep = ' ', )
+    job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
+    job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
 # ******************************************************
 # ******************************************************
@@ -2939,7 +2972,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(lambda *jobs: all(part_4b_job_gomc_wolf_sanity_completed_properly(j)
                                 for j in jobs[0]._project))  
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
-    #@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
+    @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
