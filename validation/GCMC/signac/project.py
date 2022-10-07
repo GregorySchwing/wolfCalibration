@@ -356,11 +356,13 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    equilibration_ensemble = "GCMC"
-    production_ensemble = "GCMC"
+    if (job.sp.shell_radius != "water_box"):
+        job.doc.equilibration_ensemble = "GCMC"
+        job.doc.production_ensemble = "GCMC"
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
-    job.doc.equilibration_ensemble = equilibration_ensemble
-    job.doc.production_ensemble = production_ensemble
+    else:
+        job.doc.equilibration_ensemble = "NPT"
+        job.doc.production_ensemble = "NPT"
     job.doc.production_pressure_bar = (1 * u.atm).to('bar')
     job.doc.production_temperature_K = job.sp.production_temperature_K
 
@@ -376,10 +378,11 @@ def initial_parameters(job):
 
     padding = 10
 
-    if (job.sp.wolf_model != "Calibrator"):
-        job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
-    else:
+    if (job.sp.shell_radius == "water_box"):
         job.doc.liq_box_lengths_ang = 30 * u.angstrom
+    else:
+        job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
+
     job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
     job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
     job.doc.neighbor_list_dist_namd_ang = 22 * u.angstrom # NAMD's neighbor list
@@ -454,15 +457,15 @@ def initial_parameters(job):
         )
 
         # set the initial iteration number of the simulation
-    if equilibration_ensemble == "NPT":
+    if job.doc.equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
         job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
-    elif equilibration_ensemble == "NVT":
+    elif job.doc.equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
         job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
-    elif equilibration_ensemble == "GCMC":
+    elif job.doc.equilibration_ensemble == "GCMC":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GCMC"
         job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_GCMC"
@@ -472,11 +475,11 @@ def initial_parameters(job):
         )
     
 
-    if production_ensemble == "NPT":
+    if job.doc.production_ensemble == "NPT":
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-    elif production_ensemble == "NVT":
+    elif job.doc.production_ensemble == "NVT":
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
-    elif production_ensemble == "GCMC":
+    elif job.doc.production_ensemble == "GCMC":
         job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GCMC"
     else:
         raise ValueError(
@@ -1392,6 +1395,7 @@ def build_charmm(job, write_files=True):
     #else:
     #    gomc_fix_bonds_angles_residues_list  = None
 
+
     print('Running: filling liquid box')
     box_0 = mb.fill_box(compound=[solute, solvent],
                         n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
@@ -1402,15 +1406,45 @@ def build_charmm(job, write_files=True):
                         seed=mbuild_box_seed_no
                         )
     print('Completed: filling liquid box')
-    box_1 = mb.fill_box(compound=[solute, solvent],
-                        n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
-                        box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                             ],
-                        seed=mbuild_box_seed_no
-                        )
-    print('Running: GOMC FF file, and the psf and pdb files')
+
+    if(job.doc.equilibration_ensemble in ["GCMC"]):
+        print('Running: filling resevoir box')
+        box_1 = mb.fill_box(compound=[solute, solvent],
+                            n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
+                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                ],
+                            seed=mbuild_box_seed_no
+                            )
+        print('Completed: filling resevoir box')
+        print('Running: gomc_charmm')
+        gomc_charmm = mf_charmm.Charmm(
+            box_0,
+            mosdef_structure_box_0_name_str,
+            structure_box_1=box_1,
+            filename_box_1=mosdef_structure_box_1_name_str,
+            ff_filename=  gomc_ff_filename_str,
+            forcefield_selection=minimal_forcefield_dict,
+            residues=residues_list,
+            bead_to_atom_name_dict=bead_to_atom_name_dict,
+            gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
+        )
+    else:
+        print('Running: gomc_charmm')
+        gomc_charmm = mf_charmm.Charmm(
+            box_0,
+            mosdef_structure_box_0_name_str,
+            structure_box_1=None,
+            filename_box_1=None,
+            ff_filename=  gomc_ff_filename_str,
+            forcefield_selection=minimal_forcefield_dict,
+            residues=residues_list,
+            bead_to_atom_name_dict=bead_to_atom_name_dict,
+            gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
+        )
+        print('Running: GOMC FF file, and the psf and pdb files')
+
     print('Running: namd_charmm')
     namd_charmm = mf_charmm.Charmm(
         box_0,
@@ -1422,19 +1456,6 @@ def build_charmm(job, write_files=True):
         residues=residues_list,
         bead_to_atom_name_dict=bead_to_atom_name_dict,
         gomc_fix_bonds_angles=None,
-    )
-
-    print('Running: gomc_charmm')
-    gomc_charmm = mf_charmm.Charmm(
-        box_0,
-        mosdef_structure_box_0_name_str,
-        structure_box_1=box_1,
-        filename_box_1=mosdef_structure_box_1_name_str,
-        ff_filename=  gomc_ff_filename_str,
-        forcefield_selection=minimal_forcefield_dict,
-        residues=residues_list,
-        bead_to_atom_name_dict=bead_to_atom_name_dict,
-        gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
     )
 
     gomc_charmm.write_inp()
@@ -1489,8 +1510,8 @@ def build_charmm(job, write_files=True):
         
         # convert water shell to namd bin coords file
         # Replace the target string
-        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
-        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_0_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_0_name_str))
 
         # Write the file out again
         with open(job.fn("create_box_0_namdbin.tcl"), 'w') as file:
@@ -1508,33 +1529,21 @@ def build_charmm(job, write_files=True):
         radius = job.sp.shell_radius
         padding = 10
         # Replace the target string
-        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
-        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
-        filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_0_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_0_name_str))
+        filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_0_name_str))
 
         # Write the file out again
         with open(job.fn("create_box_0_xsc.tcl"), 'w') as file:
             file.write(filedata)
 
-        print("Making solvated sphere", job)
+        print("Making solvated sphere xsc", job)
         ions = evaltcl("source " + job.fn("create_box_0_xsc.tcl"))
         ionsList = ions.split()
 
-        # GOMC checks the resname in GCMC
-        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
-            for l in f:
-                l = re.sub(r"%s" % "NE1", "Ne ", l)
-                sys.stdout.write(l)
-
-        # GOMC checks the resname in GCMC
-        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
-            for l in f:
-                l = re.sub(r"%s" % "NE1", "Ne ", l)
-                sys.stdout.write(l)
-
     elif(job.sp.electrostatic_method == "Ewald" \
         and job.sp.replica_number_int == 0 and \
-            job.sp.wolf_model == "Calibrator"
+            job.sp.shell_radius == "water_box"
     ):
 
         from vmd import evaltcl
@@ -1563,8 +1572,8 @@ def build_charmm(job, write_files=True):
         
         # convert water shell to namd bin coords file
         # Replace the target string
-        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
-        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_0_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_0_name_str))
 
         # Write the file out again
         with open(job.fn("create_box_0_namdbin.tcl"), 'w') as file:
@@ -1580,9 +1589,9 @@ def build_charmm(job, write_files=True):
             filedata = file.read()
 
         # Replace the target string
-        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
-        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
-        filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_0_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_0_name_str))
+        filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_0_name_str))
 
         # Write the file out again
         with open(job.fn("create_box_0_xsc.tcl"), 'w') as file:
@@ -1592,46 +1601,43 @@ def build_charmm(job, write_files=True):
         ions = evaltcl("source " + job.fn("create_box_0_xsc.tcl"))
         ionsList = ions.split()
 
-        # GOMC checks the resname in GCMC
-        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
-            for l in f:
-                l = re.sub(r"%s" % "NE1", "Ne ", l)
-                sys.stdout.write(l)
+    # GOMC checks the resname in GCMC
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "NE1", "Ne ", l)
+            sys.stdout.write(l)
 
-        # GOMC checks the resname in GCMC
-        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
-            for l in f:
-                l = re.sub(r"%s" % "NE1", "Ne ", l)
-                sys.stdout.write(l)
+    # GOMC checks the resname in GCMC
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "NE1", "Ne ", l)
+            sys.stdout.write(l)
 
-        # GOMC checks the resname in GCMC
-        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
-            for l in f:
-                l = re.sub(r"%s" % "NE1", "Ne ", l)
-                sys.stdout.write(l)
+    # GOMC checks the resname in GCMC
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "NE1", "Ne ", l)
+            sys.stdout.write(l)
 
-        # GOMC checks the resname in GCMC
-        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
-            for l in f:
-                l = re.sub(r"%s" % "NE1", "Ne ", l)
-                sys.stdout.write(l)
-
-    print("Edit forcefields to use atom types from vmd solvate", job)
+    # GOMC checks the resname in GCMC
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "NE1", "Ne ", l)
+            sys.stdout.write(l)
+        print("Edit forcefields to use atom types from vmd solvate", job)
     with fileinput.FileInput(job.fn(f"{namd_ff_filename_str}.inp"), inplace=True) as f:
         for l in f:
-            l = re.sub(r"\b%s\b" % "A", "HT", l)
-            l = re.sub(r"\b%s\b" % "B", "NE", l)
+            l = re.sub(r"\b%s\b" % "A", "NE", l)
+            l = re.sub(r"\b%s\b" % "B", "HT", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
             sys.stdout.write(l)
 
     with fileinput.FileInput(job.fn(f"{gomc_ff_filename_str}.inp"), inplace=True) as f:
         for l in f:
-            l = re.sub(r"\b%s\b" % "A", "HT", l)
-            l = re.sub(r"\b%s\b" % "B", "NE", l)
+            l = re.sub(r"\b%s\b" % "A", "NE", l)
+            l = re.sub(r"\b%s\b" % "B", "HT", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
             sys.stdout.write(l)
-
-
 
     return [namd_charmm, gomc_charmm]
 
@@ -1710,11 +1716,18 @@ def build_psf_pdb_ff_gomc_conf(job):
     job.doc.path_to_ref_pdb =  Coordinates_box_0
     job.doc.path_to_ref_psf =  Structure_box_0
     job.doc.path_to_ref_binCoordinates =  binCoordinates_box_0
-    job.doc.path_to_ref_extendedSystem =  extendedSystem_box_0  
-    job.doc.path_to_ref_pdb_box_1 =  Coordinates_box_1
-    job.doc.path_to_ref_psf_box_1 =  Structure_box_1
-    job.doc.path_to_ref_binCoordinates_box_1 =  binCoordinates_box_1
-    job.doc.path_to_ref_extendedSystem_box_1 =  extendedSystem_box_1 
+    job.doc.path_to_ref_extendedSystem =  extendedSystem_box_0
+
+    if (job.doc.equilibration_ensemble in ["GCMC"]):  
+        job.doc.path_to_ref_pdb_box_1 =  Coordinates_box_1
+        job.doc.path_to_ref_psf_box_1 =  Structure_box_1
+        job.doc.path_to_ref_binCoordinates_box_1 =  binCoordinates_box_1
+        job.doc.path_to_ref_extendedSystem_box_1 =  extendedSystem_box_1 
+    else:
+        job.doc.path_to_ref_pdb_box_1 =  None
+        job.doc.path_to_ref_psf_box_1 =  None
+        job.doc.path_to_ref_binCoordinates_box_1 =  None
+        job.doc.path_to_ref_extendedSystem_box_1 =  None         
 
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
@@ -1747,6 +1760,12 @@ def build_psf_pdb_ff_gomc_conf(job):
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
+        if (job.sp.wolf_model == "Calibrator"):
+            ref_sp['wolf_model']="Calibrator"
+            ref_sp['wolf_potential']="Calibrator"
+        else:
+            ref_sp['wolf_model']="Ewald"
+            ref_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
@@ -1959,8 +1978,8 @@ def build_psf_pdb_ff_gomc_conf(job):
         binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
         extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
         binVelocities_box_0=None,
-        Coordinates_box_1=Coordinates_box_1,
-        Structure_box_1=Structure_box_1,
+        Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
+        Structure_box_1=job.doc.path_to_ref_psf_box_1,
         binCoordinates_box_1=job.doc.path_to_ref_binCoordinates_box_1,
         extendedSystem_box_1=job.doc.path_to_ref_extendedSystem_box_1,
         binVelocities_box_1=None,
@@ -1997,7 +2016,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
             "CBMC_Dih": CBMC_Dih[-1],
-            "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
+            "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
         },
     )
 
@@ -2066,7 +2085,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
             },
         )
 
@@ -2249,7 +2268,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
             },
         )
         print("#**********************")
@@ -2472,7 +2491,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
             },
         )
 
@@ -2626,7 +2645,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": CBMC_Nth[-1],
                     "CBMC_Ang": CBMC_Ang[-1],
                     "CBMC_Dih": CBMC_Dih[-1],
-                    "ChemPot" : {"TIP3" : -4166, "Ne" : -8000}
+                    "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
                 },
             )
             append_wolf_calibration_parameters(job)
