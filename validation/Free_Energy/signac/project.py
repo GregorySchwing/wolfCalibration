@@ -282,6 +282,11 @@ def append_wolf_calibration_parameters(job):
 
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             myfile.write(alphaLine)
+
+def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_file):
+    with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
+        checkpointLine = "Checkpoint\tTrue\t{}\n".format(path_to_previous_checkpoint_file)
+        myfile.write(checkpointLine)
             
 # ******************************************************
 # ******************************************************
@@ -1909,7 +1914,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_sseq_binCoordinates =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_0)
             job.doc.path_to_sseq_extendedSystem =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_0)
             job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
-       
+            job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
+
     else:
         job.doc.path_to_namd_console =  job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
         job.doc.path_to_ref_pdb =  job.fn(Coordinates_box_0)
@@ -1921,6 +1927,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_binCoordinates =  job.fn(Single_state_gomc_eq_binCoordinates_box_0)
         job.doc.path_to_sseq_extendedSystem =  job.fn(Single_state_gomc_eq_extendedSystem_box_0)
         job.doc.path_to_sseq_console =  job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
+        job.doc.path_to_sseq_checkpoint =  job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
     # This has to be off during calibration
@@ -2212,6 +2219,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
         },
     )
+    append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
 
     print("#**********************")
     print("Finished: Wolf Sanity GOMC control file writing")
@@ -2514,6 +2522,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
             },
         )
+        append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
         print("#**********************")
         print("Completed: equilb NPT or GEMC-NVT GOMC control file writing")
         print("#**********************")
@@ -2711,6 +2720,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
             },
         )
+        append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
 
         print("#**********************")
         print("Completed: production NPT or GEMC-NVT GOMC control file writing")
