@@ -159,7 +159,7 @@ forcefield_residue_to_ff_filename_dict = {
 
 # smiles of mol2 file input a .mol2 file or smiles as a string
 smiles_or_mol2_name_to_value_dict = {
-    "MSPCE": "O",
+    "MSPCE": "mspce.mol2",
     "SPCE": "O",
     "SPC": "O",
     "TIP3": "O",
@@ -254,7 +254,7 @@ def append_wolf_calibration_parameters(job):
     wolfCalFreq = 1000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
-        defPotLine = "Wolf\tTrue\n"
+        defPotLine = "Wolf\tFalse\n"
         myfile.write(defPotLine)
         defPotLine = "WolfPotential\t{pot}\n".format(pot=WolfDefaultPotential)
         myfile.write(defPotLine)
@@ -376,8 +376,10 @@ def initial_parameters(job):
 
     padding = 10
 
-    job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
-
+    if (job.sp.wolf_model != "Calibrator"):
+        job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
+    else:
+        job.doc.liq_box_lengths_ang = 30 * u.angstrom
     job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
     job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
     job.doc.neighbor_list_dist_namd_ang = 22 * u.angstrom # NAMD's neighbor list
@@ -919,11 +921,7 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             job, namd_equilb_NPT_control_file_name_str
         )
 
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.label
-@flow.with_job
-def part_4b_job_gomc_calibration_completed_properly(job):
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+
 @Project.label
 @flow.with_job
 def part_4b_job_gomc_calibration_completed_properly(job):
@@ -1354,7 +1352,7 @@ def build_charmm(job, write_files=True):
     print("#**********************")
     print("Started: GOMC Charmm Object")
     print("#**********************")
-    mbuild_box_seed_no = job.doc.replica_number_int
+    mbuild_box_seed_no = job.sp.replica_number_int
 
     solvent = mb.load(smiles_or_mol2[job.doc.solvent]['smiles_or_mol2'],
                       smiles=smiles_or_mol2[job.doc.solvent]['use_smiles']
@@ -1457,7 +1455,10 @@ def build_charmm(job, write_files=True):
 
     namd_charmm.write_pdb()
 
-    if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
+    if(job.sp.electrostatic_method == "Ewald" \
+        and job.sp.replica_number_int == 0 and \
+            job.sp.wolf_model != "Calibrator"
+    ):
 
         from vmd import evaltcl
         template = get_sphere_builder_path()
@@ -1474,51 +1475,29 @@ def build_charmm(job, write_files=True):
         filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_0_name_str))
 
         # Write the file out again
-        with open(job.fn("filled_template.tcl"), 'w') as file:
+        with open(job.fn("water_sphere_template.tcl"), 'w') as file:
             file.write(filedata)
 
         print("Making solvated sphere", job)
-        ions = evaltcl("source " + job.fn("filled_template.tcl"))
-        ionsList = ions.split()
-
-        template = get_water_box_builder_path()
-        # Read in the file
-        with open(template, 'r') as file :
-            filedata = file.read()
-
-        radius = job.sp.shell_radius
-        padding = 10
-        # Replace the target string
-        filedata = filedata.replace("R_ARG", str(radius))
-        filedata = filedata.replace("PADDING_ARG", str(padding))
-        filedata = filedata.replace("GAS_TOPOLOGY", get_topology_path("toppar_dum_noble_gases.str"))
-        filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_1_name_str))
-
-        # Write the file out again
-        with open(job.fn("filled_template.tcl"), 'w') as file:
-            file.write(filedata)
-
-        print("Making solvated sphere", job)
-        ions = evaltcl("source " + job.fn("filled_template.tcl"))
+        ions = evaltcl("source " + job.fn("water_sphere_template.tcl"))
         ionsList = ions.split()
 
         template = get_pdb2bincoords_path()
         # Read in the file
         with open(template, 'r') as file :
             filedata = file.read()
-
-        radius = job.sp.shell_radius
-        padding = 10
+        
+        # convert water shell to namd bin coords file
         # Replace the target string
         filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
         filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
 
         # Write the file out again
-        with open(job.fn("filled_template.tcl"), 'w') as file:
+        with open(job.fn("create_box_0_namdbin.tcl"), 'w') as file:
             file.write(filedata)
 
-        print("Making solvated sphere", job)
-        ions = evaltcl("source " + job.fn("filled_template.tcl"))
+        print("Making solvated sphere namd bin file", job)
+        ions = evaltcl("source " + job.fn("create_box_0_namdbin.tcl"))
         ionsList = ions.split()
 
         template = get_pdb2xsc_path()
@@ -1534,12 +1513,96 @@ def build_charmm(job, write_files=True):
         filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
 
         # Write the file out again
-        with open(job.fn("filled_template.tcl"), 'w') as file:
+        with open(job.fn("create_box_0_xsc.tcl"), 'w') as file:
             file.write(filedata)
 
         print("Making solvated sphere", job)
-        ions = evaltcl("source " + job.fn("filled_template.tcl"))
+        ions = evaltcl("source " + job.fn("create_box_0_xsc.tcl"))
         ionsList = ions.split()
+
+        # GOMC checks the resname in GCMC
+        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
+            for l in f:
+                l = re.sub(r"%s" % "NE1", "Ne ", l)
+                sys.stdout.write(l)
+
+        # GOMC checks the resname in GCMC
+        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
+            for l in f:
+                l = re.sub(r"%s" % "NE1", "Ne ", l)
+                sys.stdout.write(l)
+
+    elif(job.sp.electrostatic_method == "Ewald" \
+        and job.sp.replica_number_int == 0 and \
+            job.sp.wolf_model == "Calibrator"
+    ):
+
+        from vmd import evaltcl
+        template = get_water_box_builder_path()
+        # Read in the file
+        with open(template, 'r') as file :
+            filedata = file.read()
+
+        box_length = job.doc.liq_box_lengths_ang
+        # Replace the target string
+        filedata = filedata.replace("R_ARG", str(box_length))
+        filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_0_name_str))
+
+        # Write the file out again
+        with open(job.fn("water_box_template.tcl"), 'w') as file:
+            file.write(filedata)
+
+        print("Making solvated water box", job)
+        ions = evaltcl("source " + job.fn("water_box_template.tcl"))
+        ionsList = ions.split()
+
+        template = get_pdb2bincoords_path()
+        # Read in the file
+        with open(template, 'r') as file :
+            filedata = file.read()
+        
+        # convert water shell to namd bin coords file
+        # Replace the target string
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+
+        # Write the file out again
+        with open(job.fn("create_box_0_namdbin.tcl"), 'w') as file:
+            file.write(filedata)
+
+        print("Making solvated sphere namd bin file", job)
+        ions = evaltcl("source " + job.fn("create_box_0_namdbin.tcl"))
+        ionsList = ions.split()
+
+        template = get_pdb2xsc_path()
+        # Read in the file
+        with open(template, 'r') as file :
+            filedata = file.read()
+
+        # Replace the target string
+        filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+        filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
+
+        # Write the file out again
+        with open(job.fn("create_box_0_xsc.tcl"), 'w') as file:
+            file.write(filedata)
+
+        print("Making solvated sphere", job)
+        ions = evaltcl("source " + job.fn("create_box_0_xsc.tcl"))
+        ionsList = ions.split()
+
+        # GOMC checks the resname in GCMC
+        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
+            for l in f:
+                l = re.sub(r"%s" % "NE1", "Ne ", l)
+                sys.stdout.write(l)
+
+        # GOMC checks the resname in GCMC
+        with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
+            for l in f:
+                l = re.sub(r"%s" % "NE1", "Ne ", l)
+                sys.stdout.write(l)
 
         # GOMC checks the resname in GCMC
         with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
@@ -1567,6 +1630,8 @@ def build_charmm(job, write_files=True):
             l = re.sub(r"\b%s\b" % "B", "NE", l)
             l = re.sub(r"\b%s\b" % "C", "OT", l)
             sys.stdout.write(l)
+
+
 
     return [namd_charmm, gomc_charmm]
 
@@ -2138,7 +2203,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             ff_psf_pdb_file_directory=None,
             check_input_files_exist=False,
             Parameters="{}.inp".format(gomc_ff_filename_str),
-            Restart= False if job.sp.skipEq == "True" else True,
+            Restart= True,
             RestartCheckpoint=True,
             ExpertMode=False,
             Coordinates_box_0=job.doc.path_to_sseq_pdb,
@@ -2515,7 +2580,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 ff_psf_pdb_file_directory=None,
                 check_input_files_exist=False,
                 Parameters="{}.inp".format(gomc_ff_filename_str),
-                Restart= False if job.sp.skipEq == "True" else True,
+                Restart= True,
                 RestartCheckpoint=True,
                 ExpertMode=False,
                 Coordinates_box_0=job.doc.path_to_sseq_pdb,
@@ -2531,7 +2596,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 input_variables_dict={
                     "PRNG": seed_no,
                     "Pressure": production_pressure_bar,
-                    "Ewald": False,
+                    "Ewald": True,
                     "ElectroStatic": use_ElectroStatics,
                     "VDWGeometricSigma": VDWGeometricSigma,
                     "Rcut": job.doc.Rcut_ang,
@@ -2587,7 +2652,6 @@ def build_psf_pdb_ff_gomc_conf(job):
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_3a_output_namd_equilb_NPT_hasnt_started)
@@ -2636,7 +2700,6 @@ def run_namd_equilb_NPT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
@@ -2670,7 +2733,6 @@ def run_sseq_run_gomc_command(job):
     return run_command
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.skipEq == "False")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.post(part_3b_output_gomc_wolf_sanity_started)
