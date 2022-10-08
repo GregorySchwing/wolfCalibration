@@ -76,11 +76,11 @@ namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 #gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 5 * 10**6 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
+gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 5 * 10**1 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 100 * 10**1 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
@@ -94,10 +94,10 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
-EqSteps = 1000
-Calibration_MC_steps = 1000000
-Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 5000000
+EqSteps = 100
+Calibration_MC_steps = 1000
+Calibration_MC_Eq_Steps = 100
+Wolf_Sanity_MC_steps = 5000
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -113,6 +113,7 @@ gomc_ff_filename_str = "in_gomc_FF"
 # initial mosdef structure and coordinates
 # Note: do not add extensions
 mosdef_structure_box_0_name_str = "mosdef_box_0"
+mosdef_structure_box_1_name_str = "mosdef_box_1"
 
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
@@ -411,6 +412,10 @@ def initial_parameters(job):
             LambdaVDW_list.append(1.0)    
             #InitialState_list.append(counter)
             #counter = counter + 1
+    elif (job.sp.solute in ["solvent_box"]):
+        LambdaVDW_list = [0]
+        LambdaCoul_list = [0]
+        InitialState_list = [0]
     else:
         print("Didnt recognize solute", job.sp.solute)
     print("*********************")
@@ -448,7 +453,7 @@ def initial_parameters(job):
     """
 
     job.doc.N_liquid_solvent = 1000
-    if (job.sp.pure_solvent == "True"):
+    if (job.sp.solute == "solvent_box"):
         job.doc.N_liquid_solute = 0
     else:
         job.doc.N_liquid_solute = 1
@@ -742,6 +747,15 @@ def part_3a_output_namd_equilb_NPT_started(job):
     """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
     if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+        else:
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Ewald"
@@ -829,30 +843,28 @@ def part_3b_output_gomc_calibration_started(job):
 def part_3b_output_gomc_sseq_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
     Single_state_gomc_eq_control_file_name = "single_state_eq"
-    try:
 #This will cause Ewald sims to wait for Wolf calibration to complete.
         #This will cause Ewald sims to wait for Wolf calibration to complete.
-        if(job.sp.electrostatic_method == "Wolf"):
-            wolf_sp = job.statepoint()
-            wolf_sp['electrostatic_method']="Ewald"
-            wolf_sp['wolf_model']="Ewald"
-            wolf_sp['wolf_potential']="Ewald"
-            jobs = list(pr.find_jobs(wolf_sp))
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
+            jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                if ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat"):
-                    return True
-                else:
-                    return False
-
-
-        if job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat"):
-            return True
+                ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         else:
-            return False
-    except:
-        return False
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
+    else:
+        return job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
 
-        return True
 
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
@@ -861,7 +873,6 @@ def part_3b_output_gomc_wolf_sanity_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
     wolf_sanity_eq_control_file_name = "wolf_sanity"
     try:
-#This will cause Ewald sims to wait for Wolf calibration to complete.
         #This will cause Ewald sims to wait for Wolf calibration to complete.
         if(job.sp.electrostatic_method == "Ewald"):
             wolf_sp = job.statepoint()
@@ -980,28 +991,25 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.replica_number_int != 0):
-        wolf_sp = job.statepoint()
-        wolf_sp['electrostatic_method']="Ewald"
-        wolf_sp['replica_number_int']=0
-        wolf_sp['wolf_model']="Ewald"
-        wolf_sp['wolf_potential']="Ewald"
-        jobs = list(pr.find_jobs(wolf_sp))
-        for wolf_job in jobs:
-            if namd_sim_completed_properly(
-                wolf_job, namd_equilb_NPT_control_file_name_str
-            ) is False:
-                #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-                return False
-        return True
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
     else:
-        x = namd_sim_completed_properly(
-            job, namd_equilb_NPT_control_file_name_str
-        )
-        #print(f'namd check = {x}')
-        return namd_sim_completed_properly(
-            job, namd_equilb_NPT_control_file_name_str
-        )
+        return namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str)
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
@@ -1013,6 +1021,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     try:
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['solute']="solvent_box"
         ewald_sp['wolf_model']="Calibrator"        
         ewald_sp['wolf_potential']="Calibrator"
         ewald_sp['replica_number_int']=0
@@ -1041,23 +1050,26 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     Single_state_gomc_eq_control_file_name = "single_state_eq"
-    try:
-        wolf_sp = job.statepoint()
-        wolf_sp['electrostatic_method']="Ewald"
-        wolf_sp['replica_number_int']=0
-        wolf_sp['wolf_model']="Ewald"
-        wolf_sp['wolf_potential']="Ewald"
-        jobs = list(pr.find_jobs(wolf_sp))
-        for ewald_job in jobs:
-            if gomc_sim_completed_properly(
-                ewald_job,
-                Single_state_gomc_eq_control_file_name,
-            ) is False:
-                return False
-            else:
-                return True
-    except:
-        return False
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
+    else:
+        return gomc_sim_completed_properly(job, Single_state_gomc_eq_control_file_name)
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1149,11 +1161,11 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     with open(blk_file, 'r', encoding='utf8') as f:
         for line in f:
             if EnRegex.match(line):
-                #print('\n'.join(line.split()[1] for line in f))
                 try:
                     steps.append(float(line.split()[1]))
                     energies.append(float(line.split()[2]))
                 except:
+                    print(line)
                     print("An exception occurred") 
             if DensRegex.match(line):
                 #print('\n'.join(line.split()[1] for line in f))
@@ -1211,6 +1223,7 @@ def part_4b_wolf_sanity_analysis_completed(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['solute']="solvent_box"   
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
@@ -1244,6 +1257,7 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.solute == "solvent_box")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
@@ -1304,7 +1318,8 @@ def part_4b_job_gomc_wolf_parameters_found(job):
     ewald_sp = job.statepoint()
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
-    ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['solute']="solvent_box"   
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
@@ -1382,6 +1397,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"
     ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['solute']="solvent_box"
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     winningWolf = {}
@@ -1735,15 +1751,18 @@ def build_charmm(job, write_files=True):
         gomc_fix_bonds_angles_residues_list = [solvent.name]
         #else:
         #    gomc_fix_bonds_angles_residues_list  = None
-    else:
-
-        if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-            solute = mb.Compound(name=job.doc.solute)
-        else:
-            solute = mb.load(smiles_or_mol2[job.sp.solute]['smiles_or_mol2'],
-                            smiles=smiles_or_mol2[job.sp.solute]['use_smiles']
+        print('Running: filling liquid box')
+        box_0 = mb.fill_box(compound=[solute, solvent],
+                            n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
+                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                ],
+                            seed=mbuild_box_seed_no
                             )
-        solute.name = job.sp.solute
+        print('Completed: filling liquid box')
+
+    else:
 
         # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
         minimal_forcefield_dict = {solvent.name: forcefield_dict[solvent.name]
@@ -1762,17 +1781,7 @@ def build_charmm(job, write_files=True):
         gomc_fix_bonds_angles_residues_list = [solvent.name]
         #else:
         #    gomc_fix_bonds_angles_residues_list  = None
-    print('Running: filling liquid box')
-    if (job.doc.N_liquid_solute > 0):
-        box_0 = mb.fill_box(compound=[solute, solvent],
-                            n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
-                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                ],
-                            seed=mbuild_box_seed_no
-                            )
-    else:
+        print('Running: filling liquid box')
         box_0 = mb.fill_box(compound=[solvent],
                             n_compounds=[job.doc.N_liquid_solvent],
                             box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
@@ -1781,8 +1790,7 @@ def build_charmm(job, write_files=True):
                                 ],
                             seed=mbuild_box_seed_no
                             )
-
-    print('Completed: filling liquid box')
+        print('Completed: filling liquid box')
 
     print('Running: GOMC FF file, and the psf and pdb files')
     if job.doc.production_ensemble in ["NVT", "NPT"]:
@@ -1865,18 +1873,58 @@ def build_psf_pdb_ff_gomc_conf(job):
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
     restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
 
+    prefix = ""
+    if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
+        prefix = job.fn("")
+    else:
+        ref_sp = job.statepoint()
+        ref_sp['electrostatic_method']="Ewald"
+        ref_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ref_sp))
+        for ref_job in jobs:
+            prefix = ref_job.fn("")
+
     Coordinates_box_0 = "{}.pdb".format(
-        namd_restart_pdb_psf_file_name_str
+        prefix+mosdef_structure_box_0_name_str
     )
     Structure_box_0 = "{}.psf".format(
-        namd_restart_pdb_psf_file_name_str
+        prefix+mosdef_structure_box_0_name_str
+    )
+    Coordinates_box_1 = "{}.pdb".format(
+        prefix+mosdef_structure_box_1_name_str
+    )
+    Structure_box_1 = "{}.psf".format(
+        prefix+mosdef_structure_box_1_name_str
     )
     binCoordinates_box_0 = "{}.restart.coor".format(
-        restart_control_file_name_str
+        prefix+restart_control_file_name_str
     )
     extendedSystem_box_0 = "{}.restart.xsc".format(
-        restart_control_file_name_str
+        prefix+restart_control_file_name_str
     )
+    binCoordinates_box_1 = "{}.coor".format(
+        prefix+mosdef_structure_box_1_name_str
+    )
+    extendedSystem_box_1 = "{}.xsc".format(
+        prefix+mosdef_structure_box_1_name_str
+    )
+
+    job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
+    job.doc.path_to_ref_pdb =  Coordinates_box_0
+    job.doc.path_to_ref_psf =  Structure_box_0
+    job.doc.path_to_ref_binCoordinates =  binCoordinates_box_0
+    job.doc.path_to_ref_extendedSystem =  extendedSystem_box_0
+
+    if (job.doc.equilibration_ensemble in ["GCMC"]):  
+        job.doc.path_to_ref_pdb_box_1 =  Coordinates_box_1
+        job.doc.path_to_ref_psf_box_1 =  Structure_box_1
+        job.doc.path_to_ref_binCoordinates_box_1 =  binCoordinates_box_1
+        job.doc.path_to_ref_extendedSystem_box_1 =  extendedSystem_box_1 
+    else:
+        job.doc.path_to_ref_pdb_box_1 =  None
+        job.doc.path_to_ref_psf_box_1 =  None
+        job.doc.path_to_ref_binCoordinates_box_1 =  None
+        job.doc.path_to_ref_extendedSystem_box_1 =  None         
 
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
@@ -1893,39 +1941,52 @@ def build_psf_pdb_ff_gomc_conf(job):
     Single_state_gomc_eq_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
+    Single_state_gomc_eq_Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
+        Single_state_gomc_eq_control_file_name
+    )
+    Single_state_gomc_eq_Structure_box_1 = "{}_BOX_1_restart.psf".format(
+        Single_state_gomc_eq_control_file_name
+    )
+    Single_state_gomc_eq_binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
+        Single_state_gomc_eq_control_file_name
+    )
+    Single_state_gomc_eq_extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
+        Single_state_gomc_eq_control_file_name
+    )
 
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
-        ref_sp['wolf_model']="Ewald"
-        ref_sp['wolf_potential']="Ewald"
-
+        if (job.sp.wolf_model == "Calibrator"):
+            ref_sp['wolf_model']="Calibrator"
+            ref_sp['wolf_potential']="Calibrator"
+        else:
+            ref_sp['wolf_model']="Ewald"
+            ref_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(ref_sp))
-        print("jobs:", jobs)
         for ref_job in jobs:
-            print(ref_job.fn(""))
+            #if (ref_job.isfile(f"{Coordinates_box_0}")):
             job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
-            job.doc.path_to_ref_pdb =  ref_job.fn(Coordinates_box_0)
-            job.doc.path_to_ref_psf =  ref_job.fn(Structure_box_0)
-            job.doc.path_to_ref_binCoordinates =  ref_job.fn(binCoordinates_box_0)
-            job.doc.path_to_ref_extendedSystem =  ref_job.fn(extendedSystem_box_0)
             job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
             job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
+            job.doc.path_to_sseq_pdb_box_1 =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_1)
+            job.doc.path_to_sseq_psf_box_1 =  ref_job.fn(Single_state_gomc_eq_Structure_box_1)
             job.doc.path_to_sseq_binCoordinates =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_0)
             job.doc.path_to_sseq_extendedSystem =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_0)
+            job.doc.path_to_sseq_binCoordinates_box_1 =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_1)
+            job.doc.path_to_sseq_extendedSystem_box_1 =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_1)
             job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
             job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
-
-    else:
-        job.doc.path_to_namd_console =  job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
-        job.doc.path_to_ref_pdb =  job.fn(Coordinates_box_0)
-        job.doc.path_to_ref_psf =  job.fn(Structure_box_0)
-        job.doc.path_to_ref_binCoordinates =  job.fn(binCoordinates_box_0)
-        job.doc.path_to_ref_extendedSystem =  job.fn(extendedSystem_box_0)     
+       
+    else:    
         job.doc.path_to_sseq_pdb =  job.fn(Single_state_gomc_eq_Coordinates_box_0)
         job.doc.path_to_sseq_psf =  job.fn(Single_state_gomc_eq_Structure_box_0)
+        job.doc.path_to_sseq_pdb_box_1 =  job.fn(Single_state_gomc_eq_Coordinates_box_1)
+        job.doc.path_to_sseq_psf_box_1 =  job.fn(Single_state_gomc_eq_Structure_box_1)
         job.doc.path_to_sseq_binCoordinates =  job.fn(Single_state_gomc_eq_binCoordinates_box_0)
         job.doc.path_to_sseq_extendedSystem =  job.fn(Single_state_gomc_eq_extendedSystem_box_0)
+        job.doc.path_to_sseq_binCoordinates_box_1 =  job.fn(Single_state_gomc_eq_binCoordinates_box_1)
+        job.doc.path_to_sseq_extendedSystem_box_1 =  job.fn(Single_state_gomc_eq_extendedSystem_box_1)
         job.doc.path_to_sseq_console =  job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         job.doc.path_to_sseq_checkpoint =  job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
 
@@ -2050,7 +2111,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "in the GOMC control file writer."
             )
 
-    if job.doc.solute in ["ETOH"]:
+    if job.doc.solute in ["ETOH", "solvent_box"]:
         useCoul = True
         CBMC_First = (10,)
         CBMC_Nth = (10,)
@@ -2171,8 +2232,8 @@ def build_psf_pdb_ff_gomc_conf(job):
         ExpertMode=False,
         Coordinates_box_0=job.doc.path_to_ref_pdb,
         Structure_box_0=job.doc.path_to_ref_psf,
-        binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
-        extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
+        binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
+        extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
         binVelocities_box_0=None,
         Coordinates_box_1=None,
         Structure_box_1=None,
@@ -2260,7 +2321,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-        if job.doc.solute in ["ETOH"]:
+        if job.doc.solute in ["ETOH", "solvent_box"]:
             useCoul = True
             CBMC_First = (10,)
             CBMC_Nth = (10,)
@@ -2427,7 +2488,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-        if job.doc.solute in ["ETOH"]:
+        if job.doc.solute in ["ETOH", "solvent_box"]:
             useCoul = True
             CBMC_First = (10,)
             CBMC_Nth = (10,)
@@ -2474,8 +2535,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             ExpertMode=False,
             Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
             Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
-            binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
-            extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
+            binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
+            extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
             Coordinates_box_1=None,
             Structure_box_1=None,
@@ -2613,7 +2674,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-        if job.doc.solute in ["ETOH"]:
+        if job.doc.solute in ["ETOH", "solvent_box"]:
             useCoul = True
             CBMC_First = (10,)
             CBMC_Nth = (10,)
@@ -2746,7 +2807,6 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.pre(part_3a_output_namd_equilb_NPT_hasnt_started)
 @Project.post(part_3a_output_namd_equilb_NPT_started)
 @Project.post(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.operation.with_directives(
@@ -2766,27 +2826,6 @@ def run_namd_equilb_NPT_gomc_command(job):
     print("#**********************")
     """Run the gomc_calibration_run_ensemble simulation."""
     
-    """
-    from pathlib import Path
-    import shutil
-    import os
-    
-    # defining source and destination
-    # paths
-    #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/equilibrated_replicates/replicates/" + str(job.sp.replica_number_int)
-    #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    trg = job.fn("")
-    files=os.listdir(src)
-    
-    # iterating over all the files in
-    # the source directory
-    for fname in files:
-        
-        # copying the files to the
-        # destination directory
-        shutil.copy2(os.path.join(src,fname), trg)
-    """
     control_file_name_str = namd_equilb_NPT_control_file_name_str
     
     print(f"Running simulation job id {job}")
@@ -2835,28 +2874,7 @@ def run_namd_equilb_NPT_gomc_command(job):
 @flow.with_job
 @flow.cmd
 def run_sseq_run_gomc_command(job):
-    
-    """
-    from pathlib import Path
-    import shutil
-    import os
-    
-    # defining source and destination
-    # paths
-    #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/equilibrated_replicates/replicates/" + str(job.sp.replica_number_int)
-    #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    trg = job.fn("")
-    files=os.listdir(src)
-    
-    # iterating over all the files in
-    # the source directory
-    for fname in files:
-        
-        # copying the files to the
-        # destination directory
-        shutil.copy2(os.path.join(src,fname), trg)
-    """
+
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
     print(f"Running simulation job id {job}")
@@ -2868,11 +2886,7 @@ def run_sseq_run_gomc_command(job):
         str(Single_state_gomc_eq_control_file_name),
         str(Single_state_gomc_eq_control_file_name),
     )
-
-    """
-    run_command = "echo sseqcopied"
     print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
-    """
     return run_command
 
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
@@ -2938,27 +2952,6 @@ def run_wolf_sanity_run_gomc_command(job):
 @flow.cmd
 def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
-    from pathlib import Path
-    import shutil
-    import os
-    
-    # defining source and destination
-    # paths
-    #    path_to_equilibrated_ewald_system = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    src = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/cal_full"
-    #src = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/sseq_full"
-    trg = job.fn("")
-    files=os.listdir(src)
-    
-    # iterating over all the files in
-    # the source directory
-    for fname in files:
-        
-        # copying the files to the
-        # destination directory
-        shutil.copy2(os.path.join(src,fname), trg)
-    
-    """
     control_file_name_str = "wolf_calibration"
 
     print(f"Running simulation job id {job}")
@@ -2971,8 +2964,6 @@ def run_calibration_run_gomc_command(job):
     )
 
     print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
-    """
-    run_command = "echo copied_calibration_data"
     return run_command
 
 
@@ -3031,7 +3022,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
                                 for j in jobs[0]._project))  
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
-    @Project.pre(lambda j: j.sp.pure_solvent == "False")
+    @Project.pre(lambda j: j.sp.solute not in ["solvent_box"])
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
