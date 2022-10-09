@@ -75,12 +75,11 @@ namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-#gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 5 * 10**1 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 100 * 10**1 # set value for paper = 100 * 10**3
+gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
@@ -94,10 +93,10 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
-EqSteps = 100
-Calibration_MC_steps = 1000
-Calibration_MC_Eq_Steps = 100
-Wolf_Sanity_MC_steps = 5000
+EqSteps = 1000
+Calibration_MC_steps = 1000000
+Calibration_MC_Eq_Steps = 10000
+Wolf_Sanity_MC_steps = 5000000
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -155,59 +154,33 @@ memory_needed = 16
 
 
 # forcefield names dict
+# The only difference in FF for waters b/w opls and trappe is coulombic and LJ scaling
 forcefield_residue_to_ff_filename_dict = {
-    "MSPCE": "mspce_trappe.xml",
-    "SPCE": "spce_trappe.xml",
-    "SPC": "spc_trappe.xml",
-    "TIP3": "tip3.xml",
-    "TIP4": "tip4p_2005.xml",
+    "MSPCE": {"OPLS" : "mspce_opls.xml", "TRAPPE" : "mspce_trappe.xml"},
+    "SPCE": {"OPLS" : "spce_opls.xml", "TRAPPE" : "spce_trappe.xml"},
+    "SPC": {"OPLS" : "spc_opls.xml", "TRAPPE" : "spc_trappe.xml"},
+    "TIP3": {"OPLS" : "tip3_opls.xml", "TRAPPE" : "tip3_trappe.xml"},
+    "TIP4": {"OPLS" : "tip4p_opls.xml", "TRAPPE" : "tip4p_trappe.xml"},
+    "ETOH": {"OPLS" : "oplsaa", "TRAPPE" : "trappe-ua.xml"},
     "Ne": "nobel_gas_vrabec_LB_mixing.xml",
     "Rn": "nobel_gas_vrabec_LB_mixing.xml",
-    "ETOH": "trappe-ua.xml",
 }
-
 
 # smiles of mol2 file input a .mol2 file or smiles as a string
 smiles_or_mol2_name_to_value_dict = {
-    "MSPCE": "mspce.mol2",
-    "SPCE": "O",
-    "SPC": "O",
-    "TIP3": "O",
-    "TIP4": 'tip4p.mol2',
-    "Ne": "Ne",
-    "Rn": "Rn",
-    "ETOH": "ethanol.mol2",
-    "ETOH-OPLS": "CCO"
+    "MSPCE": {"OPLS" : "mspce.mol2", "TRAPPE" : "mspce.mol2"},
+    "MSPCE": {"OPLS" : "O", "TRAPPE" : "O"},
+    "SPCE": {"OPLS" : "O", "TRAPPE" : "O"},
+    "SPC": {"OPLS" : "O", "TRAPPE" : "O"},
+    "TIP3": {"OPLS" : "O", "TRAPPE" : "O"},
+    "TIP4": {"OPLS" : 'tip4p.mol2', "TRAPPE" : 'tip4p.mol2'},
+    "Ne": {"OPLS" : 'Ne', "TRAPPE" : 'Ne'},
+    "Rn": {"OPLS" : 'Rn', "TRAPPE" : 'Rn'},
+    "ETOH": {"OPLS" : "CCO", "TRAPPE" : "ethanol.mol2"},
 }
 
 
-# get the paths to the smiles or mol2 files
-smiles_or_mol2 = {}
-for smiles_or_mol2_iter_i in list(smiles_or_mol2_name_to_value_dict.keys()):
-    smiles_or_mol2.update(
-        {str(smiles_or_mol2_iter_i):
-             {"use_smiles": get_molecule_path(
-                 str(smiles_or_mol2_name_to_value_dict[str(smiles_or_mol2_iter_i)]))[0],
-              "smiles_or_mol2": get_molecule_path(
-                  str(smiles_or_mol2_name_to_value_dict[str(smiles_or_mol2_iter_i)]))[1],
-              }
-         }
-    )
 
-# get the paths to the FF xmls
-forcefield_dict = {}
-for forcefield_dict_iter_i in list(forcefield_residue_to_ff_filename_dict.keys()):
-    forcefield_dict.update(
-        {str(forcefield_dict_iter_i): get_ff_path(
-            forcefield_residue_to_ff_filename_dict[str(forcefield_dict_iter_i)])
-        }
-    )
-print("*********************")
-print("*********************")
-print("smiles_or_mol2 = " +str(smiles_or_mol2))
-print("forcefield_dict = " +str(forcefield_dict))
-print("*********************")
-print("*********************")
 
 # ******************************************************
 # users typical variables, but not all (end)
@@ -354,9 +327,6 @@ def initial_parameters(job):
     """Set the initial job parameters into the jobs doc json file."""
     # select
 
-    # set free energy data in doc
-    # Free energy calcs
-    # lamda generator
 
     LambdaVDW_list = []
     LambdaCoul_list = []
@@ -1721,33 +1691,46 @@ def build_charmm(job, write_files=True):
     print("#**********************")
     mbuild_box_seed_no = job.doc.replica_number_int
 
-    solvent = mb.load(smiles_or_mol2[job.doc.solvent]['smiles_or_mol2'],
-                      smiles=smiles_or_mol2[job.doc.solvent]['use_smiles']
+    # set free energy data in doc
+    # Free energy calcs
+    # lamda generator
+    # get the paths to the smiles or mol2 files
+
+    smiles_or_mol2 = get_molecule_path(smiles_or_mol2_name_to_value_dict[job.sp.solvent][job.sp.forcefield])
+
+    solvent = mb.load(smiles_or_mol2[1],
+                      smiles=smiles_or_mol2[0]
                       )
     solvent.name = job.doc.solvent
 
     #if job.doc.solvent not in ["TIP4"]:
         #solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
     if (job.doc.N_liquid_solute > 0):
+        smiles_or_mol2_solute = get_molecule_path(smiles_or_mol2_name_to_value_dict[job.sp.solute][job.sp.forcefield])
 
         if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
             solute = mb.Compound(name=job.doc.solute)
         else:
-            solute = mb.load(smiles_or_mol2[job.sp.solute]['smiles_or_mol2'],
-                            smiles=smiles_or_mol2[job.sp.solute]['use_smiles']
+            solute = mb.load(smiles_or_mol2_solute[1],
+                            smiles=smiles_or_mol2_solute[0]
                             )
         solute.name = job.sp.solute
 
+        solute_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solute][job.sp.forcefield])
+        solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
+
         # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
-        minimal_forcefield_dict = {solute.name: forcefield_dict[solute.name],
-                                solvent.name: forcefield_dict[solvent.name]
+        minimal_forcefield_dict = {solute.name: solute_ff,
+                                solvent.name: solvent_ff
                                 }
 
         #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
 
-        # for trappe, currently unused
-        bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
-
+        # for trappe, currently unused'
+        if (job.sp.forcefield == "TRAPPE"):
+            bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
+        else:
+            bead_to_atom_name_dict = None
 
         residues_list = [solute.name, solvent.name]
         print("residues_list  = " +str(residues_list ))
@@ -1768,16 +1751,19 @@ def build_charmm(job, write_files=True):
         print('Completed: filling liquid box')
 
     else:
+        solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
 
         # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
-        minimal_forcefield_dict = {solvent.name: forcefield_dict[solvent.name]
+        minimal_forcefield_dict = {solvent.name: solvent_ff
                                 }
 
         #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
 
-        # for trappe, currently unused
-        bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
-
+        # for trappe, currently unused'
+        if (job.sp.forcefield == "TRAPPE"):
+            bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
+        else:
+            bead_to_atom_name_dict = None
 
         residues_list = [solvent.name]
         print("residues_list  = " +str(residues_list ))
@@ -2002,7 +1988,14 @@ def build_psf_pdb_ff_gomc_conf(job):
     MoleculeType = [job.sp.solute, 1]
 
     use_ElectroStatics = True
-    VDWGeometricSigma = False
+
+    if (job.sp.forcefield in ["OPLS"]):
+        VDWGeometricSigma = True
+    else:
+        VDWGeometricSigma = False
+
+    
+    
     Exclude = "1-4"
 
     # common variables
@@ -2116,7 +2109,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "in the GOMC control file writer."
             )
 
-    if job.doc.solute in ["ETOH", "solvent_box"]:
+    if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
         useCoul = True
         CBMC_First = (10,)
         CBMC_Nth = (10,)
@@ -2326,7 +2319,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-        if job.doc.solute in ["ETOH", "solvent_box"]:
+        if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
             useCoul = True
             CBMC_First = (10,)
             CBMC_Nth = (10,)
@@ -2493,7 +2486,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-        if job.doc.solute in ["ETOH", "solvent_box"]:
+        if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
             useCoul = True
             CBMC_First = (10,)
             CBMC_Nth = (10,)
@@ -2679,7 +2672,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "in the GOMC control file writer."
                 )
 
-        if job.doc.solute in ["ETOH", "solvent_box"]:
+        if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
             useCoul = True
             CBMC_First = (10,)
             CBMC_Nth = (10,)
