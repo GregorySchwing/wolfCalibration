@@ -1008,9 +1008,14 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
                 return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
-    else:
+    elif (job.sp.replica_number_int == 0):
         return namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str)
-
+    else:
+        ewald_sp = job.statepoint()
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -2893,6 +2898,7 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
+@Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.post(part_3b_output_gomc_wolf_sanity_started)
