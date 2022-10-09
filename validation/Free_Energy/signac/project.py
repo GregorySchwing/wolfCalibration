@@ -1221,14 +1221,16 @@ def part_4b_wolf_sanity_analysis_completed(job):
 @Project.label
 @flow.with_job
 def part_4b_is_winning_wolf_model_or_ewald(job):
-    if (job.sp.electrostatic_method == "Ewald"):
-        return True
-    elif (job.sp.wolf_model == job.doc.winningWolfModel \
-        and job.sp.wolf_potential == job.doc.winningWolfPotential):
-        return True
-    else:
+    try:
+        if (job.sp.electrostatic_method == "Ewald"):
+            return True
+        elif (job.sp.wolf_model == job.doc.winningWolfModel \
+            and job.sp.wolf_potential == job.doc.winningWolfPotential):
+            return True
+        else:
+            return False
+    except:
         return False
-
 @Project.operation.with_directives(
     {
         "np": 1,
