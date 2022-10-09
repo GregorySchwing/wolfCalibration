@@ -1207,14 +1207,16 @@ def part_4b_wolf_sanity_analysis_completed(job):
     ewald_sp['solute']="solvent_box"   
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
-    for ewald_job in jobs:
-        if (ewald_job.isfile("wolf_statistics.csv")):
-            job.doc.winningWolfPotential = ewald_job.doc.winningWolfPotential
-            job.doc.winningWolfModel = ewald_job.doc.winningWolfModel
-            return True
-        else:
-            return False
-
+    try:
+        for ewald_job in jobs:
+            if (ewald_job.isfile("wolf_statistics.csv")):
+                job.doc.winningWolfPotential = ewald_job.doc.winningWolfPotential
+                job.doc.winningWolfModel = ewald_job.doc.winningWolfModel
+                return True
+            else:
+                return False
+    except:
+        return False
 
 @Project.label
 @flow.with_job
