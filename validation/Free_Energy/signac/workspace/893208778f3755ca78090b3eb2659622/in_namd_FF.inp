@@ -1,0 +1,53 @@
+*  mosdef_box_0 - created by mBuild using the on 2022-10-08 22:57:27.186831
+*  parameters from the {'SPCE': '/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/src/utils/../xmls/spce_trappe.xml'} force field(s) via MoSDef
+*  1-4 coulombic scaling = {'SPCE': 0.0}, and 1-4 LJ scaling = {'SPCE': 0.0}
+
+*  3000 atoms
+*  2000 bonds
+*  1000 angles
+*  0 dihedrals
+*  0 impropers
+
+*  2 atom types
+*  1 bond types
+*  1 angle types
+
+
+* masses
+
+!atom_types 	mass 		  atomTypeForceFieldName_ResidueName (i.e., atoms_type_per_utilized_FF)  
+*  B		15.999430	! o_spce_SPCE
+*  A		1.007947	! h_spce_SPCE
+
+BONDS * harmonic
+!
+!V(bond) = Kb(b - b0)**2
+!
+!Kb: kcal/mole/A**2
+!b0: A
+!Kb (kcal/mol) = Kb_K (K) * Boltz. const.; (9999999999 if no stretching)
+!
+!atom_types 	 Kb		b0 		  atoms_types_per_utilized_FF
+A	B	600.40152964	1.0		! h_spce_SPCE	o_spce_SPCE
+
+ANGLES * harmonic
+!
+!V(angle) = Ktheta(Theta - Theta0)**2
+!
+!Ktheta: kcal/mole/rad**2
+!Theta0: degrees
+!
+! Ktheta (kcal/mol) = Ktheta_K (K) * Boltz. const.		
+!
+!atom_types 		Ktheta		Theta0			  atoms_types_per_utilized_FF
+A	B	A	45.76959847		109.47122		! h_spce_SPCE	o_spce_SPCE	h_spce_SPCE
+
+NONBONDED
+!
+!V(Lennard-Jones) = Eps,i,j[(Rmin,i,j/ri,j)**12 - 2(Rmin,i,j/ri,j)**6]
+!
+!atype 	ignored	epsilon 	Rmin/2 		ignored	eps,1-4		Rmin/2,1-4		  atom_type_per_utilized_FF
+B	0.00	-0.155377629	1.77663293006	0.00	-0.000000000	1.77663293006		! o_spce_SPCE	o_spce_SPCE
+A	0.00	-0.000000000	0.00000000000	0.00	-0.000000000	0.00000000000		! h_spce_SPCE	h_spce_SPCE
+
+END

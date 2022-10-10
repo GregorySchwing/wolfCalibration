@@ -1,0 +1,1 @@
+{"replica_number_int": 0, "solute": "solvent_box", "solvent": "SPCE", "forcefield": "TRAPPE", "production_temperature_K": 298.0, "electrostatic_method": "Ewald", "wolf_model": "Calibrator", "wolf_potential": "Calibrator"}
