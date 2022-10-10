@@ -1400,8 +1400,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 bestModel = ""
                 bestOpt = ""
                 smallestRelErr = 1.0
-                smallestAUC = 1000000000
-                largestAUC = 0
+                largestRelErr = 0
 
                 bestRCut = 0
                 bestAlpha = 0
@@ -1410,21 +1409,18 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 for model in model2BestWolfAlphaRCut:
                     print("Model :", model)
                     print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
-                    print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
                     print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
                     print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
                     print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
-                    if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
+                    if (model2BestWolfAlphaRCut[model]['GD_relerr']  < smallestRelErr):
                         bestModel = model
                         smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                        smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
                         bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                         bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
                         bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
-                    if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
+                    if (model2BestWolfAlphaRCut[model]['GD_relerr']  > largestRelErr):
                         worstModel = model
                         largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                        largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
                         worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                         worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
                         worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
@@ -1432,7 +1428,6 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 print("worstOpt :", worstOpt)
 
                 print("largestRelErr :", largestRelErr)
-                print("largestAUC :", largestAUC)
                 print("worstRCut :", worstRCut)
                 print("worstAlpha :", worstAlpha)
 
@@ -1440,7 +1435,6 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 print("bestOpt :", bestOpt)
 
                 print("smallestRelErr :", smallestRelErr)
-                print("smallestAUC :", smallestAUC)
                 print("bestRCut :", bestRCut)
                 print("bestAlpha :", bestAlpha)
 

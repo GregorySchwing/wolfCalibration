@@ -115,6 +115,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     weightZError = 1.0
     weightRCut = 1.0
     minRCut = 1.0
+    tolerance = 0.0
     # Multi-objective lambda function (ZError and MinRCut).
     f = lambda x: (weightZError*(np.abs(F2(xi= x, method='linear'))) + (np.abs(F2(xi= x, method='linear')))*(x[0]-minRCut))
 
@@ -127,7 +128,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
   
     #x0 = (12, 0.12)
     x0 = (bfXY[0], bfXY[1])
-    gd = minimize(f, x0, method='SLSQP', bounds=bounds)
+    gd = minimize(f, x0, tol=tolerance,method='SLSQP', bounds=bounds)
 
     #original_polynomial = [f(x0),bfXY[0]]
     #gdMO = least_squares(poly_fun, x0=original_polynomial, args=(a, x))
@@ -177,8 +178,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdanx_auc["REF"] = sptdual_annealingOutNoX0.fun
 
     print("Calling differential_evolution")
-    sptdifferential_evolutionOut = differential_evolution(f, bounds=bounds, x0=x0)
-    sptdifferential_evolutionOutNox0 = differential_evolution(f, bounds=bounds)
+    sptdifferential_evolutionOut = differential_evolution(f, tol=tolerance,bounds=bounds, x0=x0)
+    sptdifferential_evolutionOutNox0 = differential_evolution(f, tol=tolerance,bounds=bounds)
     print(sptdifferential_evolutionOut)  
     print("sptdifferential_evolutionOut.keys()", sptdifferential_evolutionOut.keys())  
     print(sptdifferential_evolutionOut.keys())   
@@ -236,6 +237,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     goAUCs["sptdanx"] = sptdanx_auc
     goAUCs["sptdenx"] = sptdenx_auc
 
+    # Choose optimizer with smallest z-err
+    """
     smallestAUC = 100000000
     winningOptimizer = ""
     sizeOfRegionScale = 0.000
@@ -248,7 +251,20 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         if (value["REF"] < smallestAUC):
             winningOptimizer = key
             smallestAUC = value["REF"]
+    """
 
+    # Choose optimizer with smallest r-cut
+    
+    smallestRCut = 100000000
+    winningOptimizer = ""
+    for key, value in goMethods.items():
+    
+        print("method",key, value)
+        
+        if (value["REF"][0] < smallestRCut):
+            winningOptimizer = key
+            smallestRCut = value["REF"][0]
+    
         
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
@@ -305,7 +321,5 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("GD_rcut",goMethods[winningOptimizer]["REF"][0])
     print("GD_alpha",goMethods[winningOptimizer]["REF"][1])
     print("GD_relerr",goAUCs[winningOptimizer]["REF"] )
-    print("GD_AUC",smallestAUC) 
     print("WINNING_OPT",winningOptimizer)
-    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_AUC",smallestAUC), ("GD_relerr",F2(goMethods[winningOptimizer]["REF"]))
-    , ("GD_AUC",smallestAUC),  ("WINNING_OPT",winningOptimizer) )
+    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_relerr",F2(goMethods[winningOptimizer]["REF"])), ("WINNING_OPT",winningOptimizer) )
