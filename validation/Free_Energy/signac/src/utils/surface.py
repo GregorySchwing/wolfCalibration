@@ -17,6 +17,14 @@ import plotly.io as pio
 import plotly.graph_objects as go
 from scipy.interpolate import griddata
 from scipy.interpolate import Rbf, interp2d, RegularGridInterpolator
+import scipy
+from scipy.optimize import OptimizeResult, least_squares
+
+def poly_fun(coeffs, a, x):
+    predicted = 10**np.polynomial.polynomial.polyval(np.log10(a), coeffs)
+    slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, predicted) 
+    return np.array([3, 4, 5]) * np.array([slope-1, r_value-1, intercept]) 
+
 def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None):
 	xy_len, z_len = ax.get_figure().get_size_inches()
 	axis_length = [x[1] - x[0] for x in [ax.get_xbound(), ax.get_ybound(), ax.get_zbound()]]
@@ -99,7 +107,17 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(rranges)
     bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
     
-    f = lambda x: np.abs(F2(xi= x, method='linear'))
+    # Single objective lambda function (ZError).
+    #f = lambda x: np.abs(F2(xi= x, method='linear'))
+    # x[0] is rcut value
+    # This will follow the 0 line down the gradient.  Hopefully all the results aren't
+    # just (10, some alpha) if there is no 0 point on the 10.
+    weightZError = 1.0
+    weightRCut = 1.0
+    minRCut = 1.0
+    # Multi-objective lambda function (ZError and MinRCut).
+    f = lambda x: (weightZError*(np.abs(F2(xi= x, method='linear'))) + (np.abs(F2(xi= x, method='linear')))*(x[0]-minRCut))
+
     #f = lambda x: np.sum(np.abs(F2(xi=tuple(np.meshgrid(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10), np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))), method='linear')))
 
     bf = brute(f, rranges, full_output=True, finish=None)
@@ -110,6 +128,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #x0 = (12, 0.12)
     x0 = (bfXY[0], bfXY[1])
     gd = minimize(f, x0, method='SLSQP', bounds=bounds)
+
+    #original_polynomial = [f(x0),bfXY[0]]
+    #gdMO = least_squares(poly_fun, x0=original_polynomial, args=(a, x))
+
     print(gd)
     gdXY = np.array(gd.x)
     print(gdXY[0])
