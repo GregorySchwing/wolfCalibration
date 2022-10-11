@@ -116,16 +116,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
     z = df4.iloc[:,0].to_numpy()
-    print(x)
-    print(y)
-    print(z)
 
     z = np.reshape(z, (len(x),len(y)))
-    #z = np.reshape(z, (len(y),len(x)))
+    #This is wrong : z = np.reshape(z, (len(y),len(x)))
 
-    print(x)
-    print(y)
-    print(z)
 
     sptbf_mins = {}
     sptgd_mins = {}
@@ -151,11 +145,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     rect_B_spline = RectBivariateSpline(x, y, z)
     pd_RCut_varies_alpha_constant = [1,0]
     pd_RCut_constant_alpha_varies = [0,1]
+    pd_RCut_varies_alpha_varies = [1,1]
 
-    # OK - M.O. 2.0
-    derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_constant[0],pd_RCut_varies_alpha_constant[1])
     # Bad - don't use this
+    #derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_constant[0],pd_RCut_varies_alpha_constant[1])
+    # OK - M.O. 2.0
     #derivs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies[0],pd_RCut_constant_alpha_varies[1])
+    # M.O. 3.0
+    derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
 
     tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
  
@@ -163,12 +160,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(tck_pd)
     #F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=True, fill_value=None)
     #f = lambda x: np.abs(F2(xi= x, method='linear'))
-    exampleX = 10
+    exampleX = 10.05
     exampleY = 0.16
     val = interpolate.bisplev(exampleX, exampleY, tck_pd)
     print("deriv at ", exampleX, exampleY)
     print(val)
-    exampleX2 = 10
+    exampleX2 = 10.05
     exampleY2 = 0.0
     val = interpolate.bisplev(exampleX2, exampleY2, tck_pd)
     print("deriv", exampleX2, exampleY2)
@@ -251,7 +248,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     
     # if you use MO 1.0
     #weights = np.array([0.2, 0.8])
-    weights = np.array([0.6, 0.1, 0.3])
+    weights = np.array([0.8, 0.1, 0.1])
 
 
 
@@ -305,6 +302,34 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     margin=dict(r=20, b=10, l=10, t=10))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
+
+        """
+        x_opts, y_opts = zip(*X)
+        print(x_opts)
+        print(y_opts)
+        iteractivefig.add_trace(
+            go.Scatter3d(x=x_opts,
+                        y=y_opts,
+                        z=rect_B_spline.ev(x_opts,y_opts))
+                        #,mode='markers',
+                        #name=key,
+                        #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
+                        #showlegend=True)
+        )
+        """
+        
+        x_opts, y_opts = zip(X[i])
+        print(x_opts)
+        print(y_opts)
+        iteractivefig.add_trace(
+            go.Scatter3d(x=x_opts,
+                        y=y_opts,
+                        z=rect_B_spline.ev(x_opts,y_opts))
+                        #,mode='markers',
+                        #name=key,
+                        #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
+                        #showlegend=True)
+        )
         """
         for key, value in goMethods.items():
             print("method",key, value)
