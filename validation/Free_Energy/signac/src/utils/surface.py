@@ -210,6 +210,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     import matplotlib.pyplot as plt
     xl, xu = problem.bounds()
+    
+    """
     plt.figure(figsize=(7, 5))
     plt.scatter(X[:, 0], X[:, 1], s=30, facecolors='none', edgecolors='r')
     plt.xlim(xl[0], xu[0])
@@ -246,7 +248,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.scatter(nF[:, 0], nF[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.title("Objective Space")
     plt.show()
-    
+    """
+
+
     # if you use MO 1.0
     #weights = np.array([0.5, 0.5])
     #weights = np.array([0.333, 0.333, 0.333])
@@ -260,13 +264,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     i = decomp.do(nF, 1/weights).argmin()
 
+    """
     print("Best regarding ASF: Point \ni = %s\nF = %s" % (i, F[i]))
     plt.figure(figsize=(7, 5))
     plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.scatter(F[i, 0], F[i, 1], marker="x", color="red", s=200)
     plt.title("Objective Space")
     plt.show()
-
+    """
     x_opts, y_opts = zip(X[i])
     print(x_opts)
     print(y_opts)
@@ -278,12 +283,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
     print(X[i])
 
+    """
     plt.figure(figsize=(7, 5))
     plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.scatter(F[i, 0], F[i, 1], marker="x", color="red", s=200)
     plt.title("Objective Space")
     plt.show()
-
+    """
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
 
