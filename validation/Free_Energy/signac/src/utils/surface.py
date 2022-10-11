@@ -61,7 +61,7 @@ class MyProblem(ElementwiseProblem):
 
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, LowerBoundRcut):
         super().__init__(n_var=2,
-                         n_obj=2,
+                         n_obj=3,
                          n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
@@ -78,9 +78,9 @@ class MyProblem(ElementwiseProblem):
         f3 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_pd))
 
         g1 = -(x[0]-self.LowerBoundRcut)
-        out["F"] = [f1, f2]
+        #out["F"] = [f1, f2]
 
-        #out["F"] = [f1, f2, f3]
+        out["F"] = [f1, f2, f3]
         out["G"] = [g1]
 
 
@@ -151,9 +151,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # Bad - don't use this
     #derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_constant[0],pd_RCut_varies_alpha_constant[1])
     # OK - M.O. 2.0
-    derivs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies[0],pd_RCut_constant_alpha_varies[1])
+    #derivs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies[0],pd_RCut_constant_alpha_varies[1])
     # M.O. 3.0
-    #derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
+    derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
 
     tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
  
@@ -248,8 +248,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.show()
     
     # if you use MO 1.0
-    weights = np.array([0.5, 0.5])
+    #weights = np.array([0.5, 0.5])
     #weights = np.array([0.333, 0.333, 0.333])
+    weights = np.array([0.5, 0.25, 0.25])
 
 
 
