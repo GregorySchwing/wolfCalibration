@@ -223,10 +223,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.title("Objective Space")
     plt.show()
-
+    """
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
-
+    """
     plt.figure(figsize=(7, 5))
     plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.scatter(approx_ideal[0], approx_ideal[1], facecolors='none', edgecolors='red', marker="*", s=100, label="Ideal Point (Approx)")
@@ -234,7 +234,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.title("Objective Space")
     plt.legend()
     plt.show()
-
+    """
     nF = (F - approx_ideal) / (approx_nadir - approx_ideal)
 
     fl = nF.min(axis=0)
@@ -242,8 +242,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(f"Scale f1: [{fl[0]}, {fu[0]}]")
     print(f"Scale f2: [{fl[1]}, {fu[1]}]")
 
-    ### last working line
-
+    """
     plt.figure(figsize=(7, 5))
     plt.scatter(nF[:, 0], nF[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.title("Objective Space")
