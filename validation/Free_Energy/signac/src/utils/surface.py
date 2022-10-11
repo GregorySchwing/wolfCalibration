@@ -75,7 +75,7 @@ class MyProblem(ElementwiseProblem):
         # Minimize RCut
         f2 = (x[0]-self.RCutMin)
         # Minimize Gradient
-        f3 = interpolate.bisplev(x[0], x[1], self.tck_pd)
+        f3 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_pd))
 
         g1 = -(x[0]-self.LowerBoundRcut)
 
@@ -86,9 +86,14 @@ class MyProblem(ElementwiseProblem):
 
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df = pd.read_csv(path,sep='\t',index_col=0)
+    # remove the nan column
     df = df.iloc[: , :-1]
-    dfMean = df.mean()
+    dfMean = df.iloc[0, :]
 
+    #dfMean = df.mean()
+    print(dfMean)
+    #quit()
+    print("columns",df.columns)
     points = dfMean.index.map(lambda x: x.strip('('))
     points = points.map(lambda x: x.strip(')'))
     pointsSplit = points.str.split(pat=", ", expand=False)
@@ -105,14 +110,18 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #z = np.abs(df4.iloc[:,0].to_numpy())
     # I wonder if interpolation has problem with abs value
     z = df4.iloc[:,0].to_numpy()
+    print(x)
+    print(y)
+    print(z)
+    print("lenx ", len(x))
+    print("leny ", len(y))
 
     z = np.reshape(z, (len(x),len(y)))
+    #z = np.reshape(z, (len(y),len(x)))
 
     print(x)
     print(y)
     print(z)
-
-
 
     sptbf_mins = {}
     sptgd_mins = {}
@@ -134,12 +143,33 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
     from scipy.interpolate import RectBivariateSpline
     from scipy import interpolate
-    rect_B_spline = RectBivariateSpline(x, y, z)
-    derivs = rect_B_spline.partial_derivative(1,1)
-    tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
 
+    rect_B_spline = RectBivariateSpline(x, y, z)
+    pd_RCut_varies_alpha_constant = [1,0]
+    pd_RCut_constant_alpha_varies = [0,1]
+
+    # OK - M.O. 2.0
+    derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_constant[0],pd_RCut_varies_alpha_constant[1])
+    # Bad - don't use this
+    #derivs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies[0],pd_RCut_constant_alpha_varies[1])
+
+    tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
+ 
+    print("Derivative data:")
+    print(tck_pd)
     #F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=True, fill_value=None)
     #f = lambda x: np.abs(F2(xi= x, method='linear'))
+    exampleX = 10
+    exampleY = 0.16
+    val = interpolate.bisplev(exampleX, exampleY, tck_pd)
+    print("deriv at ", exampleX, exampleY)
+    print(val)
+    exampleX2 = 10
+    exampleY2 = 0.0
+    val = interpolate.bisplev(exampleX2, exampleY2, tck_pd)
+    print("deriv", exampleX2, exampleY2)
+    print(val)
+
 
     problem = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
 
@@ -208,12 +238,18 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(f"Scale f1: [{fl[0]}, {fu[0]}]")
     print(f"Scale f2: [{fl[1]}, {fu[1]}]")
 
+    ### last working line
+
     plt.figure(figsize=(7, 5))
     plt.scatter(nF[:, 0], nF[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.title("Objective Space")
     plt.show()
+    
+    # if you use MO 1.0
+    #weights = np.array([0.2, 0.8])
+    weights = np.array([0.6, 0.1, 0.3])
 
-    weights = np.array([0.2, 0.8])
+
 
     from pymoo.decomposition.asf import ASF
 
@@ -222,18 +258,17 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     i = decomp.do(nF, 1/weights).argmin()
 
     print("Best regarding ASF: Point \ni = %s\nF = %s" % (i, F[i]))
-
     plt.figure(figsize=(7, 5))
     plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
     plt.scatter(F[i, 0], F[i, 1], marker="x", color="red", s=200)
     plt.title("Objective Space")
     plt.show()
-
     from pymoo.mcdm.pseudo_weights import PseudoWeights
 
     i = PseudoWeights(weights).do(nF)
 
     print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
+    print(X[i])
 
     plt.figure(figsize=(7, 5))
     plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
@@ -241,183 +276,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.title("Objective Space")
     plt.show()
 
-    quit()
 
-    """
-    # For gradient, make sure there is enough room to create the grid of points.
-    sizeOfRegionScale = 0.000
-    sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
-    sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
-    rranges = slice(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX, (x.max()-sizeOfRegionX - x.min()+sizeOfRegionX)/100), slice(y.min()+sizeOfRegionY, y.max()-sizeOfRegionX, (y.max()-sizeOfRegionX - y.min()+sizeOfRegionY)/100)
-    print(rranges)
-    bounds = [(x.min()+sizeOfRegionX, x.max()-sizeOfRegionX),(y.min()+sizeOfRegionY, y.max()-sizeOfRegionY)]
-    
-    # Single objective lambda function (ZError).
-    #f = lambda x: np.abs(F2(xi= x, method='linear'))
-    # x[0] is rcut value
-    # This will follow the 0 line down the gradient.  Hopefully all the results aren't
-    # just (10, some alpha) if there is no 0 point on the 10.
-    weightZError = 1.0
-    weightRCut = 1.0
-    minRCut = 1.0
-    tolerance = 0.0
-    # Multi-objective lambda function (ZError and MinRCut).
-    # f(x) = abs|z|; g(x) = (RCut - RCut_Min); RCut >= RCut_Min
-    # h(x) = f(x)*g(x)
-    # d/dx h(x) = f'(x)*g(x) + f(x)*g'(x)
-    f = lambda x: (np.abs(F2(xi= x, method='linear')))*(x[0]-minRCut)
-
-    #f = lambda x: np.sum(np.abs(F2(xi=tuple(np.meshgrid(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10), np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))), method='linear')))
-
-    F1 = lambda x: (np.abs(F2(xi= x, method='linear')))
-    F2 = lambda x: (x[0]-minRCut)
-
-    bf = brute(f, rranges, full_output=True, finish=None)
-    bfXY = np.array(bf[0])
-    print("best rcut", bfXY[0])
-    print("best alpha", bfXY[1])
-  
-    #x0 = (12, 0.12)
-    x0 = (bfXY[0], bfXY[1])
-    gd = minimize(f, x0, tol=tolerance,method='SLSQP', bounds=bounds)
-
-    #original_polynomial = [f(x0),bfXY[0]]
-    #gdMO = least_squares(poly_fun, x0=original_polynomial, args=(a, x))
-
-    print(gd)
-    gdXY = np.array(gd.x)
-    print(gdXY[0])
-    print(gdXY[1])
-    gdJacXY = np.array(gd.jac)
-    print(gdJacXY[0])
-    print(gdJacXY[1])
-
-    sptbf_mins["REF"] = bfXY
-    sptbf_auc["REF"] = bf[1]
-    sptgd_mins["REF"] = gd.x
-    sptgd_auc["REF"] = gd.fun
-
-
-    ZBF = F2(bfXY, method='linear')
-    ZGD = F2(gd.x, method='linear')
-
-    d = {'x': [gdXY[0]], 'y': [gdXY[1]], 'z':[ZGD]}
-
-
-    print("Calling shgo")
-    # Default method is SLSQP
-    #shgoOut = shgo(f, x0, method='SLSQP', bounds=bounds)
-    # Doesnt work for shgo
-    #bounds = [(x.min(), x.max()),(y.min(), y.max())]
-    # TypeError: shgo() got multiple values for argument 'bounds'
-    # Derivative-free, so can't use gradient here to rank.
-    sptshgoOut = shgo(f, bounds=bounds)
-    print(sptshgoOut)
-    sptshgo_mins["REF"] = sptshgoOut.x
-    sptshgo_auc["REF"] = sptshgoOut.fun
-    
-    print("Calling dual_annealing")
-    sptdual_annealingOutNoX0 = dual_annealing(f, bounds=bounds)
-    sptdual_annealingOut = dual_annealing(f, bounds=bounds, x0=x0)
-    print(sptdual_annealingOut)    
-    print("Calling dual_annealingNoX0")
-    print(sptdual_annealingOutNoX0)    
-    sptda_mins["REF"] = sptdual_annealingOut.x
-    sptdanx_mins["REF"] = sptdual_annealingOutNoX0.x
-
-    sptda_auc["REF"] = sptdual_annealingOut.fun
-    sptdanx_auc["REF"] = sptdual_annealingOutNoX0.fun
-
-    print("Calling differential_evolution")
-    sptdifferential_evolutionOut = differential_evolution(f, tol=tolerance,bounds=bounds, x0=x0)
-    sptdifferential_evolutionOutNox0 = differential_evolution(f, tol=tolerance,bounds=bounds)
-    print(sptdifferential_evolutionOut)  
-    print("sptdifferential_evolutionOut.keys()", sptdifferential_evolutionOut.keys())  
-    print(sptdifferential_evolutionOut.keys())   
-    print("Calling differential_evolutionX0")
-    print(sptdifferential_evolutionOutNox0) 
-    sptde_mins["REF"] = sptdifferential_evolutionOut.x
-    sptdenx_mins["REF"] = sptdifferential_evolutionOutNox0.x
-
-    sptde_auc["REF"] = sptdifferential_evolutionOut.fun
-    sptdenx_auc["REF"] = sptdifferential_evolutionOutNox0.fun
-
-
-
-    dfGD = pd.DataFrame(data=d)
-
-
-    print("ZBF : ", ZBF)
-    print("ZGD : ", ZGD)
-
-    print("sptbf_mins", sptbf_mins)
-    print("sptgd_mins", sptgd_mins)
-    print("sptshgo_mins", sptshgo_mins)
-    print("sptda_mins", sptda_mins)
-    print("sptde_mins", sptde_mins)
-    print("sptdanx_mins", sptdanx_mins)
-    print("sptdenx_mins", sptdenx_mins)
-
-
-    print("sptbf_auc", sptbf_auc)
-    print("sptgd_auc", sptgd_auc)
-    print("sptshgo_auc", sptshgo_auc)
-    print("sptda_auc", sptda_auc)
-    print("sptde_auc", sptde_auc)
-    print("sptdanx_auc", sptdanx_auc)
-    print("sptdenx_auc", sptdenx_auc)
-
-    goMethods = {}
-    goMethods["sptbf"] = sptbf_mins
-    goMethods["sptgd"] = sptgd_mins
-    goMethods["sptshgo"] = sptshgo_mins
-    goMethods["sptda"] = sptda_mins
-    goMethods["sptde"] = sptde_mins
-    goMethods["sptdanx"] = sptdanx_mins
-    goMethods["sptdenx"] = sptdenx_mins
-
-    goAUCs = {}
-
-    # AUC of single points are not what I'm using here.
-
-    goAUCs["sptbf"] = sptbf_auc
-    goAUCs["sptgd"] = sptgd_auc
-    goAUCs["sptshgo"] = sptshgo_auc
-    goAUCs["sptda"] = sptda_auc
-    goAUCs["sptde"] = sptde_auc
-    goAUCs["sptdanx"] = sptdanx_auc
-    goAUCs["sptdenx"] = sptdenx_auc
-
-    # Choose optimizer with smallest z-err
-    """
-    """
-    smallestAUC = 100000000
-    winningOptimizer = ""
-    sizeOfRegionScale = 0.000
-    for key, value in goAUCs.items():
-        #sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
-        #sizeOfRegionY = sizeOfRegionScale*(y.max()-y.min())
-    
-        print("method",key, value)
-        
-        if (value["REF"] < smallestAUC):
-            winningOptimizer = key
-            smallestAUC = value["REF"]
-    """
-    """
-    # Choose optimizer with smallest r-cut
-    
-    smallestRCut = 100000000
-    winningOptimizer = ""
-    for key, value in goMethods.items():
-    
-        print("method",key, value)
-        
-        if (value["REF"][0] < smallestRCut):
-            winningOptimizer = key
-            smallestRCut = value["REF"][0]
-    """
-        
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
 
@@ -426,11 +285,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         xx_forplotting = np.linspace(x.min(), x.max(), 1000)
         yy_forplotting = np.linspace(y.min(), y.max(), 1000)
 
-        X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting, indexing='xy')
+        #X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting, indexing='xy')
 
         iteractivefig = go.Figure()
         #iteractivefig.add_surface(autocolorscale=True, x=X, y=Y, z=F2((X, Y), method='linear'))
-        iteractivefig.add_surface(autocolorscale=True, x=xx_forplotting, y=yy_forplotting, z=F2((X_forplotting, Y_forplotting), method='linear'))
+        iteractivefig.add_surface(autocolorscale=True, x=xx_forplotting, y=yy_forplotting, z=rect_B_spline(xx_forplotting, yy_forplotting, grid=True))
         #iteractivefig.add_surface(autocolorscale=True, x=X.ravel(), y=Y.ravel(), z=F2((X, Y), method='linear').ravel())
         #iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=True, margin=dict(l=65, r=65, b=65, t=65))
@@ -465,6 +324,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
             )
         """
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
+    quit()
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
