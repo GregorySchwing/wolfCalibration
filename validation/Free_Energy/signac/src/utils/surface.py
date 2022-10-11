@@ -277,19 +277,47 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.show()
 
 
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    xx_forplotting = np.linspace(x.min(), x.max(), 1000)
+    yy_forplotting = np.linspace(y.min(), y.max(), 1000)
+    #X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting, indexing='xy')
+    X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting)
+    #np.ravel(X_forplotting)
+    #np.ravel(Y_forplotting)
+    zs = np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel()))
+    Z = zs.reshape(X_forplotting.shape)
+
+    ax.plot_surface(X_forplotting, Y_forplotting, Z)
+
+    ax.set_xlabel('Rcut')
+    ax.set_ylabel('Alpha')
+    ax.set_zlabel('Err')
+
+    plt.show()
+
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
+
         xx_forplotting = np.linspace(x.min(), x.max(), 1000)
         yy_forplotting = np.linspace(y.min(), y.max(), 1000)
 
+        xx_forplotting = np.linspace(x.min(), x.max(), 1000)
+        yy_forplotting = np.linspace(y.min(), y.max(), 1000)
         #X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting, indexing='xy')
+        X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting)
+        #np.ravel(X_forplotting)
+        #np.ravel(Y_forplotting)
+        zs = np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel()))
+        Z = zs.reshape(X_forplotting.shape)
 
         iteractivefig = go.Figure()
         #iteractivefig.add_surface(autocolorscale=True, x=X, y=Y, z=F2((X, Y), method='linear'))
-        iteractivefig.add_surface(autocolorscale=True, x=xx_forplotting, y=yy_forplotting, z=rect_B_spline(xx_forplotting, yy_forplotting, grid=True))
+        iteractivefig.add_surface(autocolorscale=True, x=X_forplotting, y=Y_forplotting, z=Z)
         #iteractivefig.add_surface(autocolorscale=True, x=X.ravel(), y=Y.ravel(), z=F2((X, Y), method='linear').ravel())
         #iteractivefig.add_surface(x=xi_forplotting,y=yi_forplotting,z=Z2_forplotting)
         layout = go.Layout(title=title,autosize=True, margin=dict(l=65, r=65, b=65, t=65))
