@@ -19,6 +19,11 @@ from scipy.interpolate import griddata
 from scipy.interpolate import Rbf, interp2d, RegularGridInterpolator
 import scipy
 from scipy.optimize import OptimizeResult, least_squares
+from  scipy.interpolate import UnivariateSpline
+def merge(list1, list2):
+      
+    merged_list = [(list1[i], list2[i]) for i in range(0, len(list1))]
+    return merged_list
 
 def poly_fun(coeffs, a, x):
     predicted = 10**np.polynomial.polynomial.polyval(np.log10(a), coeffs)
@@ -48,6 +53,36 @@ def reject_outliers_median(data, m = 2.):
     mdev = np.median(d)
     s = d/mdev if mdev else 0.
     return data[s<m]
+
+from pymoo.core.problem import ElementwiseProblem
+from scipy.interpolate import RectBivariateSpline
+from scipy import interpolate
+class MyProblem(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, LowerBoundRcut):
+        super().__init__(n_var=2,
+                         n_obj=3,
+                         n_ieq_constr=1,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck_pd = tck_pd
+        self.RCutMin = RCutMin
+        self.LowerBoundRcut = LowerBoundRcut
+    def _evaluate(self, x, out, *args, **kwargs):
+        # Minimize Relative Error
+        f1 = np.abs(self.rect_B_spline.ev(x[0], x[1]))
+        # Minimize RCut
+        f2 = (x[0]-self.RCutMin)
+        # Minimize Gradient
+        f3 = interpolate.bisplev(x[0], x[1], self.tck_pd)
+
+        g1 = -(x[0]-self.LowerBoundRcut)
+
+        out["F"] = [f1, f2, f3]
+        out["G"] = [g1]
+
+
 
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df = pd.read_csv(path,sep='\t',index_col=0)
@@ -97,8 +132,118 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     sptdenx_auc = {}
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
     #F2 = interpolate.RegularGridInterpolator((y_raw,x_raw), z_raw)
-    F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=True, fill_value=None)
-    
+    from scipy.interpolate import RectBivariateSpline
+    from scipy import interpolate
+    rect_B_spline = RectBivariateSpline(x, y, z)
+    derivs = rect_B_spline.partial_derivative(1,1)
+    tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
+
+    #F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=True, fill_value=None)
+    #f = lambda x: np.abs(F2(xi= x, method='linear'))
+
+    problem = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+
+    from pymoo.algorithms.moo.nsga2 import NSGA2
+    from pymoo.operators.crossover.sbx import SBX
+    from pymoo.operators.mutation.pm import PM
+    from pymoo.operators.sampling.rnd import FloatRandomSampling
+
+    algorithm = NSGA2(
+        pop_size=40,
+        n_offsprings=10,
+        sampling=FloatRandomSampling(),
+        crossover=SBX(prob=0.9, eta=15),
+        mutation=PM(eta=20),
+        eliminate_duplicates=True
+    )
+
+    from pymoo.termination import get_termination
+
+    termination = get_termination("n_gen", 400)
+
+    from pymoo.optimize import minimize
+
+    res = minimize(problem,
+                algorithm,
+                termination,
+                seed=1,
+                save_history=True,
+                verbose=True)
+
+    X = res.X
+    F = res.F
+
+    print(X)
+    print(F)
+
+    import matplotlib.pyplot as plt
+    xl, xu = problem.bounds()
+    plt.figure(figsize=(7, 5))
+    plt.scatter(X[:, 0], X[:, 1], s=30, facecolors='none', edgecolors='r')
+    plt.xlim(xl[0], xu[0])
+    plt.ylim(xl[1], xu[1])
+    plt.title("Design Space")
+    plt.show()
+
+    plt.figure(figsize=(7, 5))
+    plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
+    plt.title("Objective Space")
+    plt.show()
+
+    approx_ideal = F.min(axis=0)
+    approx_nadir = F.max(axis=0)
+
+    plt.figure(figsize=(7, 5))
+    plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
+    plt.scatter(approx_ideal[0], approx_ideal[1], facecolors='none', edgecolors='red', marker="*", s=100, label="Ideal Point (Approx)")
+    plt.scatter(approx_nadir[0], approx_nadir[1], facecolors='none', edgecolors='black', marker="p", s=100, label="Nadir Point (Approx)")
+    plt.title("Objective Space")
+    plt.legend()
+    plt.show()
+
+    nF = (F - approx_ideal) / (approx_nadir - approx_ideal)
+
+    fl = nF.min(axis=0)
+    fu = nF.max(axis=0)
+    print(f"Scale f1: [{fl[0]}, {fu[0]}]")
+    print(f"Scale f2: [{fl[1]}, {fu[1]}]")
+
+    plt.figure(figsize=(7, 5))
+    plt.scatter(nF[:, 0], nF[:, 1], s=30, facecolors='none', edgecolors='blue')
+    plt.title("Objective Space")
+    plt.show()
+
+    weights = np.array([0.2, 0.8])
+
+    from pymoo.decomposition.asf import ASF
+
+    decomp = ASF()
+
+    i = decomp.do(nF, 1/weights).argmin()
+
+    print("Best regarding ASF: Point \ni = %s\nF = %s" % (i, F[i]))
+
+    plt.figure(figsize=(7, 5))
+    plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
+    plt.scatter(F[i, 0], F[i, 1], marker="x", color="red", s=200)
+    plt.title("Objective Space")
+    plt.show()
+
+    from pymoo.mcdm.pseudo_weights import PseudoWeights
+
+    i = PseudoWeights(weights).do(nF)
+
+    print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
+
+    plt.figure(figsize=(7, 5))
+    plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
+    plt.scatter(F[i, 0], F[i, 1], marker="x", color="red", s=200)
+    plt.title("Objective Space")
+    plt.show()
+
+    quit()
+
+    """
     # For gradient, make sure there is enough room to create the grid of points.
     sizeOfRegionScale = 0.000
     sizeOfRegionX = sizeOfRegionScale*(x.max()-x.min())
@@ -117,9 +262,15 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     minRCut = 1.0
     tolerance = 0.0
     # Multi-objective lambda function (ZError and MinRCut).
-    f = lambda x: (weightZError*(np.abs(F2(xi= x, method='linear'))) + (np.abs(F2(xi= x, method='linear')))*(x[0]-minRCut))
+    # f(x) = abs|z|; g(x) = (RCut - RCut_Min); RCut >= RCut_Min
+    # h(x) = f(x)*g(x)
+    # d/dx h(x) = f'(x)*g(x) + f(x)*g'(x)
+    f = lambda x: (np.abs(F2(xi= x, method='linear')))*(x[0]-minRCut)
 
     #f = lambda x: np.sum(np.abs(F2(xi=tuple(np.meshgrid(np.linspace(x[0]-sizeOfRegionX, x[0]+sizeOfRegionX, 10), np.linspace(x[1]-sizeOfRegionY, x[1]+sizeOfRegionY, 10))), method='linear')))
+
+    F1 = lambda x: (np.abs(F2(xi= x, method='linear')))
+    F2 = lambda x: (x[0]-minRCut)
 
     bf = brute(f, rranges, full_output=True, finish=None)
     bfXY = np.array(bf[0])
@@ -239,6 +390,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     # Choose optimizer with smallest z-err
     """
+    """
     smallestAUC = 100000000
     winningOptimizer = ""
     sizeOfRegionScale = 0.000
@@ -252,7 +404,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
             winningOptimizer = key
             smallestAUC = value["REF"]
     """
-
+    """
     # Choose optimizer with smallest r-cut
     
     smallestRCut = 100000000
@@ -264,7 +416,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         if (value["REF"][0] < smallestRCut):
             winningOptimizer = key
             smallestRCut = value["REF"][0]
-    
+    """
         
     if(plotSuface):
         title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
@@ -291,7 +443,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     margin=dict(r=20, b=10, l=10, t=10))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
-        
+        """
         for key, value in goMethods.items():
             print("method",key, value)
             xvals = [item[0] for item in value.values()]
@@ -311,7 +463,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                             hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                             showlegend=True)
             )
-        
+        """
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
