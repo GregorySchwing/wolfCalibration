@@ -281,6 +281,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
     print(X[i])
+    x_popts, y_popts = zip(X[i])
 
     """
     plt.figure(figsize=(7, 5))
@@ -334,11 +335,20 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         #print(x_opts)
         #print(y_opts)
         iteractivefig.add_trace(
+            go.Scatter3d(x=x_popts,
+                        y=y_popts,
+                        z=rect_B_spline.ev(x_popts,y_popts),
+                        mode='markers',
+                        name="M.O. 3 - psuedo",
+                        #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
+                        showlegend=True)
+        )
+        iteractivefig.add_trace(
             go.Scatter3d(x=x_opts,
                         y=y_opts,
                         z=rect_B_spline.ev(x_opts,y_opts),
                         mode='markers',
-                        name="M.O. 2",
+                        name="M.O. 3",
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
@@ -357,7 +367,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
     # The question is which of the above optimizations to use.  For now, I am going with "REF" AUC as the metric.
 
-    print("GD_rcut",x_opts[0])
-    print("GD_alpha",y_opts[0])
-    print("GD_relerr",rect_B_spline.ev(x_opts,y_opts)[0])
-    return (("GD_rcut",x_opts[0]), ("GD_alpha",y_opts[0]), ("GD_relerr",rect_B_spline.ev(x_opts,y_opts)[0]))
+    print("GD_rcut",x_popts[0])
+    print("GD_alpha",y_popts[0])
+    print("GD_relerr",rect_B_spline.ev(x_popts,y_popts)[0])
+    return (("GD_rcut",x_popts[0]), ("GD_alpha",y_popts[0]), ("GD_relerr",rect_B_spline.ev(x_popts,y_popts)[0]))
