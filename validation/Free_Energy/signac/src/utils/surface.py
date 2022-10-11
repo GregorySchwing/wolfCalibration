@@ -61,7 +61,7 @@ class MyProblem(ElementwiseProblem):
 
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, LowerBoundRcut):
         super().__init__(n_var=2,
-                         n_obj=3,
+                         n_obj=2,
                          n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
@@ -78,8 +78,9 @@ class MyProblem(ElementwiseProblem):
         f3 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_pd))
 
         g1 = -(x[0]-self.LowerBoundRcut)
+        out["F"] = [f1, f2]
 
-        out["F"] = [f1, f2, f3]
+        #out["F"] = [f1, f2, f3]
         out["G"] = [g1]
 
 
@@ -150,9 +151,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # Bad - don't use this
     #derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_constant[0],pd_RCut_varies_alpha_constant[1])
     # OK - M.O. 2.0
-    #derivs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies[0],pd_RCut_constant_alpha_varies[1])
+    derivs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies[0],pd_RCut_constant_alpha_varies[1])
     # M.O. 3.0
-    derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
+    #derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
 
     tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
  
@@ -247,8 +248,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.show()
     
     # if you use MO 1.0
-    #weights = np.array([0.2, 0.8])
-    weights = np.array([0.8, 0.1, 0.1])
+    weights = np.array([0.5, 0.5])
+    #weights = np.array([0.333, 0.333, 0.333])
 
 
 
@@ -264,6 +265,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.scatter(F[i, 0], F[i, 1], marker="x", color="red", s=200)
     plt.title("Objective Space")
     plt.show()
+
+    x_opts, y_opts = zip(X[i])
+    print(x_opts)
+    print(y_opts)
+
     from pymoo.mcdm.pseudo_weights import PseudoWeights
 
     i = PseudoWeights(weights).do(nF)
@@ -318,48 +324,34 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         )
         """
         
-        x_opts, y_opts = zip(X[i])
-        print(x_opts)
-        print(y_opts)
+        #x_opts, y_opts = zip(X[i])
+        #print(x_opts)
+        #print(y_opts)
         iteractivefig.add_trace(
             go.Scatter3d(x=x_opts,
                         y=y_opts,
-                        z=rect_B_spline.ev(x_opts,y_opts))
-                        #,mode='markers',
-                        #name=key,
+                        z=rect_B_spline.ev(x_opts,y_opts),
+                        mode='markers',
+                        name="M.O. 2",
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
-                        #showlegend=True)
+                        showlegend=True)
         )
-        """
-        for key, value in goMethods.items():
-            print("method",key, value)
-            xvals = [item[0] for item in value.values()]
-            yvals = [item[1] for item in value.values()]
-            zvals = []
-            for x,y in zip(xvals,yvals):
-                zvals.append(F2((x, y), method='linear'))
-            print("x:", xvals)
-            print("y:", yvals)
-            print("z:", zvals)
-            iteractivefig.add_trace(
-                go.Scatter3d(x=xvals,
-                            y=yvals,
-                            z=zvals,
-                            mode='markers',
-                            name=key,
-                            hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
-                            showlegend=True)
-            )
-        """
+        iteractivefig.add_trace(
+            go.Scatter3d(x=[14],
+                        y=[0.12],
+                        z=rect_B_spline.ev(14,0.12),
+                        mode='markers',
+                        name="Rahbari's choice",
+                        #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
+                        showlegend=True)
+        )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
-    quit()
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
     # The question is which of the above optimizations to use.  For now, I am going with "REF" AUC as the metric.
 
-    print("GD_rcut",goMethods[winningOptimizer]["REF"][0])
-    print("GD_alpha",goMethods[winningOptimizer]["REF"][1])
-    print("GD_relerr",goAUCs[winningOptimizer]["REF"] )
-    print("WINNING_OPT",winningOptimizer)
-    return ( ("GD_rcut",goMethods[winningOptimizer]["REF"][0]), ("GD_alpha",goMethods[winningOptimizer]["REF"][1]), ("GD_relerr",F2(goMethods[winningOptimizer]["REF"])), ("WINNING_OPT",winningOptimizer) )
+    print("GD_rcut",x_opts[0])
+    print("GD_alpha",y_opts[0])
+    print("GD_relerr",rect_B_spline.ev(x_opts,y_opts)[0])
+    return (("GD_rcut",x_opts[0]), ("GD_alpha",y_opts[0]), ("GD_relerr",rect_B_spline.ev(x_opts,y_opts)[0]))

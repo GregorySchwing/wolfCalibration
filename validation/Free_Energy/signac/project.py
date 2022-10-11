@@ -55,8 +55,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -64,8 +64,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 # local bin paths
-#gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
  
 
@@ -1398,17 +1398,14 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                     model2BestWolfAlphaRCut = pickle.load(handle)
                 
                 bestModel = ""
-                bestOpt = ""
                 smallestRelErr = 1.0
                 largestRelErr = 0
-
                 bestRCut = 0
                 bestAlpha = 0
 
                 #print("Replica :", job.sp.replica)
                 for model in model2BestWolfAlphaRCut:
                     print("Model :", model)
-                    print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
                     print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
                     print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
                     print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
@@ -1417,23 +1414,17 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
                         bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                         bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                        bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
                     if (model2BestWolfAlphaRCut[model]['GD_relerr']  > largestRelErr):
                         worstModel = model
                         largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
                         worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
                         worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                        worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
                 print("worstModel :", worstModel)
-                print("worstOpt :", worstOpt)
-
                 print("largestRelErr :", largestRelErr)
                 print("worstRCut :", worstRCut)
                 print("worstAlpha :", worstAlpha)
 
                 print("bestModel :", bestModel)
-                print("bestOpt :", bestOpt)
-
                 print("smallestRelErr :", smallestRelErr)
                 print("bestRCut :", bestRCut)
                 print("bestAlpha :", bestAlpha)
