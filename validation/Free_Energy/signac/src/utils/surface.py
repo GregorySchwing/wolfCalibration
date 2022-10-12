@@ -454,17 +454,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     X_pareto_forplotting, Y_pareto_forplotting = np.meshgrid(xx_pareto, yy_pareto, indexing="ij")
 
-
-
-    #zs_pareto = np.array(sbsp.ev(X_pareto_forplotting.ravel(), Y_pareto_forplotting.ravel()))
-    #Z_pareto = zs_pareto.reshape(X_pareto_forplotting.shape)
-    
+    # Pareto front is an irregular grid.
     from scipy.interpolate import griddata
     grid_z0 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='nearest')
     grid_z1 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='linear')
 
     grid_z2 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='cubic')
-
+    """
     plt.subplot(221)
 
     #plt.imshow(func(X_pareto_forplotting, Y_pareto_forplotting).T, extent=(0,1,0,1), origin='lower')
@@ -494,6 +490,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.gcf().set_size_inches(6, 6)
 
     plt.show()
+    """
 
     iteractivefig = go.Figure()
     iteractivefig.add_surface(autocolorscale=True, x=X_pareto_forplotting, y=Y_pareto_forplotting, z=grid_z2)
@@ -507,9 +504,24 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                 margin=dict(r=20, b=10, l=10, t=10))
     iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                 highlightcolor="limegreen", project_z=True))
+    iteractivefig.add_trace(
+        go.Scatter3d(x=F[:, 0],
+                    y=F[:, 1],
+                    z=F[:, 2],
+                    mode='markers',
+                    name="Functionals",
+                    marker=dict(
+                        color='LightSkyBlue',
+                        size=4,
+                        line=dict(
+                            color='LightSkyBlue',
+                            width=0.5
+                        )
+                    ),
+                    showlegend=True)
+    )
+    pio.write_html(iteractivefig, file=paretoFrontFigPath+".html", auto_open=False)
 
-    pio.write_html(iteractivefig, file=paretoFrontFigPath+".html", auto_open=True)
-    quit()
     from pymoo.indicators.igd_plus import IGDPlus
 
     metric = IGDPlus(pf_a, zero_to_one=True)
