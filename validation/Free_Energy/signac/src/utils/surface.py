@@ -653,6 +653,15 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
+        iteractivefig.add_trace(
+            go.Scatter3d(x=[12.286524514052358],
+                        y=[0.1893972369539617],
+                        z=rect_B_spline.ev(12.286524514052358,0.1893972369539617),
+                        mode='markers',
+                        name="Best Known",
+                        #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
+                        showlegend=True)
+        )
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
