@@ -20,6 +20,20 @@ from scipy.interpolate import Rbf, interp2d, RegularGridInterpolator
 import scipy
 from scipy.optimize import OptimizeResult, least_squares
 from  scipy.interpolate import UnivariateSpline
+
+def pareto_frontier_multi(myArray):
+    # Sort on first dimension
+    myArray = myArray[myArray[:,0].argsort()]
+    # Add first row to pareto_frontier
+    pareto_frontier = myArray[0:1,:]
+    # Test next row against the last row in pareto_frontier
+    for row in myArray[1:,:]:
+        if sum([row[x] >= pareto_frontier[-1][x]
+                for x in range(len(row))]) == len(row):
+            # If it is better on all features add the row to pareto_frontier
+            pareto_frontier = np.concatenate((pareto_frontier, [row]))
+    return pareto_frontier
+
 def merge(list1, list2):
       
     merged_list = [(list1[i], list2[i]) for i in range(0, len(list1))]
@@ -43,6 +57,68 @@ def add_point(ax, x, y, z, fc = None, ec = None, radius = 0.005, labelArg = None
 		art3d.pathpatch_2d_to_3d(p, z=z0, zdir=a)
 		i = i + 1
 
+def keep_efficient(pts):
+    'returns Pareto efficient row subset of pts'
+    # sort points by decreasing sum of coordinates
+    pts = pts[pts.sum(1).argsort()[::-1]]
+    # initialize a boolean mask for undominated points
+    # to avoid creating copies each iteration
+    undominated = np.ones(pts.shape[0], dtype=bool)
+    for i in range(pts.shape[0]):
+        # process each point in turn
+        n = pts.shape[0]
+        if i >= n:
+            break
+        # find all points not dominated by i
+        # since points are sorted by coordinate sum
+        # i cannot dominate any points in 1,...,i-1
+        undominated[i+1:n] = (pts[i+1:] >= pts[i]).any(1) 
+        # keep points undominated so far
+        pts = pts[undominated[:n]]
+    return pts
+
+# Faster than is_pareto_efficient_simple, but less readable.
+def is_pareto_efficient(costs, return_mask = True):
+    """
+    Find the pareto-efficient points
+    :param costs: An (n_points, n_costs) array
+    :param return_mask: True to return a mask
+    :return: An array of indices of pareto-efficient points.
+        If return_mask is True, this will be an (n_points, ) boolean array
+        Otherwise it will be a (n_efficient_points, ) integer array of indices.
+    """
+    is_efficient = np.arange(costs.shape[0])
+    n_points = costs.shape[0]
+    next_point_index = 0  # Next index in the is_efficient array to search for
+    while next_point_index<len(costs):
+        nondominated_point_mask = np.any(costs<costs[next_point_index], axis=1)
+        nondominated_point_mask[next_point_index] = True
+        is_efficient = is_efficient[nondominated_point_mask]  # Remove dominated points
+        costs = costs[nondominated_point_mask]
+        next_point_index = np.sum(nondominated_point_mask[:next_point_index])+1
+    if return_mask:
+        is_efficient_mask = np.zeros(n_points, dtype = bool)
+        is_efficient_mask[is_efficient] = True
+        return is_efficient_mask
+    else:
+        return is_efficient
+
+def cull(pts, dominates):
+    dominated = []
+    cleared = []
+    remaining = pts
+    while remaining:
+        candidate = remaining[0]
+        new_remaining = []
+        for other in remaining[1:]:
+            [new_remaining, dominated][dominates(candidate, other)].append(other)
+        if not any(dominates(other, candidate) for other in new_remaining):
+            cleared.append(candidate)
+        else:
+            dominated.append(candidate)
+        remaining = new_remaining
+    return cleared, dominated
+
 #https://stackoverflow.com/questions/11686720/is-there-a-numpy-builtin-to-reject-outliers-from-a-list
 def reject_outliers(data, m=2):
     return [abs(data - np.mean(data)) < m * np.std(data)]
@@ -55,6 +131,7 @@ def reject_outliers_median(data, m = 2.):
     return data[s<m]
 
 from pymoo.core.problem import ElementwiseProblem
+from pymoo.util.misc import stack
 from scipy.interpolate import RectBivariateSpline
 from scipy import interpolate
 class MyProblem(ElementwiseProblem):
@@ -68,6 +145,9 @@ class MyProblem(ElementwiseProblem):
         self.rect_B_spline = rect_B_spline
         self.tck_pd = tck_pd
         self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
         self.LowerBoundRcut = LowerBoundRcut
     def _evaluate(self, x, out, *args, **kwargs):
         # Minimize Relative Error
@@ -83,7 +163,28 @@ class MyProblem(ElementwiseProblem):
         out["F"] = [f1, f2, f3]
         out["G"] = [g1]
 
+    def _calc_pareto_front(self, flatten=True, *args, **kwargs):
 
+        num_pts = 100
+        rcuts = np.linspace(self.RCutMin, self.RCutMax, num_pts)
+        alphas = np.linspace(self.AlphaMin, self.AlphaMax, num_pts)
+        rcuts_g, alphas_g = np.meshgrid(rcuts, alphas)
+
+        points = np.array(list(zip(rcuts_g.ravel(), alphas_g.ravel())))
+
+
+        F1_a_costs = np.array(np.abs(self.rect_B_spline.ev(rcuts_g.ravel(), alphas_g.ravel())))
+        F2_a_costs = np.array(rcuts_g.ravel())-self.RCutMin
+        derivLambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_pd))
+
+        F3_a_costs = np.array([derivLambda(i) for i in points])
+        F3_a_costs = F3_a_costs
+        costs = np.array(list(zip(F1_a_costs, F2_a_costs, F3_a_costs)))
+        pass2Method = np.array(list(zip(costs,points)))
+        boolean_array = is_pareto_efficient(costs)
+        print(boolean_array)
+        #pf_a = pareto_frontier_multi(costs)
+        return costs[boolean_array]
 
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     df = pd.read_csv(path,sep='\t',index_col=0)
@@ -182,7 +283,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     algorithm = NSGA2(
         pop_size=40,
-        n_offsprings=10,
+        n_offsprings=100,
         sampling=FloatRandomSampling(),
         crossover=SBX(prob=0.9, eta=15),
         mutation=PM(eta=20),
@@ -191,9 +292,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     from pymoo.termination import get_termination
 
-    termination = get_termination("n_gen", 400)
+    termination = get_termination("n_gen", 40)
 
     from pymoo.optimize import minimize
+
 
     res = minimize(problem,
                 algorithm,
@@ -204,11 +306,73 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     X = res.X
     F = res.F
-
+    hist = res.history
     print(X)
     print(F)
 
-    import matplotlib.pyplot as plt
+
+    n_evals = []             # corresponding number of function evaluations\
+    hist_F = []              # the objective space values in each generation
+    hist_cv = []             # constraint violation in each generation
+    hist_cv_avg = []         # average constraint violation in the whole population
+
+    for algo in hist:
+
+        # store the number of function evaluations
+        n_evals.append(algo.evaluator.n_eval)
+
+        # retrieve the optimum from the algorithm
+        opt = algo.opt
+
+        # store the least contraint violation and the average in each population
+        hist_cv.append(opt.get("CV").min())
+        hist_cv_avg.append(algo.pop.get("CV").mean())
+
+        # filter out only the feasible and append and objective space values
+        feas = np.where(opt.get("feasible"))[0]
+        hist_F.append(opt.get("F")[feas])
+
+    k = np.where(np.array(hist_cv) <= 0.0)[0].min()
+    print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+
+
+    # replace this line by `hist_cv` if you like to analyze the least feasible optimal solution and not the population
+    vals = hist_cv_avg
+
+    k = np.where(np.array(vals) <= 0.0)[0].min()
+    print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
+
+    plt.figure(figsize=(7, 5))
+    plt.plot(n_evals, vals,  color='black', lw=0.7, label="Avg. CV of Pop")
+    plt.scatter(n_evals, vals,  facecolor="none", edgecolor='black', marker="p")
+    plt.axvline(n_evals[k], color="red", label="All Feasible", linestyle="--")
+    plt.title("Convergence")
+    plt.xlabel("Function Evaluations")
+    plt.legend()
+    plt.show()
+
+
+    approx_ideal = F.min(axis=0)
+    approx_nadir = F.max(axis=0)
+
+    from pymoo.indicators.hv import Hypervolume
+
+    metric = Hypervolume(ref_point= np.array([1.1, 1.1, 1.1]),
+                        norm_ref_point=False,
+                        zero_to_one=True,
+                        ideal=approx_ideal,
+                        nadir=approx_nadir)
+
+    hv = [metric.do(_F) for _F in hist_F]
+
+    plt.figure(figsize=(7, 5))
+    plt.plot(n_evals, hv,  color='black', lw=0.7, label="Avg. CV of Pop")
+    plt.scatter(n_evals, hv,  facecolor="none", edgecolor='black', marker="p")
+    plt.title("Convergence")
+    plt.xlabel("Function Evaluations")
+    plt.ylabel("Hypervolume")
+    plt.show()
+
     xl, xu = problem.bounds()
     
     """
@@ -248,7 +412,35 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.title("Objective Space")
     plt.show()
     """
+    pf_a = problem.pareto_front(use_cache=False, flatten=False)
 
+    # Creating figure
+    fig = plt.figure(figsize = (10, 7))
+    ax = plt.axes(projection ="3d")
+    # Creating plot
+    ax.scatter3D(pf_a[:, 0], pf_a[:, 1], pf_a[:, 2], color = "red", label="Pareto-front")
+    ax.scatter3D(F[:, 0], F[:, 1], F[:, 2], color = "blue", label="Functionals")
+    plt.title("Objective Space")
+    plt.legend()
+    plt.show()
+
+    from pymoo.indicators.igd_plus import IGDPlus
+
+    metric = IGDPlus(pf_a, zero_to_one=True)
+
+    igd = [metric.do(_F) for _F in hist_F]
+
+    plt.plot(n_evals, igd,  color='black', lw=0.7, label="Avg. CV of Pop")
+    plt.scatter(n_evals, igd,  facecolor="none", edgecolor='black', marker="p")
+    plt.axhline(10**-2, color="red", label="10^-2", linestyle="--")
+    plt.title("Convergence")
+    plt.xlabel("Function Evaluations")
+    plt.ylabel("IGD+")
+    plt.yscale("log")
+    plt.legend()
+    plt.show()
+
+    quit()
 
     # if you use MO 1.0
     #weights = np.array([0.5, 0.5])
