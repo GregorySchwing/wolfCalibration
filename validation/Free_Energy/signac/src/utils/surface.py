@@ -282,7 +282,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     from pymoo.operators.sampling.rnd import FloatRandomSampling
 
     algorithm = NSGA2(
-        pop_size=4000,
+        pop_size=40,
         n_offsprings=100,
         sampling=FloatRandomSampling(),
         crossover=SBX(prob=0.9, eta=15),
@@ -292,7 +292,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     from pymoo.termination import get_termination
 
-    termination = get_termination("n_gen", 4000)
+    termination = get_termination("n_gen", 40)
 
     from pymoo.optimize import minimize
 
@@ -435,6 +435,81 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     paretoFrontFigPath = os.path.join(prefix[0], titleParetoFront)
     plt.savefig(paretoFrontFigPath)
     
+    sbsp=interpolate.SmoothBivariateSpline(pf_a[:, 0], pf_a[:, 1], pf_a[:, 2])
+    pf_x_min = (pf_a[:, 0]).min()
+    pf_x_max = (pf_a[:, 0]).max()
+    pf_y_min = (pf_a[:, 1]).min()
+    pf_y_max = (pf_a[:, 1]).max()
+    pf_z_min = (pf_a[:, 2]).min()
+    pf_z_max = (pf_a[:, 2]).max()
+    
+    print("pf_x_min",pf_x_min)
+    print("pf_x_max",pf_x_max)
+    print("pf_y_min",pf_y_min)
+    print("pf_y_max",pf_y_max)
+    print("pf_z_min",pf_z_min)
+    print("pf_z_max",pf_z_max)
+    xx_pareto = np.linspace(pf_x_min, pf_x_max, 1000)
+    yy_pareto = np.linspace(pf_y_min, pf_y_max, 1000)
+
+    X_pareto_forplotting, Y_pareto_forplotting = np.meshgrid(xx_pareto, yy_pareto, indexing="ij")
+
+
+
+    #zs_pareto = np.array(sbsp.ev(X_pareto_forplotting.ravel(), Y_pareto_forplotting.ravel()))
+    #Z_pareto = zs_pareto.reshape(X_pareto_forplotting.shape)
+    
+    from scipy.interpolate import griddata
+    grid_z0 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='nearest')
+    grid_z1 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='linear')
+
+    grid_z2 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='cubic')
+
+    plt.subplot(221)
+
+    #plt.imshow(func(X_pareto_forplotting, Y_pareto_forplotting).T, extent=(0,1,0,1), origin='lower')
+
+    plt.plot(pf_a[:,0], pf_a[:,1], 'k.', ms=1)
+
+    plt.title('Original')
+
+    plt.subplot(222)
+
+    plt.imshow(grid_z0.T, extent=(0,1,0,1), origin='lower')
+
+    plt.title('Nearest')
+
+    plt.subplot(223)
+
+    plt.imshow(grid_z1.T, extent=(0,1,0,1), origin='lower')
+
+    plt.title('Linear')
+
+    plt.subplot(224)
+
+    plt.imshow(grid_z2.T, extent=(0,1,0,1), origin='lower')
+
+    plt.title('Cubic')
+
+    plt.gcf().set_size_inches(6, 6)
+
+    plt.show()
+
+    iteractivefig = go.Figure()
+    iteractivefig.add_surface(autocolorscale=True, x=X_pareto_forplotting, y=Y_pareto_forplotting, z=grid_z2)
+    layout = go.Layout(title=titleParetoFront,autosize=True, margin=dict(l=65, r=65, b=65, t=65))
+    iteractivefig.update_layout(layout)
+    iteractivefig.update_layout(scene = dict(
+                xaxis_title='F1',
+                yaxis_title='F2',
+                zaxis_title='F3'),
+                width=700,
+                margin=dict(r=20, b=10, l=10, t=10))
+    iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
+                                highlightcolor="limegreen", project_z=True))
+
+    pio.write_html(iteractivefig, file=paretoFrontFigPath+".html", auto_open=True)
+    quit()
     from pymoo.indicators.igd_plus import IGDPlus
 
     metric = IGDPlus(pf_a, zero_to_one=True)
