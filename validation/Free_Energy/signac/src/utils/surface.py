@@ -282,7 +282,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     from pymoo.operators.sampling.rnd import FloatRandomSampling
 
     algorithm = NSGA2(
-        pop_size=4000,
+        pop_size=400,
         n_offsprings=100,
         sampling=FloatRandomSampling(),
         crossover=SBX(prob=0.9, eta=15),
@@ -292,7 +292,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     from pymoo.termination import get_termination
 
-    termination = get_termination("n_gen", 4000)
+    termination = get_termination("n_gen", 1000)
 
     from pymoo.optimize import minimize
 
