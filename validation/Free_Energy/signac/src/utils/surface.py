@@ -342,6 +342,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     k = np.where(np.array(vals) <= 0.0)[0].min()
     print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
 
+    """
     plt.figure(figsize=(7, 5))
     plt.plot(n_evals, vals,  color='black', lw=0.7, label="Avg. CV of Pop")
     plt.scatter(n_evals, vals,  facecolor="none", edgecolor='black', marker="p")
@@ -350,7 +351,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.xlabel("Function Evaluations")
     plt.legend()
     plt.show()
-
+    """
 
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
@@ -371,7 +372,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.title("Convergence")
     plt.xlabel("Function Evaluations")
     plt.ylabel("Hypervolume")
-    plt.show()
+    #plt.show()
+    
+    titleHyperVolume = model+"_"+wolfKind+"_"+potential+"_Box_"+box+"HyperVolume"
+    prefix = os.path.split(path)
+    HyperVolumeFigPath = os.path.join(prefix[0], titleHyperVolume)
+    plt.savefig(HyperVolumeFigPath)
+
 
     xl, xu = problem.bounds()
     
@@ -422,14 +429,19 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     ax.scatter3D(F[:, 0], F[:, 1], F[:, 2], color = "blue", label="Functionals")
     plt.title("Objective Space")
     plt.legend()
-    plt.show()
 
+    titleParetoFront = model+"_"+wolfKind+"_"+potential+"_Box_"+box+"_ParetoFront"
+    prefix = os.path.split(path)
+    paretoFrontFigPath = os.path.join(prefix[0], titleParetoFront)
+    plt.savefig(paretoFrontFigPath)
+    
     from pymoo.indicators.igd_plus import IGDPlus
 
     metric = IGDPlus(pf_a, zero_to_one=True)
 
     igd = [metric.do(_F) for _F in hist_F]
 
+    fig = plt.figure(figsize = (10, 7))
     plt.plot(n_evals, igd,  color='black', lw=0.7, label="Avg. CV of Pop")
     plt.scatter(n_evals, igd,  facecolor="none", edgecolor='black', marker="p")
     plt.axhline(10**-2, color="red", label="10^-2", linestyle="--")
@@ -438,9 +450,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.ylabel("IGD+")
     plt.yscale("log")
     plt.legend()
-    plt.show()
-
-    quit()
+    titleConv = model+"_"+wolfKind+"_"+potential+"_Box_"+box+"_Convergence"
+    prefix = os.path.split(path)
+    convFigPath = os.path.join(prefix[0], titleConv)
+    plt.savefig(convFigPath)
 
     # if you use MO 1.0
     #weights = np.array([0.5, 0.5])
