@@ -1,5 +1,5 @@
-*  mosdef_box_0 - created by mBuild using the on 2022-10-08 22:57:28.642481
-*  parameters from the {'ETOH': '/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/src/utils/../xmls/trappe-ua.xml', 'SPCE': '/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/src/utils/../xmls/spce_trappe.xml'} force field(s) via MoSDef
+*  mosdef_box_0 - created by mBuild using the on 2022-10-11 22:56:50.627734
+*  parameters from the {'ETOH': '/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/src/utils/../xmls/trappe-ua.xml', 'SPCE': '/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/src/utils/../xmls/spce_trappe.xml'} force field(s) via MoSDef
 *  1-4 coulombic scaling = {'ETOH': 0.0, 'SPCE': 0.0}, and 1-4 LJ scaling = {'ETOH': 0.0, 'SPCE': 0.0}
 
 *  3004 atoms
@@ -33,10 +33,10 @@ BONDS * harmonic
 !Kb (kcal/mol) = Kb_K (K) * Boltz. const.; (9999999999 if no stretching)
 !
 !atom_types 	 Kb		b0 		  atoms_types_per_utilized_FF
+A	D	600.40152964	1.43		! CH2_O_ETOH	O_ETOH
+E	F	600.40152964	1.0		! h_spce_SPCE	o_spce_SPCE
 A	B	600.40152964	1.54		! CH2_O_ETOH	CH3_sp3_ETOH
 C	D	600.40152964	0.945		! H_ETOH	O_ETOH
-E	F	600.40152964	1.0		! h_spce_SPCE	o_spce_SPCE
-A	D	600.40152964	1.43		! CH2_O_ETOH	O_ETOH
 
 ANGLES * harmonic
 !
@@ -48,9 +48,9 @@ ANGLES * harmonic
 ! Ktheta (kcal/mol) = Ktheta_K (K) * Boltz. const.		
 !
 !atom_types 		Ktheta		Theta0			  atoms_types_per_utilized_FF
-A	D	C	55.04555449		108.49987		! CH2_O_ETOH	O_ETOH	H_ETOH
-E	F	E	45.76959847		109.47122		! h_spce_SPCE	o_spce_SPCE	h_spce_SPCE
 B	A	D	50.07754422		109.46989		! CH3_sp3_ETOH	CH2_O_ETOH	O_ETOH
+E	F	E	45.76959847		109.47122		! h_spce_SPCE	o_spce_SPCE	h_spce_SPCE
+A	D	C	55.04555449		108.49987		! CH2_O_ETOH	O_ETOH	H_ETOH
 
 DIHEDRALS * CHARMM
 !

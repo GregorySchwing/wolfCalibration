@@ -1,5 +1,5 @@
-*  mosdef_box_0 - created by mBuild using the on 2022-10-08 22:57:27.153754
-*  parameters from the {'SPCE': '/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/src/utils/../xmls/spce_trappe.xml'} force field(s) via MoSDef
+*  mosdef_box_0 - created by mBuild using the on 2022-10-11 21:17:37.470316
+*  parameters from the {'SPCE': '/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/src/utils/../xmls/spce_trappe.xml'} force field(s) via MoSDef
 *  1-4 coulombic scaling = {'SPCE': 0.0}, and 1-4 LJ scaling = {'SPCE': 0.0}
 
 *  3000 atoms
