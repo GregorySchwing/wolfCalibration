@@ -283,7 +283,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     algorithm = NSGA2(
         pop_size=400,
-        n_offsprings=100,
+        n_offsprings=400,
         sampling=FloatRandomSampling(),
         crossover=SBX(prob=0.9, eta=15),
         mutation=PM(eta=20),
