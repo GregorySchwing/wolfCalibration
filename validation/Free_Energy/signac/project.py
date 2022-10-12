@@ -151,7 +151,7 @@ walltime_gomc_equilbrium_hr = 96
 #GPU
 #walltime_gomc_equilbrium_hr = 48
 #CPU
-walltime_gomc_equilbrium_hr = 144
+walltime_gomc_production_hr = 144
 #GPU
 #walltime_gomc_production_hr = 96
 walltime_gomc_analysis_hr = 4
