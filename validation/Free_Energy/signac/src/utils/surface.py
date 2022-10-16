@@ -277,10 +277,16 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     problem = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
 
     from pymoo.algorithms.moo.nsga2 import NSGA2
+    from pymoo.algorithms.moo.nsga3 import NSGA3
+    from pymoo.util.ref_dirs import get_reference_directions
+
     from pymoo.operators.crossover.sbx import SBX
     from pymoo.operators.mutation.pm import PM
     from pymoo.operators.sampling.rnd import FloatRandomSampling
 
+    # create the reference directions to be used for the optimization
+
+    """
     algorithm = NSGA2(
         pop_size=400,
         n_offsprings=400,
@@ -289,6 +295,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         mutation=PM(eta=20),
         eliminate_duplicates=True
     )
+    """
+
+    from pymoo.algorithms.moo.age import AGEMOEA
+    algorithm = AGEMOEA(pop_size=100)
 
     from pymoo.termination import get_termination
 
