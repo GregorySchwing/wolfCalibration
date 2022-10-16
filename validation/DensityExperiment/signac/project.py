@@ -75,11 +75,12 @@ namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+#gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
+gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 100 * 10**1 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
@@ -94,9 +95,9 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 1000000
-Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 1000000
+Calibration_MC_steps = 10000
+Calibration_MC_Eq_Steps = 100
+Wolf_Sanity_MC_steps = 10000
 
 # force field (FF) file for all simulations in that job
 # Note: do not add extensions
@@ -542,6 +543,38 @@ def part_2a_namd_equilb_NVT_control_file_written(job):
     """General check that the namd_equilb_NVT_control_file
     (high temperature to set temp NAMD control file) is written."""
     return namd_control_file_written(job, namd_equilb_NVT_control_file_name_str)
+
+@Project.label
+@flow.with_job
+def part_2a_wolf_calibration_control_file_written(job):
+    """General check that the namd_equilb_NVT_control_file
+    (high temperature to set temp NAMD control file) is written."""
+    if (job.sp.wolf_model != "Calibrator"):
+        return True
+    output_name_control_file_name = "wolf_calibration"
+    try:
+        return gomc_control_file_written(
+            job,
+            output_name_control_file_name,
+        )
+    except:
+        return False
+
+@Project.label
+@flow.with_job
+def part_2a_wolf_sanity_control_file_written(job):
+    """General check that the namd_equilb_NVT_control_file
+    (high temperature to set temp NAMD control file) is written."""
+    if (job.sp.wolf_model == "Calibrator" or job.sp.electrostatic_method == "Ewald"):
+        return True
+    output_name_control_file_name = "wolf_sanity"
+    try:
+        return gomc_control_file_written(
+            job,
+            output_name_control_file_name,
+        )
+    except:
+        return False
 
 # checking if the GOMC control file is written for the equilb run with the selected ensemble
 @Project.label
@@ -1183,6 +1216,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 
 @Project.label
 @flow.with_job
+@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
@@ -1209,11 +1243,13 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                         else:
                             success = success and False
     """
-
+    if(not job.isfile("wolf_sanity.conf")):
+        return False
     regex = re.compile("wolf_sanity.conf")
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
+                print(file)
                 atLeastOneMatchExists = True
                 with open(file, "r") as openedfile:
                     last_line = openedfile.readlines()[-1]
@@ -1227,7 +1263,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
-@Project.pre(part_2c_gomc_production_control_file_written)
+@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -1649,9 +1685,8 @@ def build_charmm(job, write_files=True):
 # ******************************************************
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.post(part_2a_namd_equilb_NVT_control_file_written)
-@Project.post(part_2b_gomc_equilb_design_ensemble_control_file_written)
-@Project.post(part_2c_gomc_production_control_file_written)
 @Project.post(mosdef_input_written)
+@Project.post(part_2a_wolf_calibration_control_file_written)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1753,12 +1788,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
-        if (job.sp.wolf_model == "Calibrator"):
-            ref_sp['wolf_model']="Calibrator"
-            ref_sp['wolf_potential']="Calibrator"
-        else:
-            ref_sp['wolf_model']="Ewald"
-            ref_sp['wolf_potential']="Ewald"
+        ref_sp['wolf_model']="Ewald"
+        ref_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
@@ -2053,7 +2084,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("Finished: Wolf Sanity GOMC control file writing")
     print("#**********************")
     #
-    if (job.sp.electrostatic_method == "Wolf"):
+    if (job.sp.electrostatic_method == "Wolf" and job.sp.wolf_model == "Calibrator"):
         output_name_control_file_calibration_name = "wolf_calibration"
               
         gomc_control.write_gomc_control_file(
@@ -2269,7 +2300,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NVT_control_file_written)
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
+@Project.pre(part_2a_wolf_calibration_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4a_job_namd_equilb_NVT_completed_properly)
 @Project.post(part_3b_output_gomc_calibration_started)
