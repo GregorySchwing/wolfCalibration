@@ -623,6 +623,39 @@ def namd_control_file_written(job, control_filename_str):
     return file_written_bool
 
 
+@Project.label
+@flow.with_job
+def part_2a_wolf_calibration_control_file_written(job):
+    """General check that the namd_equilb_NVT_control_file
+    (high temperature to set temp NAMD control file) is written."""
+    if (job.sp.wolf_model != "Calibrator"):
+        return True
+    output_name_control_file_name = "wolf_calibration"
+    try:
+        return gomc_control_file_written(
+            job,
+            output_name_control_file_name,
+        )
+    except:
+        return False
+
+
+@Project.label
+@flow.with_job
+def part_2a_wolf_sanity_control_file_written(job):
+    """General check that the namd_equilb_NVT_control_file
+    (high temperature to set temp NAMD control file) is written."""
+    if (job.sp.wolf_model == "Calibrator" or job.sp.electrostatic_method == "Ewald"):
+        return True
+    output_name_control_file_name = "wolf_sanity"
+    try:
+        return gomc_control_file_written(
+            job,
+            output_name_control_file_name,
+        )
+    except:
+        return False
+
 # checking if the NAMD control file is written for the melt equilb NVT run
 @Project.label
 @flow.with_job
@@ -1319,6 +1352,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 
 @Project.label
 @flow.with_job
+@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
@@ -1345,7 +1379,8 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                         else:
                             success = success and False
     """
-
+    if(not job.isfile("wolf_sanity.conf")):
+        return False
     regex = re.compile("wolf_sanity.conf")
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
@@ -1364,6 +1399,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_2c_gomc_production_control_file_written)
+@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
