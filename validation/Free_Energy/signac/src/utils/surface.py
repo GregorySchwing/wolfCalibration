@@ -149,6 +149,7 @@ class MyProblem(ElementwiseProblem):
         self.AlphaMin = AlphaMin
         self.AlphaMax = AlphaMax
         self.LowerBoundRcut = LowerBoundRcut
+        
     def _evaluate(self, x, out, *args, **kwargs):
         # Minimize Relative Error
         f1 = np.abs(self.rect_B_spline.ev(x[0], x[1]))
@@ -179,6 +180,66 @@ class MyProblem(ElementwiseProblem):
 
         F3_a_costs = np.array([derivLambda(i) for i in points])
         F3_a_costs = F3_a_costs
+        costs = np.array(list(zip(F1_a_costs, F2_a_costs, F3_a_costs)))
+        pass2Method = np.array(list(zip(costs,points)))
+        boolean_array = is_pareto_efficient(costs)
+        print(boolean_array)
+        #pf_a = pareto_frontier_multi(costs)
+        return costs[boolean_array]
+
+class MyProblemNorm(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, LowerBoundRcut, ParetoFront):
+        super().__init__(n_var=2,
+                         n_obj=3,
+                         n_ieq_constr=1,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck_pd = tck_pd
+        self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
+        self.LowerBoundRcut = LowerBoundRcut
+        self.ParetoFront = ParetoFront
+        self.F1Min = 0
+        self.F2Min = 0
+        self.F3Min = 0
+        self.F1Max = ParetoFront[:, 0].max()
+        self.F2Max = ParetoFront[:, 1].max()
+        self.F3Max = ParetoFront[:, 2].max()
+                
+    def _evaluate(self, x, out, *args, **kwargs):
+        # Minimize Relative Error
+        f1 = np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.F1Max
+        # Minimize RCut
+        f2 = (x[0]-self.RCutMin)/self.F2Max
+        # Minimize Gradient
+        f3 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_pd))/self.F3Max
+
+        g1 = -(x[0]-self.LowerBoundRcut)
+        #out["F"] = [f1, f2]
+
+        out["F"] = [f1, f2, f3]
+        out["G"] = [g1]
+
+    def _calc_pareto_front(self, flatten=True, *args, **kwargs):
+
+        num_pts = 100
+        rcuts = np.linspace(self.RCutMin, self.RCutMax, num_pts)
+        alphas = np.linspace(self.AlphaMin, self.AlphaMax, num_pts)
+        rcuts_g, alphas_g = np.meshgrid(rcuts, alphas)
+
+        points = np.array(list(zip(rcuts_g.ravel(), alphas_g.ravel())))
+
+
+        F1_a_costs = np.array((np.abs(self.rect_B_spline.ev(rcuts_g.ravel(), alphas_g.ravel())))/self.F1Max)
+        F2_a_costs = ((rcuts_g.ravel()-self.RCutMin)/self.F2Max)
+        derivLambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_pd))
+
+        F3_a_costs = np.array([derivLambda(i) for i in points])
+        F3_a_costs = F3_a_costs/self.F3Max
         costs = np.array(list(zip(F1_a_costs, F2_a_costs, F3_a_costs)))
         pass2Method = np.array(list(zip(costs,points)))
         boolean_array = is_pareto_efficient(costs)
@@ -256,6 +317,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # M.O. 3.0
     derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
 
+
+    #smallestZDeriv = np.min(derivs, axis=0)
+    #largestZDeriv = np.min(derivs, axis=0)
+    
+    print("smallestZDeriv", derivs)
+    #print("largestZDeriv", largestZDeriv)
     tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
  
     print("Derivative data:")
@@ -272,12 +339,16 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     val = interpolate.bisplev(exampleX2, exampleY2, tck_pd)
     print("deriv", exampleX2, exampleY2)
     print(val)
-
-
-    problem = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+    
+    from pymoo.termination import get_termination
+    # Create problem to get the unnormalized Pareto Front
+    problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+    pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
+    problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10, pf_for_norm)
 
     # Gross p value ~ 0.599426150135242
-    if (wolfKind == "GROSS"):
+    if (True):
+    #if (wolfKind == "GROSS"):
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.operators.crossover.sbx import SBX
         from pymoo.operators.mutation.pm import PM
@@ -300,7 +371,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         from pymoo.algorithms.moo.age import AGEMOEA
         algorithm = AGEMOEA(pop_size=100)
 
-        from pymoo.termination import get_termination
+
 
         termination = get_termination("n_gen", 1000)
 
