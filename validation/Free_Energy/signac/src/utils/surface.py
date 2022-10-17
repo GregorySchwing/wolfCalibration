@@ -276,36 +276,35 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     problem = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
 
-    from pymoo.algorithms.moo.nsga2 import NSGA2
-    from pymoo.algorithms.moo.nsga3 import NSGA3
-    from pymoo.util.ref_dirs import get_reference_directions
+    # Gross p value ~ 0.599426150135242
+    if (wolfKind == "GROSS"):
+        from pymoo.algorithms.moo.nsga2 import NSGA2
+        from pymoo.operators.crossover.sbx import SBX
+        from pymoo.operators.mutation.pm import PM
+        from pymoo.operators.sampling.rnd import FloatRandomSampling
 
-    from pymoo.operators.crossover.sbx import SBX
-    from pymoo.operators.mutation.pm import PM
-    from pymoo.operators.sampling.rnd import FloatRandomSampling
+        algorithm = NSGA2(
+            pop_size=400,
+            n_offsprings=100,
+            sampling=FloatRandomSampling(),
+            crossover=SBX(prob=0.9, eta=15),
+            mutation=PM(eta=20),
+            eliminate_duplicates=True
+        )
+        termination = get_termination("n_gen", 400)
 
-    # create the reference directions to be used for the optimization
+    else:
+        import warnings
+        warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-    """
-    algorithm = NSGA2(
-        pop_size=400,
-        n_offsprings=400,
-        sampling=FloatRandomSampling(),
-        crossover=SBX(prob=0.9, eta=15),
-        mutation=PM(eta=20),
-        eliminate_duplicates=True
-    )
-    """
+        from pymoo.algorithms.moo.age import AGEMOEA
+        algorithm = AGEMOEA(pop_size=100)
 
-    from pymoo.algorithms.moo.age import AGEMOEA
-    algorithm = AGEMOEA(pop_size=100)
+        from pymoo.termination import get_termination
 
-    from pymoo.termination import get_termination
-
-    termination = get_termination("n_gen", 1000)
+        termination = get_termination("n_gen", 1000)
 
     from pymoo.optimize import minimize
-
 
     res = minimize(problem,
                 algorithm,
@@ -319,7 +318,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     hist = res.history
     print(X)
     print(F)
-
 
     n_evals = []             # corresponding number of function evaluations\
     hist_F = []              # the objective space values in each generation
