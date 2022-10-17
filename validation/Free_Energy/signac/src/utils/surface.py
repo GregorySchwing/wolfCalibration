@@ -340,40 +340,29 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("deriv", exampleX2, exampleY2)
     print(val)
     
-    from pymoo.termination import get_termination
     # Create problem to get the unnormalized Pareto Front
     problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
     problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10, pf_for_norm)
 
     # Gross p value ~ 0.599426150135242
-    if (True):
     #if (wolfKind == "GROSS"):
-        from pymoo.algorithms.moo.nsga2 import NSGA2
-        from pymoo.operators.crossover.sbx import SBX
-        from pymoo.operators.mutation.pm import PM
-        from pymoo.operators.sampling.rnd import FloatRandomSampling
+    from pymoo.algorithms.moo.nsga2 import NSGA2
+    from pymoo.operators.crossover.sbx import SBX
+    from pymoo.operators.mutation.pm import PM
+    from pymoo.operators.sampling.rnd import FloatRandomSampling
 
-        algorithm = NSGA2(
-            pop_size=400,
-            n_offsprings=100,
-            sampling=FloatRandomSampling(),
-            crossover=SBX(prob=0.9, eta=15),
-            mutation=PM(eta=20),
-            eliminate_duplicates=True
-        )
-        termination = get_termination("n_gen", 400)
+    algorithm = NSGA2(
+        pop_size=400,
+        n_offsprings=100,
+        sampling=FloatRandomSampling(),
+        crossover=SBX(prob=0.9, eta=15),
+        mutation=PM(eta=20),
+        eliminate_duplicates=True
+    )
 
-    else:
-        import warnings
-        warnings.filterwarnings("ignore", category=DeprecationWarning) 
-
-        from pymoo.algorithms.moo.age import AGEMOEA
-        algorithm = AGEMOEA(pop_size=100)
-
-
-
-        termination = get_termination("n_gen", 1000)
+    from pymoo.termination import get_termination
+    termination = get_termination("n_gen", 400)
 
     from pymoo.optimize import minimize
 
