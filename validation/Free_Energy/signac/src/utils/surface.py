@@ -358,7 +358,7 @@ class MyProblemNorm(ElementwiseProblem):
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRT_RCut_and_Alpha_max):
         super().__init__(n_var=2,
                          n_obj=5,
-                         n_ieq_constr=2,
+                         n_ieq_constr=6,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
@@ -401,13 +401,25 @@ class MyProblemNorm(ElementwiseProblem):
         f5 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max
         # This way I don't wind up on the side of a hill
         # Gradient <= RCutLoss
-        g1 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max) - (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        g1 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max) - (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        g2 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max) - (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        g3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max) - (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
         # Gradient <= RelError
-        g2 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
-        #out["F"] = [f1, f2]
-
+        #g4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        # Gradient <= RelError
+        #g5 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        # Gradient <= RelError
+        #g6 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        # RelError <= D_wrt_rcut
+        g4 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max)
+        # RelError <= D_wrt_alpha
+        g5 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
+        # RelError <= Gradient
+        g6 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
         out["F"] = [f1, f2, f3, f4, f5]
-        out["G"] = [g1, g2]
+        out["G"] = [g1, g2, g3, g4, g5, g6]
+        #out["G"] = [g1, g3, g5]
+
 
     def _calc_pareto_front(self, flatten=True, *args, **kwargs):
 
@@ -419,13 +431,22 @@ class MyProblemNorm(ElementwiseProblem):
         points = np.array(list(zip(rcuts_g.ravel(), alphas_g.ravel())))
 
 
-        F1_a_costs = np.array((np.abs(self.rect_B_spline.ev(rcuts_g.ravel(), alphas_g.ravel())))/self.F1Max)
-        F2_a_costs = ((rcuts_g.ravel()-self.RCutMin)/self.F2Max)
-        derivLambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_pd))
+        F1_a_costs = np.array((np.abs(self.rect_B_spline.ev(rcuts_g.ravel(), alphas_g.ravel())))/self.FMax)
+        F2_a_costs = ((rcuts_g.ravel()-self.RCutMin)/(self.RCutMax-self.RCutMin))
+        deriv1Lambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))
+        deriv2Lambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))
+        deriv3Lambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))
 
-        F3_a_costs = np.array([derivLambda(i) for i in points])
-        F3_a_costs = F3_a_costs/self.F3Max
-        costs = np.array(list(zip(F1_a_costs, F2_a_costs, F3_a_costs)))
+        F3_a_costs = np.array([deriv1Lambda(i) for i in points])
+        F3_a_costs = F3_a_costs/self.DEProblemDerivWRTRcut_max
+
+        F4_a_costs = np.array([deriv2Lambda(i) for i in points])
+        F4_a_costs = F4_a_costs/self.DEProblemDerivWRTAlpha_max
+
+        F5_a_costs = np.array([deriv2Lambda(i) for i in points])
+        F5_a_costs = F5_a_costs/self.DEProblemDerivWRT_RCut_and_Alpha_max
+
+        costs = np.array(list(zip(F1_a_costs, F2_a_costs, F3_a_costs, F4_a_costs, F5_a_costs)))
         pass2Method = np.array(list(zip(costs,points)))
         boolean_array = is_pareto_efficient(costs)
         print(boolean_array)
@@ -537,31 +558,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # Create problem to get the unnormalized Pareto Front
     problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
-    
-    print("f1 max")
-    print(pf_for_norm[:, 0].max())    
-    print("f2 max")
-    print(pf_for_norm[:, 1].max())    
-    print("f3 max")
-    print(pf_for_norm[:, 2].max())      
-    
-    print("f1 min")
-    print(pf_for_norm[:, 0].min())    
-    print("f2 min")
-    print(pf_for_norm[:, 1].min())    
-    print("f3 min")
-    print(pf_for_norm[:, 2].min())   
-    
-    RelErr = lambda x : np.abs(rect_B_spline.ev(x[0], x[1]))/pf_for_norm[:, 0].max()
-    RCutLoss = lambda x : (x[0]-RCutMin)/pf_for_norm[:, 1].max()
-    Gradient = lambda x : np.abs(interpolate.bisplev(x[0], x[1], tck_pd))/pf_for_norm[:, 2].max()
-    
-    print("RelErr")
-    print(RelErr([exampleX, exampleY]))    
-    print("RCutLoss")
-    print(RCutLoss([exampleX, exampleY]))    
-    print("Gradient")
-    print(Gradient([exampleX, exampleY]))  
    
     problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max)
 
@@ -642,21 +638,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     k = np.where(np.array(vals) <= 0.0)[0].min()
     print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
 
-    """
-    plt.figure(figsize=(7, 5))
-    plt.plot(n_evals, vals,  color='black', lw=0.7, label="Avg. CV of Pop")
-    plt.scatter(n_evals, vals,  facecolor="none", edgecolor='black', marker="p")
-    plt.axvline(n_evals[k], color="red", label="All Feasible", linestyle="--")
-    plt.title("Convergence")
-    plt.xlabel("Function Evaluations")
-    plt.legend()
-    plt.show()
-    """
 
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
 
     from pymoo.indicators.hv import Hypervolume
+
+    """
 
     metric = Hypervolume(ref_point= np.array([0.5, 0.5, 0.5, 0.5, 0.5]),
                         norm_ref_point=False,
@@ -665,6 +653,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         nadir=approx_nadir)
 
     hv = [metric.do(_F) for _F in hist_F]
+
 
     plt.figure(figsize=(7, 5))
     plt.plot(n_evals, hv,  color='black', lw=0.7, label="Avg. CV of Pop")
@@ -678,34 +667,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     prefix = os.path.split(path)
     HyperVolumeFigPath = os.path.join(prefix[0], titleHyperVolume)
     plt.savefig(HyperVolumeFigPath)
-
+    """
 
     xl, xu = problem.bounds()
-    
-    """
-    plt.figure(figsize=(7, 5))
-    plt.scatter(X[:, 0], X[:, 1], s=30, facecolors='none', edgecolors='r')
-    plt.xlim(xl[0], xu[0])
-    plt.ylim(xl[1], xu[1])
-    plt.title("Design Space")
-    plt.show()
 
-    plt.figure(figsize=(7, 5))
-    plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
-    plt.title("Objective Space")
-    plt.show()
-    """
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
-    """
-    plt.figure(figsize=(7, 5))
-    plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
-    plt.scatter(approx_ideal[0], approx_ideal[1], facecolors='none', edgecolors='red', marker="*", s=100, label="Ideal Point (Approx)")
-    plt.scatter(approx_nadir[0], approx_nadir[1], facecolors='none', edgecolors='black', marker="p", s=100, label="Nadir Point (Approx)")
-    plt.title("Objective Space")
-    plt.legend()
-    plt.show()
-    """
+
     nF = (F - approx_ideal) / (approx_nadir - approx_ideal)
 
     fl = nF.min(axis=0)
@@ -713,14 +681,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print(f"Scale f1: [{fl[0]}, {fu[0]}]")
     print(f"Scale f2: [{fl[1]}, {fu[1]}]")
 
-    """
-    plt.figure(figsize=(7, 5))
-    plt.scatter(nF[:, 0], nF[:, 1], s=30, facecolors='none', edgecolors='blue')
-    plt.title("Objective Space")
-    plt.show()
-    """
-    pf_a = problem.pareto_front(use_cache=False, flatten=False)
 
+    pf_a = problem.pareto_front(use_cache=False, flatten=False)
+    """
     # Creating figure
     fig = plt.figure(figsize = (10, 7))
     ax = plt.axes(projection ="3d")
@@ -760,37 +723,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     grid_z1 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='linear')
 
     grid_z2 = griddata(list(zip(pf_a[:, 0], pf_a[:, 1])), pf_a[:, 2], (X_pareto_forplotting, Y_pareto_forplotting), method='cubic')
-    """
-    plt.subplot(221)
+    
 
-    #plt.imshow(func(X_pareto_forplotting, Y_pareto_forplotting).T, extent=(0,1,0,1), origin='lower')
 
-    plt.plot(pf_a[:,0], pf_a[:,1], 'k.', ms=1)
-
-    plt.title('Original')
-
-    plt.subplot(222)
-
-    plt.imshow(grid_z0.T, extent=(0,1,0,1), origin='lower')
-
-    plt.title('Nearest')
-
-    plt.subplot(223)
-
-    plt.imshow(grid_z1.T, extent=(0,1,0,1), origin='lower')
-
-    plt.title('Linear')
-
-    plt.subplot(224)
-
-    plt.imshow(grid_z2.T, extent=(0,1,0,1), origin='lower')
-
-    plt.title('Cubic')
-
-    plt.gcf().set_size_inches(6, 6)
-
-    plt.show()
-    """
 
     iteractivefig = go.Figure()
     iteractivefig.add_surface(autocolorscale=True, x=X_pareto_forplotting, y=Y_pareto_forplotting, z=grid_z2)
@@ -822,6 +757,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     )
     pio.write_html(iteractivefig, file=paretoFrontFigPath+".html", auto_open=False)
 
+    """
+
     from pymoo.indicators.igd_plus import IGDPlus
 
     metric = IGDPlus(pf_a, zero_to_one=True)
@@ -845,7 +782,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # if you use MO 1.0
     #weights = np.array([0.5, 0.5])
     #weights = np.array([0.333, 0.333, 0.333])
-    weights = np.array([0.5, 0.25, 0.25])
+    weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
 
 
@@ -868,12 +805,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     print(x_opts)
     print(y_opts)
-    print("RelErr")
-    print(RelErr([x_opts[0], y_opts[0]]))    
-    print("RCutLoss")
-    print(RCutLoss([x_opts[0], y_opts[0]]))    
-    print("Gradient")
-    print(Gradient([x_opts[0], y_opts[0]]))    
     from pymoo.mcdm.pseudo_weights import PseudoWeights
 
     i = PseudoWeights(weights).do(nF)
@@ -883,12 +814,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     x_popts, y_popts = zip(X[i])
     print(x_popts)
     print(y_popts)
-    print("RelErr")
-    print(RelErr([x_popts[0], y_popts[0]]))    
-    print("RCutLoss")
-    print(RCutLoss([x_popts[0], y_popts[0]]))    
-    print("Gradient")
-    print(Gradient([x_popts[0], y_popts[0]]))   
+
     """
     plt.figure(figsize=(7, 5))
     plt.scatter(F[:, 0], F[:, 1], s=30, facecolors='none', edgecolors='blue')
