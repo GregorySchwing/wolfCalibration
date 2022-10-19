@@ -1547,7 +1547,7 @@ def part_4b_job_gomc_equilb_design_ensemble_completed_properly(job):
                     job,
                     filename_4b_iter,
                 ) is False:
-                    #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
+                    print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i) + " " + job.fn(""))
                     return False
             except:
                 return False
