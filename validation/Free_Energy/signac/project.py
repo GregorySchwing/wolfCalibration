@@ -1277,8 +1277,6 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(lambda j: j.sp.solute == "solvent_box")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
-                               for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
@@ -3047,9 +3045,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
     @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-    @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-    @Project.pre(lambda *jobs: all(part_4b_job_gomc_wolf_sanity_completed_properly(j)
-                                for j in jobs[0]._project))  
+    @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
     @Project.pre(lambda j: j.sp.solute not in ["solvent_box"])
@@ -3151,7 +3147,7 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
 @Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
 @flow.with_job
-def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
+def part_5a_preliminary_analysis_individual_simulation_averages(job):
     # remove the total averaged replicate data and all analysis data after this,
     # as it is no longer valid when adding more simulations
     if os.path.isfile(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'):
@@ -3167,72 +3163,70 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
     output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
 
 
-    # get the averages from each individual simulation and write the csv's.
-    for job in jobs:
-        files = []
-        blk_files = []
-        k_b = 1.9872036E-3  # kcal/mol/K
-        temperature = job.sp.production_temperature_K
-        k_b_T = temperature * k_b
-        dict_of_states = {}
-        for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
-            reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
-                                          f'initial_state_{initial_state_iter}.dat'
-            files.append(reading_filename_box_0_iter)
-            blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
-                       f'initial_state_{initial_state_iter}_BOX_0.dat'
-            energies = []
-            with open(blk_file, 'r', encoding='utf8') as f:
-                for line in f:
-                    #print('\n'.join(line.split()[1] for line in f))
-                    try:
-                        energies.append(float(line.split()[1]))
-                    except:
-                        print("An exception occurred") 
-            energies_np = np.array(energies)
-            print(energies_np.mean())
-            dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
-        df = pd.DataFrame.from_dict(dict_of_states)
-        df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
+    files = []
+    blk_files = []
+    k_b = 1.9872036E-3  # kcal/mol/K
+    temperature = job.sp.production_temperature_K
+    k_b_T = temperature * k_b
+    dict_of_states = {}
+    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
+        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
+                                        f'initial_state_{initial_state_iter}.dat'
+        files.append(reading_filename_box_0_iter)
+        blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
+                    f'initial_state_{initial_state_iter}_BOX_0.dat'
+        energies = []
+        with open(blk_file, 'r', encoding='utf8') as f:
+            for line in f:
+                #print('\n'.join(line.split()[1] for line in f))
+                try:
+                    energies.append(float(line.split()[1]))
+                except:
+                    print("An exception occurred") 
+        energies_np = np.array(energies)
+        print(energies_np.mean())
+        dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
+    df = pd.DataFrame.from_dict(dict_of_states)
+    df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
 
-        # for TI estimator
-        dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-        ti = TI().fit(dHdl)
-        delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+    # for TI estimator
+    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
 
-        # for MBAR estimator
-        u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-        mbar = MBAR().fit(u_nk)
-        delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+    # for MBAR estimator
+    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
 
-        # for BAR estimator
-        bar = BAR().fit(u_nk)
-        delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+    # for BAR estimator
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
 
-        # write the data out in each job
-        box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
-        box_0_replicate_data_txt_file.write(
-            f"{output_column_temp_title: <30} "
-            f"{output_column_solute_title: <30} "
-            f"{output_column_dFE_MBAR_title: <30} "
-            f"{output_column_dFE_MBAR_std_title: <30} "
-            f"{output_column_dFE_TI_title: <30} "
-            f"{output_column_dFE_TI_std_title: <30} "
-            f"{output_column_dFE_BAR_title: <30} "
-            f"{output_column_dFE_BAR_std_title: <30} "
-            f" \n"
-        )
-        box_0_replicate_data_txt_file.write(
-            f"{job.sp.production_temperature_K: <30} "
-            f"{job.sp.solute: <30} "
-            f"{delta_mbar: <30} "
-            f"{delta_std_mbar: <30} "
-            f"{delta_ti: <30} "
-            f"{delta_std_ti: <30} "
-            f"{delta_bar: <30} "
-            f"{delta_std_bar: <30} "
-            f" \n"
-        )
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
@@ -3247,16 +3241,10 @@ def part_5a_preliminary_analysis_individual_simulation_averages(*jobs):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-@FlowProject.pre(
-     lambda *jobs: all(
-         part_4c_job_production_run_completed_properly(job)
-         for job in jobs
-     )
-)
 @Project.pre(part_4c_job_production_run_completed_properly)
 @Project.post(part_5a_analysis_individual_simulation_averages_completed)
 @flow.with_job
-def part_5a_analysis_individual_simulation_averages(*jobs):
+def part_5a_analysis_individual_simulation_averages(job):
     # remove the total averaged replicate data and all analysis data after this,
     # as it is no longer valid when adding more simulations
     if os.path.isfile(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'):
@@ -3273,55 +3261,55 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 
 
     # get the averages from each individual simulation and write the csv's.
-    for job in jobs:
-        files = []
-        k_b = 1.9872036E-3  # kcal/mol/K
-        temperature = job.sp.production_temperature_K
-        k_b_T = temperature * k_b
 
-        for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
-            reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_production_control_file_name_str}_' \
-                                          f'initial_state_{initial_state_iter}.dat'
-            files.append(reading_filename_box_0_iter)
+    files = []
+    k_b = 1.9872036E-3  # kcal/mol/K
+    temperature = job.sp.production_temperature_K
+    k_b_T = temperature * k_b
 
-        # for TI estimator
-        dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-        ti = TI().fit(dHdl)
-        delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
+        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_production_control_file_name_str}_' \
+                                        f'initial_state_{initial_state_iter}.dat'
+        files.append(reading_filename_box_0_iter)
 
-        # for MBAR estimator
-        u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-        mbar = MBAR().fit(u_nk)
-        delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+    # for TI estimator
+    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
 
-        # for BAR estimator
-        bar = BAR().fit(u_nk)
-        delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+    # for MBAR estimator
+    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
 
-        # write the data out in each job
-        box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
-        box_0_replicate_data_txt_file.write(
-            f"{output_column_temp_title: <30} "
-            f"{output_column_solute_title: <30} "
-            f"{output_column_dFE_MBAR_title: <30} "
-            f"{output_column_dFE_MBAR_std_title: <30} "
-            f"{output_column_dFE_TI_title: <30} "
-            f"{output_column_dFE_TI_std_title: <30} "
-            f"{output_column_dFE_BAR_title: <30} "
-            f"{output_column_dFE_BAR_std_title: <30} "
-            f" \n"
-        )
-        box_0_replicate_data_txt_file.write(
-            f"{job.sp.production_temperature_K: <30} "
-            f"{job.sp.solute: <30} "
-            f"{delta_mbar: <30} "
-            f"{delta_std_mbar: <30} "
-            f"{delta_ti: <30} "
-            f"{delta_std_ti: <30} "
-            f"{delta_bar: <30} "
-            f"{delta_std_bar: <30} "
-            f" \n"
-        )
+    # for BAR estimator
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
 
 
 # ******************************************************
@@ -3350,8 +3338,6 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 #     }
 #)
 
-@Project.pre(lambda *jobs: all(part_5a_preliminary_analysis_individual_simulation_averages(j)
-                               for j in jobs[0]._project))
 @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
 @Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
 @Project.post(part_5b_analysis_replica_averages_completed)
@@ -3467,8 +3453,6 @@ def part_5b_preliminary_analysis_replica_averages(*jobs):
     # ************************************
 
 
-@Project.pre(lambda *jobs: all(part_5a_analysis_individual_simulation_averages_completed(j)
-                               for j in jobs[0]._project))
 @Project.pre(part_4c_job_production_run_completed_properly)
 @Project.pre(part_5a_analysis_individual_simulation_averages_completed)
 @Project.post(part_5b_analysis_replica_averages_completed)
