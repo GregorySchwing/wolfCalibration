@@ -428,7 +428,7 @@ class MyDumProblem(ElementwiseProblem):
 
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power = 4):
         super().__init__(n_var=2,
-                         n_obj=2,
+                         n_obj=3,
                          n_ieq_constr=0,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
@@ -477,7 +477,7 @@ class MyDumProblem(ElementwiseProblem):
         #f1 = -(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut)/self.DEProblemDerivWRTRcut_max))
         f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
         f0 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
-        f2 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max
+        f2 = 1.0/(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max)
         f3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut_DD))/self.DEProblemDerivWRTRcut_DD_max)
         f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
         f5 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max * np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max
@@ -485,7 +485,7 @@ class MyDumProblem(ElementwiseProblem):
         f7 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max)
         f5 = (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
         g1 = (x[1])/(self.AlphaMax) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
-        out["F"] = [f1,f5]
+        out["F"] = [f1,f2,f0]
         #out["F"] = [f1, f2]
         #out["G"] = [g1]
 
@@ -938,8 +938,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(convFigPath)
     """
     # if you use MO 1.0
-    weights = np.array([0.5,0.5])
-    #weights = np.array([0.333, 0.333, 0.333])
+    #weights = np.array([0.5,0.5])
+    weights = np.array([0.333, 0.333, 0.333])
     #weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
 
