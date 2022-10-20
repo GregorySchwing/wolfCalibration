@@ -476,13 +476,16 @@ class MyDumProblem(ElementwiseProblem):
         #f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
         #f1 = -(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut)/self.DEProblemDerivWRTRcut_max))
         f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
-        #f3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
+        f0 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
         f2 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max
         f3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut_DD))/self.DEProblemDerivWRTRcut_DD_max)
-        f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max)
+        f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
+        f5 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max * np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max
+        f6 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max)
+        f7 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max)
         f5 = (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
         g1 = (x[1])/(self.AlphaMax) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
-        out["F"] = [f1,f2]
+        out["F"] = [f1,f5]
         #out["F"] = [f1, f2]
         #out["G"] = [g1]
 
@@ -630,9 +633,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     x = np.unique(x)
     y = np.unique(y)
 
-    z = df4.iloc[:,0].to_numpy()
+    #z = df4.iloc[:,0].to_numpy()
     # I wonder if interpolation has problem with abs value
-    #z = np.abs(df4.iloc[:,0].to_numpy())
+    z = np.abs(df4.iloc[:,0].to_numpy())
 
     z = np.reshape(z, (len(x),len(y)))
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
