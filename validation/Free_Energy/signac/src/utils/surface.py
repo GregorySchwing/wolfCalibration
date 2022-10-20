@@ -20,7 +20,7 @@ from scipy.interpolate import Rbf, interp2d, RegularGridInterpolator
 import scipy
 from scipy.optimize import OptimizeResult, least_squares
 from  scipy.interpolate import UnivariateSpline
-
+import math
 def pareto_frontier_multi(myArray):
     # Sort on first dimension
     myArray = myArray[myArray[:,0].argsort()]
@@ -210,17 +210,26 @@ class MyProblem(ElementwiseProblem):
 
         self.pd_RCut_constant_alpha_constant = [0,0]
         self.pd_RCut_varies_alpha_constant = [1,0]
+        self.pd_RCut_varies_alpha_constant_DD = [2,0]
         self.pd_RCut_constant_alpha_varies = [0,1]
+        self.pd_RCut_constant_alpha_varies_DD = [0,2]
         self.pd_RCut_varies_alpha_varies = [1,1]
-
+        self.pd_RCut_varies_alpha_varies_DD = [2,2]
+        
         self.derivs_wrt_alpha = rect_B_spline.partial_derivative(self.pd_RCut_constant_alpha_varies[0],self.pd_RCut_constant_alpha_varies[1])
+        self.derivs_wrt_alpha_DD = rect_B_spline.partial_derivative(self.pd_RCut_constant_alpha_varies_DD[0],self.pd_RCut_constant_alpha_varies_DD[1])
         self.derivs_wrt_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_constant[0],self.pd_RCut_varies_alpha_constant[1])
+        self.derivs_wrt_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_constant_DD[0],self.pd_RCut_varies_alpha_constant_DD[1])
         self.derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies[0],self.pd_RCut_varies_alpha_varies[1])
+        self.derivs_wrt_alpha_and_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies_DD[0],self.pd_RCut_varies_alpha_varies_DD[1])
 
         self.tck_wrt_alpha = [self.derivs_wrt_alpha.tck[0], self.derivs_wrt_alpha.tck[1],self.derivs_wrt_alpha.tck[2],self.derivs_wrt_alpha.degrees[0],self.derivs_wrt_alpha.degrees[1]]
+        self.tck_wrt_alpha_DD = [self.derivs_wrt_alpha_DD.tck[0], self.derivs_wrt_alpha_DD.tck[1],self.derivs_wrt_alpha_DD.tck[2],self.derivs_wrt_alpha_DD.degrees[0],self.derivs_wrt_alpha_DD.degrees[1]]
         self.tck_wrt_rcut = [self.derivs_wrt_rcut.tck[0], self.derivs_wrt_rcut.tck[1],self.derivs_wrt_rcut.tck[2],self.derivs_wrt_rcut.degrees[0],self.derivs_wrt_rcut.degrees[1]]
+        self.tck_wrt_rcut_DD = [self.derivs_wrt_rcut_DD.tck[0], self.derivs_wrt_rcut_DD.tck[1],self.derivs_wrt_rcut_DD.tck[2],self.derivs_wrt_rcut_DD.degrees[0],self.derivs_wrt_rcut_DD.degrees[1]]
         self.tck_wrt_alpha_and_rcut = [self.derivs_wrt_alpha_and_rcut.tck[0], self.derivs_wrt_alpha_and_rcut.tck[1],self.derivs_wrt_alpha_and_rcut.tck[2],self.derivs_wrt_alpha_and_rcut.degrees[0],self.derivs_wrt_alpha_and_rcut.degrees[1]]
-
+        self.tck_wrt_alpha_and_rcut_DD = [self.derivs_wrt_alpha_and_rcut_DD.tck[0], self.derivs_wrt_alpha_and_rcut_DD.tck[1],self.derivs_wrt_alpha_and_rcut_DD.tck[2],self.derivs_wrt_alpha_and_rcut_DD.degrees[0],self.derivs_wrt_alpha_and_rcut_DD.degrees[1]]
+        
 
         self.MyDEProblem = DEProblem(rect_B_spline, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
@@ -262,6 +271,25 @@ class MyProblem(ElementwiseProblem):
         
         self.DEProblemDerivWRTRcut_max = np.abs(res.F[0])
 
+        self.DEProblemDerivWRTRcut_DD = DEProblemDeriv(self.tck_wrt_rcut_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        
+        algorithm = DE(
+            pop_size=100,
+            sampling=LHS(),
+            variant="DE/rand/1/bin",
+            CR=0.3,
+            dither="vector",
+            jitter=False
+        )
+
+        res = minimize(self.DEProblemDerivWRTRcut_DD,
+                    algorithm,
+                    seed=1,
+                    verbose=True)
+
+        print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
+        
+        self.DEProblemDerivWRTRcut_DD_max = np.abs(res.F[0])   
 
         self.DEProblemDerivWRTAlpha = DEProblemDeriv(self.tck_wrt_alpha, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
@@ -282,6 +310,26 @@ class MyProblem(ElementwiseProblem):
         print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
         
         self.DEProblemDerivWRTAlpha_max = np.abs(res.F[0])
+        
+        self.DEProblemDerivWRTAlpha_DD = DEProblemDeriv(self.tck_wrt_alpha_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        
+        algorithm = DE(
+            pop_size=100,
+            sampling=LHS(),
+            variant="DE/rand/1/bin",
+            CR=0.3,
+            dither="vector",
+            jitter=False
+        )
+
+        res = minimize(self.DEProblemDerivWRTAlpha_DD,
+                    algorithm,
+                    seed=1,
+                    verbose=True)
+
+        print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
+        
+        self.DEProblemDerivWRTAlpha_DD_max = np.abs(res.F[0])        
 
         self.DEProblemDerivWRT_RCut_and_Alpha = DEProblemDeriv(self.tck_wrt_alpha_and_rcut, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
@@ -302,6 +350,28 @@ class MyProblem(ElementwiseProblem):
         print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
         
         self.DEProblemDerivWRT_RCut_and_Alpha_max = np.abs(res.F[0])
+        
+        self.DEProblemDerivWRT_RCut_and_Alpha_DD = DEProblemDeriv(self.tck_wrt_alpha_and_rcut_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        
+        algorithm = DE(
+            pop_size=100,
+            sampling=LHS(),
+            variant="DE/rand/1/bin",
+            CR=0.3,
+            dither="vector",
+            jitter=False
+        )
+
+        res = minimize(self.DEProblemDerivWRT_RCut_and_Alpha_DD,
+                    algorithm,
+                    seed=1,
+                    verbose=True)
+
+        print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
+        
+        self.DEProblemDerivWRT_RCut_and_Alpha_DD_max = np.abs(res.F[0])
+        
+
 
                 
 
@@ -353,12 +423,76 @@ class MyProblem(ElementwiseProblem):
         #pf_a = pareto_frontier_multi(costs)
         return costs[boolean_array]
 
+
+class MyDumProblem(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power = 4):
+        super().__init__(n_var=2,
+                         n_obj=2,
+                         n_ieq_constr=0,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck_pd = tck_pd
+        self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
+        self.F1Min = 0
+        self.F2Min = 0
+        self.F3Min = 0
+        self.FMax = FMax
+        self.DEProblemDerivWRTRcut_max = DEProblemDerivWRTRcut_max
+        self.DEProblemDerivWRTRcut_DD_max = DEProblemDerivWRTRcut_DD_max
+        self.DEProblemDerivWRTAlpha_max = DEProblemDerivWRTAlpha_max
+        self.DEProblemDerivWRTAlpha_DD_max = DEProblemDerivWRTAlpha_DD_max
+        self.DEProblemDerivWRT_RCut_and_Alpha_max = DEProblemDerivWRT_RCut_and_Alpha_max
+        self.DEProblemDerivWRT_RCut_and_Alpha_DD_max = DEProblemDerivWRT_RCut_and_Alpha_DD_max
+        self.tolerance = pow(10, -tolerance_power)
+        
+        self.pd_RCut_constant_alpha_constant = [0,0]
+        self.pd_RCut_varies_alpha_constant = [1,0]
+        self.pd_RCut_varies_alpha_constant_DD = [2,0]
+        self.pd_RCut_constant_alpha_varies = [0,1]
+        self.pd_RCut_constant_alpha_varies_DD = [0,2]
+        self.pd_RCut_varies_alpha_varies = [1,1]
+        self.pd_RCut_varies_alpha_varies_DD = [2,2]
+        
+        self.derivs_wrt_alpha = rect_B_spline.partial_derivative(self.pd_RCut_constant_alpha_varies[0],self.pd_RCut_constant_alpha_varies[1])
+        self.derivs_wrt_alpha_DD = rect_B_spline.partial_derivative(self.pd_RCut_constant_alpha_varies_DD[0],self.pd_RCut_constant_alpha_varies_DD[1])
+        self.derivs_wrt_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_constant[0],self.pd_RCut_varies_alpha_constant[1])
+        self.derivs_wrt_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_constant_DD[0],self.pd_RCut_varies_alpha_constant_DD[1])
+        self.derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies[0],self.pd_RCut_varies_alpha_varies[1])
+        self.derivs_wrt_alpha_and_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies_DD[0],self.pd_RCut_varies_alpha_varies_DD[1])
+
+        self.tck_wrt_alpha = [self.derivs_wrt_alpha.tck[0], self.derivs_wrt_alpha.tck[1],self.derivs_wrt_alpha.tck[2],self.derivs_wrt_alpha.degrees[0],self.derivs_wrt_alpha.degrees[1]]
+        self.tck_wrt_alpha_DD = [self.derivs_wrt_alpha_DD.tck[0], self.derivs_wrt_alpha_DD.tck[1],self.derivs_wrt_alpha_DD.tck[2],self.derivs_wrt_alpha_DD.degrees[0],self.derivs_wrt_alpha_DD.degrees[1]]
+        self.tck_wrt_rcut = [self.derivs_wrt_rcut.tck[0], self.derivs_wrt_rcut.tck[1],self.derivs_wrt_rcut.tck[2],self.derivs_wrt_rcut.degrees[0],self.derivs_wrt_rcut.degrees[1]]
+        self.tck_wrt_rcut_DD = [self.derivs_wrt_rcut_DD.tck[0], self.derivs_wrt_rcut_DD.tck[1],self.derivs_wrt_rcut_DD.tck[2],self.derivs_wrt_rcut_DD.degrees[0],self.derivs_wrt_rcut_DD.degrees[1]]
+        self.tck_wrt_alpha_and_rcut = [self.derivs_wrt_alpha_and_rcut.tck[0], self.derivs_wrt_alpha_and_rcut.tck[1],self.derivs_wrt_alpha_and_rcut.tck[2],self.derivs_wrt_alpha_and_rcut.degrees[0],self.derivs_wrt_alpha_and_rcut.degrees[1]]
+        self.tck_wrt_alpha_and_rcut_DD = [self.derivs_wrt_alpha_and_rcut_DD.tck[0], self.derivs_wrt_alpha_and_rcut_DD.tck[1],self.derivs_wrt_alpha_and_rcut_DD.tck[2],self.derivs_wrt_alpha_and_rcut_DD.degrees[0],self.derivs_wrt_alpha_and_rcut_DD.degrees[1]]
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        #f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        #f1 = -(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut)/self.DEProblemDerivWRTRcut_max))
+        f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        #f3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
+        f2 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max
+        f3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut_DD))/self.DEProblemDerivWRTRcut_DD_max)
+        f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max)
+        f5 = (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        g1 = (x[1])/(self.AlphaMax) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        out["F"] = [f1,f2]
+        #out["F"] = [f1, f2]
+        #out["G"] = [g1]
+
+
 class MyProblemNorm(ElementwiseProblem):
 
-    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRT_RCut_and_Alpha_max):
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRT_RCut_and_Alpha_max, tolerance_power = 4):
         super().__init__(n_var=2,
-                         n_obj=5,
-                         n_ieq_constr=6,
+                         n_obj=2,
+                         n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
@@ -374,6 +508,8 @@ class MyProblemNorm(ElementwiseProblem):
         self.DEProblemDerivWRTRcut_max = DEProblemDerivWRTRcut_max
         self.DEProblemDerivWRTAlpha_max = DEProblemDerivWRTAlpha_max
         self.DEProblemDerivWRT_RCut_and_Alpha_max = DEProblemDerivWRT_RCut_and_Alpha_max
+        self.tolerance = pow(10, -tolerance_power)
+        
         self.pd_RCut_constant_alpha_constant = [0,0]
         self.pd_RCut_varies_alpha_constant = [1,0]
         self.pd_RCut_constant_alpha_varies = [0,1]
@@ -390,9 +526,11 @@ class MyProblemNorm(ElementwiseProblem):
 
     def _evaluate(self, x, out, *args, **kwargs):
         # Minimize Relative Error
-        f1 = np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax
+        f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)*(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
         # Minimize RCut
         f2 = (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        g1 = 0
+        """
         # Minimize dWRT RCut
         f3 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max
         # Minimize dWRT Alpha
@@ -416,8 +554,12 @@ class MyProblemNorm(ElementwiseProblem):
         g5 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
         # RelError <= Gradient
         g6 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
-        out["F"] = [f1, f2, f3, f4, f5]
-        out["G"] = [g1, g2, g3, g4, g5, g6]
+        g7 = np.abs(self.rect_B_spline.ev(x[0], x[1]))-self.tolerance
+        """
+        #out["F"] = [f1, f2, f3, f4, f5]
+        out["F"] = [f1, f2]
+        out["G"] = [g1]
+        #out["G"] = [g1, g2, g3, g4, g5, g6, g7]
         #out["G"] = [g1, g3, g5]
 
 
@@ -488,9 +630,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     x = np.unique(x)
     y = np.unique(y)
 
-    #z = np.abs(df4.iloc[:,0].to_numpy())
-    # I wonder if interpolation has problem with abs value
     z = df4.iloc[:,0].to_numpy()
+    # I wonder if interpolation has problem with abs value
+    #z = np.abs(df4.iloc[:,0].to_numpy())
 
     z = np.reshape(z, (len(x),len(y)))
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
@@ -557,11 +699,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     from pymoo.termination import get_termination
     # Create problem to get the unnormalized Pareto Front
     problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
-    pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
-   
-    problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max)
+    #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
 
-
+    tolPower = 0
+    for tolPow in range(10):
+        print("Tolerance = ", pow(10, -tolPow))
+        tolPower = tolPow
+    problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
 
     # Gross p value ~ 0.599426150135242
     if (True):
@@ -594,7 +738,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     from pymoo.optimize import minimize
 
-    res = minimize(problem,
+    prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+
+    res = minimize(prob,
                 algorithm,
                 termination,
                 seed=1,
@@ -628,15 +774,24 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         feas = np.where(opt.get("feasible"))[0]
         hist_F.append(opt.get("F")[feas])
 
-    k = np.where(np.array(hist_cv) <= 0.0)[0].min()
-    print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+
+    try:
+        k = np.where(np.array(hist_cv) <= 0.0)[0].min()
+        print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+    except:
+        print(f"No feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+        print(f"Increase tolerance.")
+        return
 
 
     # replace this line by `hist_cv` if you like to analyze the least feasible optimal solution and not the population
     vals = hist_cv_avg
 
-    k = np.where(np.array(vals) <= 0.0)[0].min()
-    print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
+    try:
+        k = np.where(np.array(vals) <= 0.0)[0].min()
+        print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
+    except:
+        print(f"Whole population not feasible after {n_evals[k]} evaluations.")
 
 
     approx_ideal = F.min(axis=0)
@@ -678,11 +833,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     fl = nF.min(axis=0)
     fu = nF.max(axis=0)
-    print(f"Scale f1: [{fl[0]}, {fu[0]}]")
-    print(f"Scale f2: [{fl[1]}, {fu[1]}]")
+    #print(f"Scale f1: [{fl[0]}, {fu[0]}]")
+    #print(f"Scale f2: [{fl[1]}, {fu[1]}]")
 
 
-    pf_a = problem.pareto_front(use_cache=False, flatten=False)
+    #pf_a = problem.pareto_front(use_cache=False, flatten=False)
     """
     # Creating figure
     fig = plt.figure(figsize = (10, 7))
@@ -758,7 +913,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     pio.write_html(iteractivefig, file=paretoFrontFigPath+".html", auto_open=False)
 
     """
-
+    """
     from pymoo.indicators.igd_plus import IGDPlus
 
     metric = IGDPlus(pf_a, zero_to_one=True)
@@ -778,11 +933,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     prefix = os.path.split(path)
     convFigPath = os.path.join(prefix[0], titleConv)
     plt.savefig(convFigPath)
-
+    """
     # if you use MO 1.0
-    #weights = np.array([0.5, 0.5])
+    weights = np.array([0.5,0.5])
     #weights = np.array([0.333, 0.333, 0.333])
-    weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
+    #weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
 
 
@@ -800,6 +955,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.title("Objective Space")
     plt.show()
     """
+    #x_opts, y_opts = zip(X)
     x_opts, y_opts = zip(X[i])
     
 
@@ -812,6 +968,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
     print(X[i])
     x_popts, y_popts = zip(X[i])
+    #x_popts, y_popts = zip(X)
     print(x_popts)
     print(y_popts)
 
