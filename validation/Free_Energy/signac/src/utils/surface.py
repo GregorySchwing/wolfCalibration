@@ -428,8 +428,8 @@ class MyDumProblem(ElementwiseProblem):
 
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power = 4):
         super().__init__(n_var=2,
-                         n_obj=2,
-                         n_ieq_constr=0,
+                         n_obj=3,
+                         n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
@@ -485,9 +485,11 @@ class MyDumProblem(ElementwiseProblem):
         f7 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max)
         f5 = (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
         g1 = (x[1])/(self.AlphaMax) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
-        out["F"] = [f1,f2]
+        g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
+
+        out["F"] = [f1,f4,f7]
         #out["F"] = [f1, f2]
-        #out["G"] = [g1]
+        out["G"] = [g2]
 
 
 class MyProblemNorm(ElementwiseProblem):
@@ -705,14 +707,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
 
     tolPower = 0
-    for tolPow in range(10):
+    for tolPow in range(10, -1, -1):
         print("Tolerance = ", pow(10, -tolPow))
         tolPower = tolPow
-    problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
-
-    # Gross p value ~ 0.599426150135242
-    if (True):
-    #if (wolfKind == "GROSS"):
+        problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
+        
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.operators.crossover.sbx import SBX
         from pymoo.operators.mutation.pm import PM
@@ -728,73 +727,65 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         )
         termination = get_termination("n_gen", 400)
 
-    else:
-        import warnings
-        warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-        from pymoo.algorithms.moo.age import AGEMOEA
-        algorithm = AGEMOEA(pop_size=100)
+        from pymoo.optimize import minimize
 
+        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
 
+        res = minimize(prob,
+                    algorithm,
+                    termination,
+                    seed=1,
+                    save_history=True,
+                    verbose=True)
 
-        termination = get_termination("n_gen", 1000)
+        X = res.X
+        F = res.F
+        hist = res.history
+        print(X)
+        print(F)
 
-    from pymoo.optimize import minimize
+        n_evals = []             # corresponding number of function evaluations\
+        hist_F = []              # the objective space values in each generation
+        hist_cv = []             # constraint violation in each generation
+        hist_cv_avg = []         # average constraint violation in the whole population
 
-    prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+        for algo in hist:
 
-    res = minimize(prob,
-                algorithm,
-                termination,
-                seed=1,
-                save_history=True,
-                verbose=True)
+            # store the number of function evaluations
+            n_evals.append(algo.evaluator.n_eval)
 
-    X = res.X
-    F = res.F
-    hist = res.history
-    print(X)
-    print(F)
+            # retrieve the optimum from the algorithm
+            opt = algo.opt
 
-    n_evals = []             # corresponding number of function evaluations\
-    hist_F = []              # the objective space values in each generation
-    hist_cv = []             # constraint violation in each generation
-    hist_cv_avg = []         # average constraint violation in the whole population
+            # store the least contraint violation and the average in each population
+            hist_cv.append(opt.get("CV").min())
+            hist_cv_avg.append(algo.pop.get("CV").mean())
 
-    for algo in hist:
+            # filter out only the feasible and append and objective space values
+            feas = np.where(opt.get("feasible"))[0]
+            hist_F.append(opt.get("F")[feas])
 
-        # store the number of function evaluations
-        n_evals.append(algo.evaluator.n_eval)
-
-        # retrieve the optimum from the algorithm
-        opt = algo.opt
-
-        # store the least contraint violation and the average in each population
-        hist_cv.append(opt.get("CV").min())
-        hist_cv_avg.append(algo.pop.get("CV").mean())
-
-        # filter out only the feasible and append and objective space values
-        feas = np.where(opt.get("feasible"))[0]
-        hist_F.append(opt.get("F")[feas])
-
-
-    try:
         k = np.where(np.array(hist_cv) <= 0.0)[0].min()
-        print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
-    except:
-        print(f"No feasible solution in Generation {k} after {n_evals[k]} evaluations.")
-        print(f"Increase tolerance.")
-        return
+        try:
+            print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+        except:
+            print(f"No feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+            print(f"Increase tolerance.")
+            continue
 
 
-    # replace this line by `hist_cv` if you like to analyze the least feasible optimal solution and not the population
-    vals = hist_cv_avg
+        # replace this line by `hist_cv` if you like to analyze the least feasible optimal solution and not the population
+        vals = hist_cv_avg
 
-    try:
         k = np.where(np.array(vals) <= 0.0)[0].min()
-        print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
-    except:
-        print(f"Whole population not feasible after {n_evals[k]} evaluations.")
+        try:
+            print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
+            break
+        except:
+            print(f"Whole population not feasible after {n_evals[k]} evaluations.")
+            print(f"Increase tolerance.")
+            continue
 
 
     approx_ideal = F.min(axis=0)
@@ -938,8 +929,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(convFigPath)
     """
     # if you use MO 1.0
-    weights = np.array([0.5,0.5])
-    #weights = np.array([0.333, 0.333, 0.333])
+    #weights = np.array([0.5,0.5])
+    weights = np.array([0.333, 0.333, 0.333])
     #weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
 
