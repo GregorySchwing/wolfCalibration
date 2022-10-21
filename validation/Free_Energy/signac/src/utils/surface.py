@@ -426,7 +426,7 @@ class MyProblem(ElementwiseProblem):
 
 class MyDumProblem(ElementwiseProblem):
 
-    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power = 4):
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power):
         super().__init__(n_var=2,
                          n_obj=3,
                          n_ieq_constr=1,
@@ -729,8 +729,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         from pymoo.optimize import minimize
-
-        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTRcut_DD_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
 
         res = minimize(prob,
                     algorithm,
@@ -766,20 +765,21 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
             feas = np.where(opt.get("feasible"))[0]
             hist_F.append(opt.get("F")[feas])
 
-        k = np.where(np.array(hist_cv) <= 0.0)[0].min()
+        k = 0
         try:
-            print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+            k = np.where(np.array(hist_cv) <= 0.0)[0].min()
         except:
             print(f"No feasible solution in Generation {k} after {n_evals[k]} evaluations.")
             print(f"Increase tolerance.")
             continue
+        print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
 
 
         # replace this line by `hist_cv` if you like to analyze the least feasible optimal solution and not the population
         vals = hist_cv_avg
 
-        k = np.where(np.array(vals) <= 0.0)[0].min()
         try:
+            k = np.where(np.array(vals) <= 0.0)[0].min()
             print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
             break
         except:
