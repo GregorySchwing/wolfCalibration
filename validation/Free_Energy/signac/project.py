@@ -3016,7 +3016,7 @@ def run_wolf_sanity_run_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_calibration_gomc_binary_file),
-        str(job.doc.gomc_ncpu),
+        str(1),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
     )
