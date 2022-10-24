@@ -55,8 +55,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -68,8 +68,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
 #WSL local bin paths
-gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -3000,8 +3000,8 @@ def run_sseq_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
-        "ngpu": lambda job: job.doc.gomc_ngpu,
+        "np": 1,
+        "ngpu": 1,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
     }
