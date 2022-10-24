@@ -1168,6 +1168,8 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     k_b_T = temperature * k_b
     dict_of_energies = {}
     dict_of_densities = {}
+    dict_of_uncorr_energies = {}
+    dict_of_uncorr_densities = {}
     dict_of_full_energies = {}
     dict_of_full_densities = {}
     blk_file = f'out_wolf_sanity.dat'
@@ -1193,6 +1195,18 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     energies_np = np.array(energies)
     densities_np = np.array(densities)
 
+    dict_of_full_energies["steps"] = steps_np
+    dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
+    
+    df2 = pd.DataFrame.from_dict(dict_of_full_energies)
+    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+    
+    dict_of_full_densities["steps"] = steps_np
+    dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
+    
+    df4 = pd.DataFrame.from_dict(dict_of_full_densities)
+    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+
     from pymbar import timeseries
     t0, g, Neff_max = timeseries.detectEquilibration(energies_np) # compute indices of uncorrelated timeseries
     A_t_equil = energies_np[t0:]
@@ -1204,33 +1218,33 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     energies_np = A_t_equil[indices]
     densities_np = A_t_equil_densities[indices]
 
-    print("Num equilibrated energy samples",np.shape(energies_np)[0])
+    print("Num uncorrelated equilibrated energy samples",np.shape(energies_np)[0])
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
     
-    dict_of_full_energies["steps"] = steps_np
-    dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
+    dict_of_uncorr_energies["steps"] = steps_np
+    dict_of_uncorr_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
 
     df1 = pd.DataFrame.from_dict(dict_of_energies)
     df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
     
-    df2 = pd.DataFrame.from_dict(dict_of_full_energies)
-    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+    df2 = pd.DataFrame.from_dict(dict_of_uncorr_energies)
+    df2.to_csv('wolf_sanity_uncorr_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
     #df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
     
     #print(densities_np.mean())
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
 
-    dict_of_full_densities["steps"] = steps_np
-    dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
+    dict_of_uncorr_densities["steps"] = steps_np
+    dict_of_uncorr_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
 
     df3 = pd.DataFrame.from_dict(dict_of_densities)
     df3.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
 
-    df4 = pd.DataFrame.from_dict(dict_of_full_densities)
+    df4 = pd.DataFrame.from_dict(dict_of_uncorr_densities)
     #df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=False, index=False, sep=' ')
-    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+    df4.to_csv('wolf_sanity_uncorr_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
 @Project.label
 @flow.with_job
@@ -1253,6 +1267,42 @@ def part_4b_wolf_sanity_analysis_completed(job):
     except:
         return False
 
+@Project.label
+@flow.with_job
+def part_4b_wolf_sanity_histograms_created(job):
+    df1 = pd.DataFrame()
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['solute']="solvent_box"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    try:
+        for ewald_job in jobs:
+            if (ewald_job.isfile("wolf_sanity_all_energies.csv")):
+                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+            else:
+                return False
+    except:
+        return False
+
+    colList = df1.columns.tolist()
+    colList.remove("Ewald_Ewald")
+    colList.remove("steps")
+    try:
+        for ewald_job in jobs:
+            for col, col_i in zip(colList, range(0, len(colList))):
+                try:
+                    if (ewald_job.isfile("PotentialEnergyDistribution_Ewald_vs_{}.png".format(col))):
+                        continue
+                    else:
+                        return False
+                except:
+                    return False
+        return True
+    except:
+        return False
 @Project.label
 @flow.with_job
 def part_4b_is_winning_wolf_model_or_ewald(job):
@@ -1285,12 +1335,14 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
     df1 = pd.DataFrame()
+    df3 = pd.DataFrame()
+
     jobs = list(pr.find_jobs({"replica_number_int": 0}))
     print(jobs)
     for other_job in jobs:
-            print("reading wolf_sanity_full_energies_{}.csv".format(other_job.id))
+            print("reading wolf_sanity_uncorr_energies_{}.csv".format(other_job.id))
             try:
-                df2 = pd.read_csv (other_job.fn('wolf_sanity_full_energies_{}.csv'.format(other_job.id)), sep=' ')
+                df2 = pd.read_csv (other_job.fn('wolf_sanity_uncorr_energies_{}.csv'.format(other_job.id)), sep=' ')
                 #print(df2)
                 if (df1.empty):
                     df1 = df2
@@ -1299,10 +1351,23 @@ def part_4b_wolf_sanity_analysis(job):
                     df1 = pd.merge(df1, df2, on='steps', how='outer')
             except:
                 print("failed to read dataframe")
-
+                
+    for other_job in jobs:
+            print("reading wolf_sanity_full_energies_{}.csv".format(other_job.id))
+            try:
+                df4 = pd.read_csv (other_job.fn('wolf_sanity_full_energies_{}.csv'.format(other_job.id)), sep=' ')
+                #print(df2)
+                if (df3.empty):
+                    df3 = df4
+                else:
+                    #df1 = df1.merge(df2, on="steps")
+                    df3 = pd.merge(df3, df4, on='steps', how='outer')
+            except:
+                print("failed to read dataframe")
         
     print(df1)
-    df1.to_csv('wolf_sanity_all_energies.csv')
+    df1.to_csv('wolf_sanity_uncorr_energies.csv')
+    df3.to_csv('wolf_sanity_all_energies.csv')
 
     statistics = pd.DataFrame()
     import scipy
@@ -1324,6 +1389,9 @@ def part_4b_wolf_sanity_analysis(job):
     job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
+
+
+
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
@@ -3045,11 +3113,93 @@ def part_4b_job_gomc_calibration_find_minimum(job):
 # ******************************************************
 # ******************************************************
 
+
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.solute == "solvent_box")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_4b_wolf_sanity_analysis_completed)
+@Project.post(part_4b_wolf_sanity_histograms_created)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@flow.with_job
+def part_4b_create_wolf_sanity_histograms(job):
+    df1 = pd.DataFrame()
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['solute']="solvent_box"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    try:
+        for ewald_job in jobs:
+            if (ewald_job.isfile("wolf_sanity_all_energies.csv")):
+                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+            else:
+                return False
+    except:
+        return False
+
+    print(df1)
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import scipy.stats as st
+    xmin = 1000
+    xmax = 0
+    numBins = 100
+    ref_ewald = df1["Ewald_Ewald"]
+    ref_min = min(ref_ewald)
+    ref_max = max(ref_ewald)
+
+    xmin = ref_min
+    xmax = ref_max
+
+    colList = df1.columns.tolist()
+    colList.remove("Ewald_Ewald")
+    colList.remove("steps")
+    for col, col_i in zip(colList, range(0, len(colList))):
+
+        wolf = df1[col]
+        wolf_min = min(wolf)
+        wolf_max = max(wolf)
+
+        xmin = min(ref_min, wolf_min)
+        xmax = min(ref_max, wolf_max)
+
+        binWidth =  (xmax - xmin)/float(numBins)
+        binList = np.arange(xmin, xmax+binWidth, binWidth)
+        # estimate the line with probability density function (PDF)
+        kde1 = st.gaussian_kde(ref_ewald).pdf(binList)
+
+        #Plot Ewald
+        plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald_Ewald")
+
+        kde2 = st.gaussian_kde(wolf).pdf(binList)
+        #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+        plt.plot(binList, kde2, linewidth=2, label=col)
+        plt.xlim(min(ref_min, wolf_min), max(wolf_max, ref_max))
+        plt.ylabel('Probability (Total E)')
+        plt.xlabel('Potential Energy (kcal/mol)')
+        plt.legend()
+        plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300)
+        plt.figure().clear()
+  
+
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
     @Project.pre(part_4b_job_gomc_sseq_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
+    @Project.pre(part_4b_wolf_sanity_histograms_created)  
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
     @Project.pre(lambda j: j.sp.solute not in ["solvent_box"])

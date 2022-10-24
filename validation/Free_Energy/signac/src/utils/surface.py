@@ -154,7 +154,7 @@ class DEProblem(ElementwiseProblem):
     def __init__(self, rect_B_spline, RCutMin, RCutMax, AlphaMin, AlphaMax):
         super().__init__(n_var=2,
                          n_obj=1,
-                         n_ieq_constr=0,
+                         n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
@@ -163,30 +163,40 @@ class DEProblem(ElementwiseProblem):
         self.RCutMax = RCutMax
         self.AlphaMin = AlphaMin
         self.AlphaMax = AlphaMax
+        self.tolerance = 0.01
+
 
     def _evaluate(self, x, out, *args, **kwargs):
         # Minimize Relative Error
         f1 = -np.abs(self.rect_B_spline.ev(x[0], x[1]))
+        g1 = np.abs(self.rect_B_spline.ev(x[0], x[1])) - self.tolerance
+
         out["F"] = [f1]
+        out["G"] = [g1]
 
 class DEProblemDeriv(ElementwiseProblem):
 
-    def __init__(self, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax):
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax):
         super().__init__(n_var=2,
                          n_obj=1,
-                         n_ieq_constr=0,
+                         n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
         self.tck = tck_pd
         self.RCutMin = RCutMin
         self.RCutMax = RCutMax
         self.AlphaMin = AlphaMin
         self.AlphaMax = AlphaMax
+        self.tolerance = 0.01
 
     def _evaluate(self, x, out, *args, **kwargs):
-        # Minimize Relative Error
+        # Maximize Relative Error
         f1 = -np.abs(interpolate.bisplev(x[0], x[1], self.tck))
+        g1 = np.abs(self.rect_B_spline.ev(x[0], x[1])) - self.tolerance
+
         out["F"] = [f1]
+        out["G"] = [g1]
 
 class MyProblem(ElementwiseProblem):
 
@@ -198,7 +208,6 @@ class MyProblem(ElementwiseProblem):
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
-
         self.RCutMin = RCutMin
         self.RCutMax = RCutMax
         self.AlphaMin = AlphaMin
@@ -251,7 +260,7 @@ class MyProblem(ElementwiseProblem):
         
         self.FMax = np.abs(res.F[0])
 
-        self.DEProblemDerivWRTRcut = DEProblemDeriv(self.tck_wrt_rcut, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        self.DEProblemDerivWRTRcut = DEProblemDeriv(self.rect_B_spline, self.tck_wrt_rcut, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
         algorithm = DE(
             pop_size=100,
@@ -271,7 +280,7 @@ class MyProblem(ElementwiseProblem):
         
         self.DEProblemDerivWRTRcut_max = np.abs(res.F[0])
 
-        self.DEProblemDerivWRTRcut_DD = DEProblemDeriv(self.tck_wrt_rcut_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        self.DEProblemDerivWRTRcut_DD = DEProblemDeriv(self.rect_B_spline, self.tck_wrt_rcut_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
         algorithm = DE(
             pop_size=100,
@@ -291,7 +300,7 @@ class MyProblem(ElementwiseProblem):
         
         self.DEProblemDerivWRTRcut_DD_max = np.abs(res.F[0])   
 
-        self.DEProblemDerivWRTAlpha = DEProblemDeriv(self.tck_wrt_alpha, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        self.DEProblemDerivWRTAlpha = DEProblemDeriv(self.rect_B_spline, self.tck_wrt_alpha, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
         algorithm = DE(
             pop_size=100,
@@ -311,7 +320,7 @@ class MyProblem(ElementwiseProblem):
         
         self.DEProblemDerivWRTAlpha_max = np.abs(res.F[0])
         
-        self.DEProblemDerivWRTAlpha_DD = DEProblemDeriv(self.tck_wrt_alpha_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        self.DEProblemDerivWRTAlpha_DD = DEProblemDeriv(self.rect_B_spline, self.tck_wrt_alpha_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
         algorithm = DE(
             pop_size=100,
@@ -331,7 +340,7 @@ class MyProblem(ElementwiseProblem):
         
         self.DEProblemDerivWRTAlpha_DD_max = np.abs(res.F[0])        
 
-        self.DEProblemDerivWRT_RCut_and_Alpha = DEProblemDeriv(self.tck_wrt_alpha_and_rcut, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        self.DEProblemDerivWRT_RCut_and_Alpha = DEProblemDeriv(self.rect_B_spline, self.tck_wrt_alpha_and_rcut, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
         algorithm = DE(
             pop_size=100,
@@ -351,7 +360,7 @@ class MyProblem(ElementwiseProblem):
         
         self.DEProblemDerivWRT_RCut_and_Alpha_max = np.abs(res.F[0])
         
-        self.DEProblemDerivWRT_RCut_and_Alpha_DD = DEProblemDeriv(self.tck_wrt_alpha_and_rcut_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
+        self.DEProblemDerivWRT_RCut_and_Alpha_DD = DEProblemDeriv(self.rect_B_spline, self.tck_wrt_alpha_and_rcut_DD, RCutMin, RCutMax, AlphaMin, AlphaMax)
         
         algorithm = DE(
             pop_size=100,
@@ -428,7 +437,7 @@ class MyDumProblem(ElementwiseProblem):
 
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power):
         super().__init__(n_var=2,
-                         n_obj=3,
+                         n_obj=2,
                          n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
@@ -448,8 +457,10 @@ class MyDumProblem(ElementwiseProblem):
         self.DEProblemDerivWRTAlpha_DD_max = DEProblemDerivWRTAlpha_DD_max
         self.DEProblemDerivWRT_RCut_and_Alpha_max = DEProblemDerivWRT_RCut_and_Alpha_max
         self.DEProblemDerivWRT_RCut_and_Alpha_DD_max = DEProblemDerivWRT_RCut_and_Alpha_DD_max
-        self.tolerance = pow(10, -tolerance_power)
-        
+        #self.tolerance = pow(10, -tolerance_power)
+        self.tolerance = pow(10, -2)
+
+
         self.pd_RCut_constant_alpha_constant = [0,0]
         self.pd_RCut_varies_alpha_constant = [1,0]
         self.pd_RCut_varies_alpha_constant_DD = [2,0]
@@ -487,7 +498,7 @@ class MyDumProblem(ElementwiseProblem):
         g1 = (x[1])/(self.AlphaMax) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
         g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
 
-        out["F"] = [f1,f4,f7]
+        out["F"] = [f1,f4]
         #out["F"] = [f1, f2]
         out["G"] = [g2]
 
@@ -929,8 +940,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(convFigPath)
     """
     # if you use MO 1.0
-    #weights = np.array([0.5,0.5])
-    weights = np.array([0.333, 0.333, 0.333])
+    weights = np.array([0.5,0.5])
+    #weights = np.array([0.333, 0.333, 0.333])
     #weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
 
