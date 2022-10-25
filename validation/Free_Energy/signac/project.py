@@ -2510,7 +2510,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             },
         )
         append_wolf_calibration_parameters(job)
-        append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
+        append_checkpoint_line(job, output_name_control_file_calibration_name, job.doc.path_to_sseq_checkpoint)
 
         ### Need to append Wolf Calibration lines since they aren't in MosDef
 
