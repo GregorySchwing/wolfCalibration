@@ -2519,8 +2519,8 @@ def build_psf_pdb_ff_gomc_conf(job):
         print("#**********************")
 
 
-    if (job.doc.N_liquid_solute == 0):
-        return
+    #if (job.doc.N_liquid_solute == 0):
+    #    return
     # ******************************************************
     # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (start)
     # Note: the control files are written for the max number of gomc_equilb_design_ensemble runs
