@@ -21,8 +21,8 @@ electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 #replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
 replicas = [0]# [0, 1, 2, 3, 4]
 g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
-densities_to_1 = np.arange (0.2, 0.3, 0.1)
-#densities_to_1 = np.arange (0.2, 1.1, 0.1)
+#densities_to_1 = np.arange (0.2, 0.3, 0.1)
+densities_to_1 = np.arange (0.2, 1.1, 0.1)
 
 startingDensities = np.array([0.001, 0.01, 0.1])
 densities = np.concatenate((startingDensities, densities_to_1), axis=0)* g_per_cm3
