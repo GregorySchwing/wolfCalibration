@@ -55,8 +55,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -64,10 +64,12 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 # local bin paths
-gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
 
- 
+#WSL local bin paths
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -75,12 +77,11 @@ namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-#gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 100 * 10**1 # set value for paper = 100 * 10**3
+gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
@@ -95,9 +96,15 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 10000
-Calibration_MC_Eq_Steps = 100
-Wolf_Sanity_MC_steps = 10000
+Calibration_MC_steps = 1000000
+Calibration_MC_Eq_Steps = 10000
+Wolf_Sanity_MC_steps = 5 * 10**7
+# Free energy calcs: set free energy data in doc
+# this number will generate the lamdas
+# set the number of lambda spacings, which includes 0 to 1
+#number_of_lambda_spacing_including_zero_int = 11
+number_of_lambda_spacing_including_zero_int = 23
+
 
 # force field (FF) file for all simulations in that job
 # Note: do not add extensions
@@ -111,7 +118,7 @@ mosdef_structure_box_1_name_str = "mosdef_box_1"
 
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-namd_equilb_NVT_control_file_name_str = "namd_equilb_NVT"
+namd_equilb_NPT_control_file_name_str = "namd_equilb_NVT"
 
 # The equilb using the ensemble used for the simulation design, which
 # includes the simulation runs GOMC control file input and simulation outputs
@@ -142,11 +149,11 @@ preliminary_output_avg_std_of_replicates_txt_file_name_box_0 = "preliminary_anal
 walltime_mosdef_hr = 24
 walltime_namd_hr = 24
 #CPU
-walltime_gomc_equilbrium_hr = 96
+walltime_gomc_equilbrium_hr = 120
 #GPU
 #walltime_gomc_equilbrium_hr = 48
 #CPU
-walltime_gomc_production_hr = 144
+walltime_gomc_production_hr = 240
 #GPU
 #walltime_gomc_production_hr = 96
 walltime_gomc_analysis_hr = 4
@@ -328,6 +335,81 @@ def initial_parameters(job):
     """Set the initial job parameters into the jobs doc json file."""
     # select
 
+
+    LambdaVDW_list = []
+    LambdaCoul_list = []
+    InitialState_list = []
+    if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+        for lamda_i in range(0, int(number_of_lambda_spacing_including_zero_int)):
+            lambda_space_increments = 1 / int(number_of_lambda_spacing_including_zero_int - 1)
+            LambdaVDW_list.append(np.round(lamda_i * lambda_space_increments, decimals=8))
+            InitialState_list.append(lamda_i)
+
+        """
+        To calculate the free energy of solvation in water and
+        1-octanol, 23 intermediate lambda states, as shown in
+        Figure 1, were used:
+        λ coul,LJ ∈ {
+        (0.0, 0.0), (0.0, 0.05), (0.0, 0.1), (0.0, 0.15),
+        (0.0, 0.2), (0.0, 0.25), (0.0, 0.3), (0.0, 0.35),
+        (0.0, 0.4), (0.0, 0.45), (0.0, 0.5), (0.0, 0.6),
+        (0.0, 0.7), (0.0, 0.8), (0.0, 0.9), (0.0, 1.0),
+        (0.2, 1.0), (0.4, 1.0), (0.6, 1.0), (0.7, 1.0),
+        (0.8, 1.0), (0.9, 1.0), (1.0, 1.0) }
+        """
+    elif job.sp.solute in ["ETOH"]:
+        counter = 0
+        # Append 16 0.0's
+        for x in range(0, 16):
+            LambdaCoul_list.append(0.0)
+            InitialState_list.append(counter)
+            counter = counter + 1
+        # Append 0.2, 0.4, 0.6
+        for x in range(2, 8, 2):
+            LambdaCoul_list.append(round(x*0.1,2))
+            InitialState_list.append(counter)
+            counter = counter + 1
+        # Append 0.7, 0.8, 0.9, 1.0
+        for x in range(7, 11, 1):
+            LambdaCoul_list.append(round(x*0.1,2))
+            InitialState_list.append(counter)
+            counter = counter + 1
+
+        # 0.0-0.5, by 0.5
+        for x in range(0, 55, 5):
+            LambdaVDW_list.append(round(x*0.01,2))
+            #InitialState_list.append(counter)
+            #counter = counter + 1
+        # 0.6-0.9
+        for x in range(6, 10, 1):
+            LambdaVDW_list.append(round(x*0.1,2))
+            #InitialState_list.append(counter)
+            #counter = counter + 1
+        # Append 7 1.0's
+        for x in range(0, 8, 1):
+            LambdaVDW_list.append(1.0)    
+            #InitialState_list.append(counter)
+            #counter = counter + 1
+    elif (job.sp.solute in ["solvent_box"]):
+        LambdaVDW_list = [0]
+        LambdaCoul_list = [0]
+        InitialState_list = [0]
+    else:
+        print("Didnt recognize solute", job.sp.solute)
+    print("*********************")
+    print("*********************")
+    print("LambdaVDW_list = " + str(LambdaVDW_list))
+    print("LambdaCoul_list = " + str(LambdaCoul_list))
+    print("InitialState_list = " + str(InitialState_list))
+    print("*********************")
+    print("*********************")
+    if LambdaVDW_list[0] != 0 and LambdaVDW_list[-1] != 1 :
+        raise ValueError("ERROR: The selected lambda list values do not start with a 0 and end 1.")
+
+    job.doc.LambdaVDW_list = LambdaVDW_list
+    job.doc.LambdaCoul_list = LambdaCoul_list
+    job.doc.InitialState_list = InitialState_list
+
     equilibration_ensemble = "NVT"
     production_ensemble = "NVT"
     production_ensemble = "NVT"
@@ -354,9 +436,19 @@ def initial_parameters(job):
 
     """
 
+    job.doc.N_liquid_solvent = 1000
+    if (job.sp.solute == "solvent_box"):
+        job.doc.N_liquid_solute = 0
+    else:
+        job.doc.N_liquid_solute = 1
+
+
     job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
 
-    job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
+    if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+        job.doc.Rcut_ang = 15 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
+    else:
+        job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
 
     job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
     job.doc.neighbor_list_dist_namd_ang = 22 * u.angstrom # NAMD's neighbor list
@@ -390,6 +482,9 @@ def initial_parameters(job):
         int(job.sp.replica_number_int)
     )
 
+    # set solvent and solute in doc
+    job.doc.solvent = job.sp.solvent
+    job.doc.solute = job.sp.solute
 
     job.doc.namd_node_ncpu = 4
     job.doc.namd_node_ngpu = 1
@@ -397,7 +492,7 @@ def initial_parameters(job):
 
     job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     #job.doc.gomc_ngpu = 1
-    job.doc.gomc_ngpu = 1
+    job.doc.gomc_ngpu = 0
 
     # set rcut, ewalds
     job.doc.winningWolfPotential = ""
@@ -431,11 +526,11 @@ def initial_parameters(job):
 
     # set the initial iteration number of the simulation
     if equilibration_ensemble == "NPT":
-        job.doc.namd_equilb_NVT_gomc_binary_file = f"namd2"
+        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
         job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
     elif equilibration_ensemble == "NVT":
-        job.doc.namd_equilb_NVT_gomc_binary_file = f"namd2"
+        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
         job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
     else:
@@ -536,14 +631,6 @@ def namd_control_file_written(job, control_filename_str):
     return file_written_bool
 
 
-# checking if the NAMD control file is written for the melt equilb NVT run
-@Project.label
-@flow.with_job
-def part_2a_namd_equilb_NVT_control_file_written(job):
-    """General check that the namd_equilb_NVT_control_file
-    (high temperature to set temp NAMD control file) is written."""
-    return namd_control_file_written(job, namd_equilb_NVT_control_file_name_str)
-
 @Project.label
 @flow.with_job
 def part_2a_wolf_calibration_control_file_written(job):
@@ -559,6 +646,7 @@ def part_2a_wolf_calibration_control_file_written(job):
         )
     except:
         return False
+
 
 @Project.label
 @flow.with_job
@@ -576,11 +664,24 @@ def part_2a_wolf_sanity_control_file_written(job):
     except:
         return False
 
+# checking if the NAMD control file is written for the melt equilb NVT run
+@Project.label
+@flow.with_job
+def part_2a_namd_equilb_NPT_control_file_written(job):
+    """General check that the namd_equilb_NPT_control_file
+    (high temperature to set temp NAMD control file) is written."""
+    return namd_control_file_written(job, namd_equilb_NPT_control_file_name_str)
+
 # checking if the GOMC control file is written for the equilb run with the selected ensemble
 @Project.label
 @flow.with_job
 def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
     """General check that the gomc_equilb_design_ensemble (run temperature) gomc control file is written."""
+    try:
+        if (job.doc.N_liquid_solute == 0):
+            return True
+    except:
+        return False
     
     try:
         for initial_state_i in list(job.doc.InitialState_list):
@@ -602,7 +703,11 @@ def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
 @flow.with_job
 def part_2c_gomc_production_control_file_written(job):
     """General check that the gomc_production_control_file (run temperature) is written."""
-
+    try:
+        if (job.doc.N_liquid_solute == 0):
+            return True
+    except:
+        return False
     try:
         for initial_state_i in list(job.doc.InitialState_list):
             try:
@@ -655,26 +760,35 @@ def namd_simulation_started(job, control_filename_str):
 # check if melt equilb_NVT namd run is started
 @Project.label
 @flow.with_job
-def part_3a_output_namd_equilb_NVT_started(job):
-    """Check to see if the namd_equilb_NVT_control_file is started
+def part_3a_output_namd_equilb_NPT_started(job):
+    """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
     if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Ewald"
             ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                return namd_simulation_started(ewald_job, namd_equilb_NVT_control_file_name_str)
+                return namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
 
-    return namd_simulation_started(job, namd_equilb_NVT_control_file_name_str)
+    return namd_simulation_started(job, namd_equilb_NPT_control_file_name_str)
 
 
 # check if melt equilb_NVT namd run is started
 @Project.label
 @flow.with_job
-def part_3a_output_namd_equilb_NVT_hasnt_started(job):
-    """Check to see if the namd_equilb_NVT_control_file is started
+def part_3a_output_namd_equilb_NPT_hasnt_started(job):
+    """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
     ewald_sp = job.statepoint()
     ewald_sp['replica_number_int']=0
@@ -683,7 +797,7 @@ def part_3a_output_namd_equilb_NVT_hasnt_started(job):
     ewald_sp['wolf_potential']="Ewald"
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
-        return not namd_simulation_started(ewald_job, namd_equilb_NVT_control_file_name_str)
+        return not namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
 
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
@@ -749,6 +863,15 @@ def part_3b_output_gomc_sseq_started(job):
 #This will cause Ewald sims to wait for Wolf calibration to complete.
         #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
+        else:
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Ewald"
@@ -881,26 +1004,35 @@ def namd_sim_completed_properly(job, control_filename_str):
 # check if melt equilb NVT GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
-def part_4a_job_namd_equilb_NVT_completed_properly(job):
-    """Check to see if the  namd_equilb_NVT_control_file was completed properly
+def part_4a_job_namd_equilb_NPT_completed_properly(job):
+    """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Ewald"
             ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_name_str)
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
     elif (job.sp.replica_number_int == 0):
-        return namd_sim_completed_properly(job, namd_equilb_NVT_control_file_name_str)
+        return namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str)
     else:
         ewald_sp = job.statepoint()
         ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
-            return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_name_str)
+            return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -911,8 +1043,9 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     try:
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['wolf_model']="Calibrator"        
-        ewald_sp['wolf_potential']="Calibrator"
+        ewald_sp['solute']="solvent_box"
+        ewald_sp['wolf_model']="Ewald"        
+        ewald_sp['wolf_potential']="Ewald"
         ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
@@ -941,6 +1074,15 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     Single_state_gomc_eq_control_file_name = "single_state_eq"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
+        else:
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Ewald"
@@ -1032,6 +1174,8 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     k_b_T = temperature * k_b
     dict_of_energies = {}
     dict_of_densities = {}
+    dict_of_uncorr_energies = {}
+    dict_of_uncorr_densities = {}
     dict_of_full_energies = {}
     dict_of_full_densities = {}
     blk_file = f'out_wolf_sanity.dat'
@@ -1057,6 +1201,18 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     energies_np = np.array(energies)
     densities_np = np.array(densities)
 
+    dict_of_full_energies["steps"] = steps_np
+    dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
+    
+    df2 = pd.DataFrame.from_dict(dict_of_full_energies)
+    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+    
+    dict_of_full_densities["steps"] = steps_np
+    dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
+    
+    df4 = pd.DataFrame.from_dict(dict_of_full_densities)
+    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+
     from pymbar import timeseries
     t0, g, Neff_max = timeseries.detectEquilibration(energies_np) # compute indices of uncorrelated timeseries
     A_t_equil = energies_np[t0:]
@@ -1068,33 +1224,33 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     energies_np = A_t_equil[indices]
     densities_np = A_t_equil_densities[indices]
 
-    print("Num equilibrated energy samples",np.shape(energies_np)[0])
+    print("Num uncorrelated equilibrated energy samples",np.shape(energies_np)[0])
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [energies_np.mean()]
     dict_of_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [energies_np.std()]
     
-    dict_of_full_energies["steps"] = steps_np
-    dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
+    dict_of_uncorr_energies["steps"] = steps_np
+    dict_of_uncorr_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
 
     df1 = pd.DataFrame.from_dict(dict_of_energies)
     df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
     
-    df2 = pd.DataFrame.from_dict(dict_of_full_energies)
-    df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+    df2 = pd.DataFrame.from_dict(dict_of_uncorr_energies)
+    df2.to_csv('wolf_sanity_uncorr_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
     #df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
     
     #print(densities_np.mean())
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [densities_np.mean()]
     dict_of_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [densities_np.std()]
 
-    dict_of_full_densities["steps"] = steps_np
-    dict_of_full_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
+    dict_of_uncorr_densities["steps"] = steps_np
+    dict_of_uncorr_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = densities_np
 
     df3 = pd.DataFrame.from_dict(dict_of_densities)
     df3.to_csv('wolf_sanity_densities_{}.csv'.format(job.id))
 
-    df4 = pd.DataFrame.from_dict(dict_of_full_densities)
+    df4 = pd.DataFrame.from_dict(dict_of_uncorr_densities)
     #df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=False, index=False, sep=' ')
-    df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
+    df4.to_csv('wolf_sanity_uncorr_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
 @Project.label
 @flow.with_job
@@ -1103,6 +1259,7 @@ def part_4b_wolf_sanity_analysis_completed(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['solute']="solvent_box"   
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     try:
@@ -1116,6 +1273,42 @@ def part_4b_wolf_sanity_analysis_completed(job):
     except:
         return False
 
+@Project.label
+@flow.with_job
+def part_4b_wolf_sanity_histograms_created(job):
+    df1 = pd.DataFrame()
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['solute']="solvent_box"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    try:
+        for ewald_job in jobs:
+            if (ewald_job.isfile("wolf_sanity_all_energies.csv")):
+                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+            else:
+                return False
+    except:
+        return False
+
+    colList = df1.columns.tolist()
+    colList.remove("Ewald_Ewald")
+    colList.remove("steps")
+    try:
+        for ewald_job in jobs:
+            for col, col_i in zip(colList, range(0, len(colList))):
+                try:
+                    if (ewald_job.isfile("PotentialEnergyDistribution_Ewald_vs_{}.png".format(col))):
+                        continue
+                    else:
+                        return False
+                except:
+                    return False
+        return True
+    except:
+        return False
 @Project.label
 @flow.with_job
 def part_4b_is_winning_wolf_model_or_ewald(job):
@@ -1140,20 +1333,22 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.solute == "solvent_box")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
     df1 = pd.DataFrame()
+    df3 = pd.DataFrame()
+
     jobs = list(pr.find_jobs({"replica_number_int": 0}))
     print(jobs)
     for other_job in jobs:
-            print("reading wolf_sanity_full_energies_{}.csv".format(other_job.id))
+            print("reading wolf_sanity_uncorr_energies_{}.csv".format(other_job.id))
             try:
-                df2 = pd.read_csv (other_job.fn('wolf_sanity_full_energies_{}.csv'.format(other_job.id)), sep=' ')
+                df2 = pd.read_csv (other_job.fn('wolf_sanity_uncorr_energies_{}.csv'.format(other_job.id)), sep=' ')
                 #print(df2)
                 if (df1.empty):
                     df1 = df2
@@ -1162,10 +1357,23 @@ def part_4b_wolf_sanity_analysis(job):
                     df1 = pd.merge(df1, df2, on='steps', how='outer')
             except:
                 print("failed to read dataframe")
-
+                
+    for other_job in jobs:
+            print("reading wolf_sanity_full_energies_{}.csv".format(other_job.id))
+            try:
+                df4 = pd.read_csv (other_job.fn('wolf_sanity_full_energies_{}.csv'.format(other_job.id)), sep=' ')
+                #print(df2)
+                if (df3.empty):
+                    df3 = df4
+                else:
+                    #df1 = df1.merge(df2, on="steps")
+                    df3 = pd.merge(df3, df4, on='steps', how='outer')
+            except:
+                print("failed to read dataframe")
         
     print(df1)
-    df1.to_csv('wolf_sanity_all_energies.csv')
+    df1.to_csv('wolf_sanity_uncorr_energies.csv')
+    df3.to_csv('wolf_sanity_all_energies.csv')
 
     statistics = pd.DataFrame()
     import scipy
@@ -1187,6 +1395,9 @@ def part_4b_wolf_sanity_analysis(job):
     job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
+
+
+
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
@@ -1202,6 +1413,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['solute']="solvent_box"   
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
@@ -1249,7 +1461,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
-                print(file)
                 atLeastOneMatchExists = True
                 with open(file, "r") as openedfile:
                     last_line = openedfile.readlines()[-1]
@@ -1263,6 +1474,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
+@Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
@@ -1282,6 +1494,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"
     ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['solute']="solvent_box"
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     winningWolf = {}
@@ -1412,7 +1625,7 @@ def part_4b_job_gomc_equilb_design_ensemble_completed_properly(job):
                     job,
                     filename_4b_iter,
                 ) is False:
-                    #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
+                    #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i) + " " + job.fn(""))
                     return False
             except:
                 return False
@@ -1597,32 +1810,85 @@ def build_charmm(job, write_files=True):
                       )
     solvent.name = job.doc.solvent
 
-    solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
+    #if job.doc.solvent not in ["TIP4"]:
+        #solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
+    if (job.doc.N_liquid_solute > 0):
+        smiles_or_mol2_solute = get_molecule_path(smiles_or_mol2_name_to_value_dict[job.sp.solute][job.sp.forcefield])
 
-    # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
-    minimal_forcefield_dict = {solvent.name: solvent_ff}
+        if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            solute = mb.Compound(name=job.doc.solute)
+        else:
+            solute = mb.load(smiles_or_mol2_solute[1],
+                            smiles=smiles_or_mol2_solute[0]
+                            )
+        solute.name = job.sp.solute
 
-    #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
+        solute_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solute][job.sp.forcefield])
+        solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
 
-    residues_list = [solvent.name]
-    print("residues_list  = " +str(residues_list ))
+        # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
+        minimal_forcefield_dict = {solute.name: solute_ff,
+                                solvent.name: solvent_ff
+                                }
 
-    #if job.doc.solvent in ["TIP4", "TIP3"]:
-    gomc_fix_bonds_angles_residues_list = [solvent.name]
-    #else:
-    #    gomc_fix_bonds_angles_residues_list  = None
-    print('Running: filling liquid box')
-    box_0 = mb.fill_box(compound=[solvent],
-                        density=job.doc.density,
-                        box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                            ],
-                        seed=mbuild_box_seed_no
-                        )
-    print('Completed: filling liquid box')
+        #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
 
-    bead_to_atom_name_dict = None
+        # for trappe, currently unused'
+        if (job.sp.forcefield == "TRAPPE"):
+            bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
+        else:
+            bead_to_atom_name_dict = None
+
+        residues_list = [solute.name, solvent.name]
+        print("residues_list  = " +str(residues_list ))
+
+        #if job.doc.solvent in ["TIP4", "TIP3"]:
+        gomc_fix_bonds_angles_residues_list = [solvent.name]
+        #else:
+        #    gomc_fix_bonds_angles_residues_list  = None
+        print('Running: filling liquid box')
+        box_0 = mb.fill_box(compound=[solvent],
+                            density=job.doc.density,
+                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                ],
+                            seed=mbuild_box_seed_no
+                            )
+        print('Completed: filling liquid box')
+
+    else:
+        solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
+
+        # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
+        minimal_forcefield_dict = {solvent.name: solvent_ff
+                                }
+
+        #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
+
+        # for trappe, currently unused'
+        if (job.sp.forcefield == "TRAPPE"):
+            bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
+        else:
+            bead_to_atom_name_dict = None
+
+        residues_list = [solvent.name]
+        print("residues_list  = " +str(residues_list ))
+
+        #if job.doc.solvent in ["TIP4", "TIP3"]:
+        gomc_fix_bonds_angles_residues_list = [solvent.name]
+        #else:
+        #    gomc_fix_bonds_angles_residues_list  = None
+        print('Running: filling liquid box')
+        box_0 = mb.fill_box(compound=[solvent],
+                            density=job.doc.density,
+                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                                ],
+                            seed=mbuild_box_seed_no
+                            )
+        print('Completed: filling liquid box')
 
     print('Running: GOMC FF file, and the psf and pdb files')
     if job.doc.production_ensemble in ["NVT", "NPT"]:
@@ -1684,9 +1950,10 @@ def build_charmm(job, write_files=True):
 # ******************************************************
 # ******************************************************
 @Project.pre(part_1a_initial_data_input_to_json)
-@Project.post(part_2a_namd_equilb_NVT_control_file_written)
+@Project.post(part_2a_namd_equilb_NPT_control_file_written)
+@Project.post(part_2b_gomc_equilb_design_ensemble_control_file_written)
+@Project.post(part_2c_gomc_production_control_file_written)
 @Project.post(mosdef_input_written)
-@Project.post(part_2a_wolf_calibration_control_file_written)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1702,7 +1969,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
-    restart_control_file_name_str = namd_equilb_NVT_control_file_name_str
+    restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
 
     prefix = ""
     if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
@@ -1740,7 +2007,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         prefix+mosdef_structure_box_1_name_str
     )
 
-    job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NVT_control_file_name_str}.dat"
+    job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
     job.doc.path_to_ref_pdb =  Coordinates_box_0
     job.doc.path_to_ref_psf =  Structure_box_0
     job.doc.path_to_ref_binCoordinates =  binCoordinates_box_0
@@ -1788,12 +2055,16 @@ def build_psf_pdb_ff_gomc_conf(job):
     if (job.sp.electrostatic_method == "Wolf"):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
-        ref_sp['wolf_model']="Ewald"
-        ref_sp['wolf_potential']="Ewald"
+        if (job.sp.wolf_model == "Calibrator"):
+            ref_sp['wolf_model']="Ewald"
+            ref_sp['wolf_potential']="Ewald"
+        else:
+            ref_sp['wolf_model']="Ewald"
+            ref_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
-            job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NVT_control_file_name_str}.dat")
+            job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
             job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
             job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
             job.doc.path_to_sseq_pdb_box_1 =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_1)
@@ -1821,7 +2092,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     # This has to be off during calibration
     NoFreeEnergyCalc = [False, int(gomc_free_energy_output_data_every_X_steps)]
 
-    MoleculeType = [job.sp.solvent, 1]
+    MoleculeType = [job.sp.solute, 1]
 
     use_ElectroStatics = True
 
@@ -1870,8 +2141,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     # NOTE: the production and melt temps are converted to intergers so they can be ramped down
     # from hot to cool to equilibrate the system.
     generate_namd_equilb_control_file(template_path_filename=namd_template_path_str,
-                                      namd_path_conf_filename=namd_equilb_NVT_control_file_name_str,
-                                      namd_path_file_output_names=namd_equilb_NVT_control_file_name_str,
+                                      namd_path_conf_filename=namd_equilb_NPT_control_file_name_str,
+                                      namd_path_file_output_names=namd_equilb_NPT_control_file_name_str,
                                       namd_uses_water=namd_uses_water,
                                       namd_water_model=namd_water_model,
                                       namd_electrostatics_bool=use_ElectroStatics,
@@ -1889,10 +2160,10 @@ def build_psf_pdb_ff_gomc_conf(job):
                                       )
 
     print("#**********************")
-    print("Completed: namd_equilb_NVT GOMC control file writing")
+    print("Completed: namd_equilb_NPT GOMC control file writing")
     print("#**********************")
     # ******************************************************
-    # namd_equilb_NVT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
+    # namd_equilb_NPT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
     # ******************************************************
     MC_steps = int(gomc_steps_equilb_design_ensemble)
 
@@ -1909,37 +2180,73 @@ def build_psf_pdb_ff_gomc_conf(job):
         False,
         int(gomc_output_data_every_X_steps),
     ]
+    # namd and gomc integrators are off by ~2%, which may cause drift
+    # if you calibrate wolf using the restart files from namd
+    # therefore a single state npt equilibration is performed
+    # in gomc before wolf calibration.
+    if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+        useCoul = False
+        CBMC_First = (12,)
+        CBMC_Nth = (10,)
+        CBMC_Ang = (50,)
+        CBMC_Dih = (50,)
+        if job.doc.equilibration_ensemble in ["NVT"]:
+            VolFreq = (0.00,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.4,)
+            RotFreq = (0.3,)
+            RegrowthFreq = (0.3,)
 
-    useCoul = True
-    CBMC_First = (10,)
-    CBMC_Nth = (10,)
-    CBMC_Ang = (100,)
-    CBMC_Dih = (50,)
-    if job.doc.equilibration_ensemble in ["NVT"]:
-        VolFreq = (0.00,)
-        MultiParticleFreq = (None,)
-        IntraSwapFreq = (0.0,)
-        CrankShaftFreq = (0.1,)
-        SwapFreq = (None,)
-        DisFreq = (0.50,)
-        RotFreq = (0.2,)
-        RegrowthFreq = (0.20,)
+        elif job.doc.equilibration_ensemble in ["NPT"]:
+            VolFreq = (0.01,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.39,)
+            RotFreq = (0.3,)
+            RegrowthFreq = (0.3,)
 
-    elif job.doc.equilibration_ensemble in ["NPT"]:
-        VolFreq = (0.01,)
-        MultiParticleFreq = (None,)
-        IntraSwapFreq = (0.0,)
-        CrankShaftFreq = (0.1,)
-        SwapFreq = (None,)
-        DisFreq = (0.49,)
-        RotFreq = (0.2,)
-        RegrowthFreq = (0.20,)
+        else:
+            raise ValueError(
+                "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                "in the GOMC control file writer."
+            )
 
-    else:
-        raise ValueError(
-            "Moleules MC move ratios not listed for this solvent and solute or ensemble "
-            "in the GOMC control file writer."
-        )
+    if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
+        useCoul = True
+        CBMC_First = (10,)
+        CBMC_Nth = (10,)
+        CBMC_Ang = (100,)
+        CBMC_Dih = (50,)
+        if job.doc.equilibration_ensemble in ["NVT"]:
+            VolFreq = (0.00,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (0.1,)
+            SwapFreq = (None,)
+            DisFreq = (0.50,)
+            RotFreq = (0.2,)
+            RegrowthFreq = (0.20,)
+
+        elif job.doc.equilibration_ensemble in ["NPT"]:
+            VolFreq = (0.01,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (0.1,)
+            SwapFreq = (None,)
+            DisFreq = (0.49,)
+            RotFreq = (0.2,)
+            RegrowthFreq = (0.20,)
+
+        else:
+            raise ValueError(
+                "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                "in the GOMC control file writer."
+            )
     print("#**********************")
     print("Started: equilb NPT NAMD -> NPT GOMC control file writing")
     print("#**********************")
@@ -2084,9 +2391,73 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("Finished: Wolf Sanity GOMC control file writing")
     print("#**********************")
     #
-    if (job.sp.electrostatic_method == "Wolf" and job.sp.wolf_model == "Calibrator"):
+    if (job.sp.electrostatic_method == "Wolf"):
         output_name_control_file_calibration_name = "wolf_calibration"
-              
+
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            useCoul = False
+            CBMC_First = (12,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (50,)
+            CBMC_Dih = (50,)
+            if job.doc.equilibration_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.4,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            elif job.doc.equilibration_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.39,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )
+
+        if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
+            useCoul = True
+            CBMC_First = (10,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (100,)
+            CBMC_Dih = (50,)
+            if job.doc.equilibration_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.50,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            elif job.doc.equilibration_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.49,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )                  
+
         gomc_control.write_gomc_control_file(
             gomc_charmm_object_with_files,
             output_name_control_file_calibration_name,
@@ -2154,6 +2525,377 @@ def build_psf_pdb_ff_gomc_conf(job):
         print("#**********************")
 
 
+    if (job.doc.N_liquid_solute == 0):
+        return
+    # ******************************************************
+    # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (start)
+    # Note: the control files are written for the max number of gomc_equilb_design_ensemble runs
+    # so the Charmm object only needs created 1 time.
+    # ******************************************************
+    print("#**********************")
+    print("Started: equilb NPT or GEMC-NVT GOMC control file writing")
+    print("#**********************")
+    job.doc.gomc_equilb_design_ensemble_dict = {}
+    job.doc.gomc_production_run_ensemble_dict = {}
+
+    for initial_state_sims_i in list(job.doc.InitialState_list):
+        output_name_control_file_name = "{}_initial_state_{}".format(
+            gomc_equilb_design_ensemble_control_file_name_str, initial_state_sims_i
+        )
+
+        job.doc.gomc_equilb_design_ensemble_dict.update(
+            {
+                initial_state_sims_i: {
+                    "restart_control_file_name": restart_control_file_name_str,
+                    "output_name_control_file_name": output_name_control_file_name,
+                }
+            }
+        )
+
+        # output all data and calc frequecy
+        output_true_list_input = [
+            True,
+            int(gomc_output_data_every_X_steps),
+        ]
+        output_false_list_input = [
+            False,
+            int(gomc_output_data_every_X_steps),
+        ]
+
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            useCoul = False
+            CBMC_First = (12,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (50,)
+            CBMC_Dih = (50,)
+            if job.doc.equilibration_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.4,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            elif job.doc.equilibration_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.39,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )
+
+        if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
+            useCoul = True
+            CBMC_First = (10,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (100,)
+            CBMC_Dih = (50,)
+            if job.doc.equilibration_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.50,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            elif job.doc.equilibration_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.49,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )                
+                
+        # Only use namd run from ewald to ensure both start at exact same configuration.
+        gomc_control.write_gomc_control_file(
+            gomc_charmm_object_with_files,
+            output_name_control_file_name,
+            job.doc.equilibration_ensemble,
+            MC_steps,
+            production_temperature_K,
+            ff_psf_pdb_file_directory=None,
+            check_input_files_exist=False,
+            Parameters="{}.inp".format(gomc_ff_filename_str),
+            Restart= True,
+            RestartCheckpoint=True,
+            ExpertMode=False,
+            Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
+            Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
+            binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
+            extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
+            binVelocities_box_0=None,
+            Coordinates_box_1=None,
+            Structure_box_1=None,
+            binCoordinates_box_1=None,
+            extendedSystem_box_1=None,
+            binVelocities_box_1=None,
+            input_variables_dict={
+                "PRNG": seed_no,
+                "Pressure": production_pressure_bar,
+                "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
+                "ElectroStatic": use_ElectroStatics,
+                "VDWGeometricSigma": VDWGeometricSigma,
+                "Rcut": job.doc.Rcut_ang,
+                "Exclude": Exclude,
+                "VolFreq": VolFreq[-1],
+                "MultiParticleFreq": MultiParticleFreq[-1],
+                "IntraSwapFreq": IntraSwapFreq[-1],
+                "CrankShaftFreq": CrankShaftFreq[-1],
+                "SwapFreq": SwapFreq[-1],
+                "DisFreq": DisFreq[-1],
+                "RotFreq": RotFreq[-1],
+                "RegrowthFreq": RegrowthFreq[-1],
+                "OutputName": output_name_control_file_name,
+                "EqSteps": EqSteps,
+                "PressureCalc": output_false_list_input,
+                "RestartFreq": output_true_list_input,
+                "CheckpointFreq": output_true_list_input,
+                "ConsoleFreq": console_output_true_list_input,
+                "BlockAverageFreq": output_true_list_input,
+                "HistogramFreq": output_false_list_input,
+                "CoordinatesFreq": output_false_list_input,
+                "DCDFreq": output_true_list_input,
+                "Potential": cutoff_style,
+                "LRC": True,
+                "RcutLow": 0,
+                "CBMC_First": CBMC_First[-1],
+                "CBMC_Nth": CBMC_Nth[-1],
+                "CBMC_Ang": CBMC_Ang[-1],
+                "CBMC_Dih": CBMC_Dih[-1],
+                "FreeEnergyCalc": FreeEnergyCalc,
+                "MoleculeType": MoleculeType,
+                "InitialState": initial_state_sims_i,
+                "LambdaVDW": list(job.doc.LambdaVDW_list),
+                "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+            },
+        )
+        append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
+        print("#**********************")
+        print("Completed: equilb NPT or GEMC-NVT GOMC control file writing")
+        print("#**********************")
+
+        # ******************************************************
+        # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (end)
+        # Note: the control files are written for the max number of gomc_equilb_design_ensemble runs
+        # so the Charmm object only needs created 1 time.
+        # ******************************************************
+
+        # ******************************************************
+        # production NPT or GEMC-NVT - GOMC control file writing  (start)
+        # ******************************************************
+        print("#**********************")
+        print("Started: production NPT or GEMC-NVT GOMC control file writing")
+        print("#**********************")
+
+    for initial_state_sims_i in list(job.doc.InitialState_list):
+        output_name_control_file_name = "{}_initial_state_{}".format(
+            gomc_production_control_file_name_str, initial_state_sims_i
+        )
+        restart_control_file_name_str = "{}_initial_state_{}".format(
+            gomc_equilb_design_ensemble_control_file_name_str, int(initial_state_sims_i)
+        )
+        job.doc.gomc_production_run_ensemble_dict.update(
+            {
+                initial_state_sims_i: {
+                    "restart_control_file_name": restart_control_file_name_str,
+                    "output_name_control_file_name": output_name_control_file_name,
+                }
+            }
+        )
+
+        # output all data and calc frequecy
+        output_true_list_input = [
+            True,
+            int(gomc_output_data_every_X_steps),
+        ]
+        output_false_list_input = [
+            False,
+            int(gomc_output_data_every_X_steps),
+        ]
+
+        # calc MC steps
+        MC_steps = int(gomc_steps_lamda_production)
+        
+
+
+        # output all data and calc frequecy
+        output_true_list_input = [
+            True,
+            int(gomc_output_data_every_X_steps),
+        ]
+        output_false_list_input = [
+            False,
+            int(gomc_output_data_every_X_steps),
+        ]
+        
+        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+            useCoul = False
+            CBMC_First = (12,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (50,)
+            CBMC_Dih = (50,)
+            if job.doc.production_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.4,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            elif job.doc.production_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (None,)
+                SwapFreq = (None,)
+                DisFreq = (0.39,)
+                RotFreq = (0.3,)
+                RegrowthFreq = (0.3,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )
+
+        if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
+            useCoul = True
+            CBMC_First = (10,)
+            CBMC_Nth = (10,)
+            CBMC_Ang = (100,)
+            CBMC_Dih = (50,)
+            if job.doc.production_ensemble in ["NVT"]:
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.50,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            elif job.doc.production_ensemble in ["NPT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (None,)
+                DisFreq = (0.49,)
+                RotFreq = (0.2,)
+                RegrowthFreq = (0.20,)
+
+            else:
+                raise ValueError(
+                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                    "in the GOMC control file writer."
+                )
+
+        Prod_Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
+            restart_control_file_name_str
+        )
+        Prod_Structure_box_0 = "{}_BOX_0_restart.psf".format(
+            restart_control_file_name_str
+        )
+        Prod_binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
+            restart_control_file_name_str
+        )
+        Prod_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
+            restart_control_file_name_str
+        )
+
+        gomc_control.write_gomc_control_file(
+            gomc_charmm_object_with_files,
+            output_name_control_file_name,
+            job.doc.production_ensemble,
+            MC_steps,
+            production_temperature_K,
+            ff_psf_pdb_file_directory=None,
+            check_input_files_exist=False,
+            Parameters="{}.inp".format(gomc_ff_filename_str),
+            Restart=True,
+            RestartCheckpoint=True,
+            ExpertMode=False,
+            Coordinates_box_0=Prod_Coordinates_box_0,
+            Structure_box_0=Prod_Structure_box_0,
+            binCoordinates_box_0=Prod_binCoordinates_box_0,
+            extendedSystem_box_0=Prod_extendedSystem_box_0,
+            binVelocities_box_0=None,
+            Coordinates_box_1=None,
+            Structure_box_1=None,
+            binCoordinates_box_1=None,
+            extendedSystem_box_1=None,
+            binVelocities_box_1=None,
+            input_variables_dict={
+                "PRNG": seed_no,
+                "Pressure": production_pressure_bar,
+                "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
+                "ElectroStatic": use_ElectroStatics,
+                "VDWGeometricSigma": VDWGeometricSigma,
+                "Rcut": job.doc.Rcut_ang,
+                "Exclude": Exclude,
+                "VolFreq": VolFreq[-1],
+                "MultiParticleFreq": MultiParticleFreq[-1],
+                "IntraSwapFreq": IntraSwapFreq[-1],
+                "CrankShaftFreq": CrankShaftFreq[-1],
+                "SwapFreq": SwapFreq[-1],
+                "DisFreq": DisFreq[-1],
+                "RotFreq": RotFreq[-1],
+                "RegrowthFreq": RegrowthFreq[-1],
+                "OutputName": output_name_control_file_name,
+                "EqSteps": EqSteps,
+                "PressureCalc": output_false_list_input,
+                "RestartFreq": output_true_list_input,
+                "CheckpointFreq": output_true_list_input,
+                "ConsoleFreq": console_output_true_list_input,
+                "BlockAverageFreq": output_true_list_input,
+                "HistogramFreq": output_false_list_input,
+                "CoordinatesFreq": output_false_list_input,
+                "DCDFreq": output_true_list_input,
+                "Potential": cutoff_style,
+                "LRC": True,
+                "RcutLow": 0,
+                "CBMC_First": CBMC_First[-1],
+                "CBMC_Nth": CBMC_Nth[-1],
+                "CBMC_Ang": CBMC_Ang[-1],
+                "CBMC_Dih": CBMC_Dih[-1],
+                "FreeEnergyCalc": FreeEnergyCalc,
+                "MoleculeType": MoleculeType,
+                "InitialState": initial_state_sims_i,
+                "LambdaVDW": list(job.doc.LambdaVDW_list),
+                "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+            },
+        )
+        append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
+
+        print("#**********************")
+        print("Completed: production NPT or GEMC-NVT GOMC control file writing")
+        print("#**********************")
+        # ******************************************************
+        # production NPT or GEMC-NVT - GOMC control file writing  (end)
+        # ******************************************************
+
 # ******************************************************
 # ******************************************************
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (end)
@@ -2162,7 +2904,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
 # ******************************************************
 # ******************************************************
-# namd_equilb_NVT -starting the NAMD simulations (start)
+# namd_equilb_NPT -starting the NAMD simulations (start)
 # ******************************************************
 # ******************************************************
 # Only run namd on the Ewald directories, then use the same 
@@ -2170,9 +2912,9 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NVT_control_file_written)
-@Project.post(part_3a_output_namd_equilb_NVT_started)
-@Project.post(part_4a_job_namd_equilb_NVT_completed_properly)
+@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+@Project.post(part_3a_output_namd_equilb_NPT_started)
+@Project.post(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.operation.with_directives(
     {
         "np": lambda job: job.doc.namd_node_ncpu,
@@ -2183,19 +2925,19 @@ def build_psf_pdb_ff_gomc_conf(job):
 )
 @flow.with_job
 @flow.cmd
-def run_namd_equilb_NVT_gomc_command(job):
-    """Run the namd_equilb_NVT simulation."""
+def run_namd_equilb_NPT_gomc_command(job):
+    """Run the namd_equilb_NPT simulation."""
     print("#**********************")
-    print("# Started the run_namd_equilb_NVT_gomc_command.")
+    print("# Started the run_namd_equilb_NPT_gomc_command.")
     print("#**********************")
     """Run the gomc_calibration_run_ensemble simulation."""
     
-    control_file_name_str = namd_equilb_NVT_control_file_name_str
+    control_file_name_str = namd_equilb_NPT_control_file_name_str
     
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
-        str(job.doc.namd_equilb_NVT_gomc_binary_file),
+        str(job.doc.namd_equilb_NPT_gomc_binary_file),
         str(job.doc.namd_node_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
@@ -2213,7 +2955,7 @@ def run_namd_equilb_NVT_gomc_command(job):
 
 # ******************************************************
 # ******************************************************
-# namd_equilb_NVT -starting the NAMD simulations (end)
+# namd_equilb_NPT -starting the NAMD simulations (end)
 # ******************************************************
 # ******************************************************
 # ******************************************************
@@ -2222,9 +2964,9 @@ def run_namd_equilb_NVT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(part_4a_job_namd_equilb_NVT_completed_properly)
+@Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NVT_control_file_written)
+@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.post(part_3b_output_gomc_sseq_started)
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
@@ -2264,8 +3006,8 @@ def run_sseq_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
-        "ngpu": lambda job: job.doc.gomc_ngpu,
+        "np": 1,
+        "ngpu": 1,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
     }
@@ -2280,7 +3022,7 @@ def run_wolf_sanity_run_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_calibration_gomc_binary_file),
-        str(job.doc.gomc_ncpu),
+        str(1),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
     )
@@ -2299,10 +3041,10 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NVT_control_file_written)
-@Project.pre(part_2a_wolf_calibration_control_file_written)
+@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.pre(part_4a_job_namd_equilb_NVT_completed_properly)
+@Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.post(part_3b_output_gomc_calibration_started)
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
@@ -2365,7 +3107,7 @@ def part_4b_job_gomc_calibration_find_minimum(job):
                     wolfKind = groups.group(1)
                     potential = groups.group(2)
                     box = groups.group(3)
-                    tupleMin = find_minimum(job.fn(file), job.sp.solvent, wolfKind, potential, box, True)
+                    tupleMin = find_minimum(job.fn(file), job.sp.solute, wolfKind, potential, box, True)
                     # Use smaller error, either BF or Grad Desc
                     model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
         with open(bestValueFileName+".pickle", 'wb') as handle:
@@ -2378,6 +3120,619 @@ def part_4b_job_gomc_calibration_find_minimum(job):
 # ******************************************************
 # ******************************************************
 
+
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.solute == "solvent_box")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_4b_wolf_sanity_analysis_completed)
+@Project.post(part_4b_wolf_sanity_histograms_created)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@flow.with_job
+def part_4b_create_wolf_sanity_histograms(job):
+    df1 = pd.DataFrame()
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"   
+    ewald_sp['solute']="solvent_box"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    try:
+        for ewald_job in jobs:
+            if (ewald_job.isfile("wolf_sanity_all_energies.csv")):
+                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+            else:
+                return False
+    except:
+        return False
+
+    print(df1)
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import scipy.stats as st
+    xmin = 1000
+    xmax = 0
+    numBins = 100
+    ref_ewald = df1["Ewald_Ewald"]
+    ref_min = min(ref_ewald)
+    ref_max = max(ref_ewald)
+
+    xmin = ref_min
+    xmax = ref_max
+
+    colList = df1.columns.tolist()
+    colList.remove("Ewald_Ewald")
+    colList.remove("steps")
+    for col, col_i in zip(colList, range(0, len(colList))):
+
+        wolf = df1[col]
+        wolf_min = min(wolf)
+        wolf_max = max(wolf)
+
+        xmin = min(ref_min, wolf_min)
+        xmax = min(ref_max, wolf_max)
+
+        binWidth =  (xmax - xmin)/float(numBins)
+        binList = np.arange(xmin, xmax+binWidth, binWidth)
+        # estimate the line with probability density function (PDF)
+        kde1 = st.gaussian_kde(ref_ewald).pdf(binList)
+
+        #Plot Ewald
+        plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald_Ewald")
+
+        kde2 = st.gaussian_kde(wolf).pdf(binList)
+        #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+        plt.plot(binList, kde2, linewidth=2, label=col)
+        plt.xlim(min(ref_min, wolf_min), max(wolf_max, ref_max))
+        plt.ylabel('Probability (Total E)')
+        plt.xlabel('Potential Energy (kcal/mol)')
+        plt.legend()
+        plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300)
+        plt.figure().clear()
+  
+
+for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
+    @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+    @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
+    @Project.pre(part_4b_job_gomc_sseq_completed_properly)
+    @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
+    @Project.pre(part_4b_wolf_sanity_histograms_created)  
+    @Project.pre(part_4b_wolf_sanity_analysis_completed)  
+    @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
+    @Project.pre(lambda j: j.sp.solute not in ["solvent_box"])
+    @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
+    @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+    @Project.operation.with_directives(
+        {
+            "np": lambda job: job.doc.gomc_ncpu,
+            "ngpu": lambda job: job.doc.gomc_ngpu,
+            "memory": memory_needed,
+            "walltime": walltime_gomc_equilbrium_hr,
+        },
+        name = f"gomc_equilb_design_ensemble_initial_state_{initial_state_j}"
+    )
+    @flow.with_job
+    @flow.cmd
+    def run_equilb_run_gomc_command(job, *, initial_state_j=initial_state_j):
+        """Run the gomc_equilb_run_ensemble simulation."""
+        control_file_name_str = job.doc.gomc_equilb_design_ensemble_dict[
+            str(initial_state_j)
+        ]["output_name_control_file_name"]
+
+        print(f"Running simulation job id {job}")
+        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
+            str(gomc_binary_path),
+            str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+            str(job.doc.gomc_ncpu),
+            str(control_file_name_str),
+            str(control_file_name_str),
+        )
+
+        print('gomc equilbrium_run run_command = ' + str(run_command))
+
+        return run_command
+# *****************************************
+# ******************************************************
+# equilb NPT - starting the GOMC simulation (end)
+# ******************************************************
+# ******************************************************
+
+
+# ******************************************************
+# ******************************************************
+# production run - starting the GOMC simulation (start)
+# ******************************************************
+# ******************************************************
+for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
+    @Project.pre(part_2c_gomc_production_control_file_written)
+    @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+    @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
+    @Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
+    @Project.post(part_part_3c_output_gomc_production_run_started)
+    @Project.post(part_4c_job_production_run_completed_properly)
+    @Project.operation.with_directives(
+        {
+            "np": lambda job: job.doc.gomc_ncpu,
+            "ngpu": lambda job: job.doc.gomc_ngpu,
+            "memory": memory_needed,
+            "walltime": walltime_gomc_production_hr,
+        },
+        name = f"gomc_production_ensemble_initial_state_{initial_state_i}"
+    )
+    @flow.with_job
+    @flow.cmd
+    def run_production_run_gomc_command(job, *, initial_state_i=initial_state_i):
+        """Run the gomc_production_ensemble simulation."""
+
+        control_file_name_str = job.doc.gomc_production_run_ensemble_dict[
+            str(initial_state_i)
+        ]["output_name_control_file_name"]
+
+        print(f"Running simulation job id {job}")
+        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
+            str(gomc_binary_path),
+            str(job.doc.gomc_production_ensemble_gomc_binary_file),
+            str(job.doc.gomc_ncpu),
+            str(control_file_name_str),
+            str(control_file_name_str),
+        )
+
+        print('gomc production run_command = ' + str(run_command))
+
+        return run_command
+
+# ******************************************************
+# ******************************************************
+# production run - starting the GOMC simulation (end)
+# ******************************************************
+# ******************************************************
+
+@Project.operation.with_directives(
+     {
+         "np": 1,
+         "ngpu": 0,
+         "memory": memory_needed,
+         "walltime": walltime_gomc_analysis_hr,
+     }
+)
+@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+@Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
+@flow.with_job
+def part_5a_preliminary_analysis_individual_simulation_averages(job):
+    # remove the total averaged replicate data and all analysis data after this,
+    # as it is no longer valid when adding more simulations
+    if os.path.isfile(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'):
+        os.remove(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}')
+
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
+
+
+    files = []
+    blk_files = []
+    k_b = 1.9872036E-3  # kcal/mol/K
+    temperature = job.sp.production_temperature_K
+    k_b_T = temperature * k_b
+    dict_of_states = {}
+    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
+        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
+                                        f'initial_state_{initial_state_iter}.dat'
+        files.append(reading_filename_box_0_iter)
+        blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
+                    f'initial_state_{initial_state_iter}_BOX_0.dat'
+        energies = []
+        with open(blk_file, 'r', encoding='utf8') as f:
+            for line in f:
+                #print('\n'.join(line.split()[1] for line in f))
+                try:
+                    energies.append(float(line.split()[1]))
+                except:
+                    print("An exception occurred") 
+        energies_np = np.array(energies)
+        print(energies_np.mean())
+        dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
+    df = pd.DataFrame.from_dict(dict_of_states)
+    df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
+
+    # for TI estimator
+    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+
+    # for MBAR estimator
+    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+
+    # for BAR estimator
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
+# ******************************************************
+# ******************************************************
+# data analysis - get the average data from each individual simulation (start)
+# ******************************************************
+# ******************************************************
+
+@Project.operation.with_directives(
+     {
+         "np": 1,
+         "ngpu": 0,
+         "memory": memory_needed,
+         "walltime": walltime_gomc_analysis_hr,
+     }
+)
+@Project.pre(part_4c_job_production_run_completed_properly)
+@Project.post(part_5a_analysis_individual_simulation_averages_completed)
+@flow.with_job
+def part_5a_analysis_individual_simulation_averages(job):
+    # remove the total averaged replicate data and all analysis data after this,
+    # as it is no longer valid when adding more simulations
+    if os.path.isfile(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'):
+        os.remove(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}')
+
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
+
+
+    # get the averages from each individual simulation and write the csv's.
+
+    files = []
+    k_b = 1.9872036E-3  # kcal/mol/K
+    temperature = job.sp.production_temperature_K
+    k_b_T = temperature * k_b
+
+    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
+        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_production_control_file_name_str}_' \
+                                        f'initial_state_{initial_state_iter}.dat'
+        files.append(reading_filename_box_0_iter)
+
+    # for TI estimator
+    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+
+    # for MBAR estimator
+    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+
+    # for BAR estimator
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
+
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the average data from each individual simulation (end)
+# ******************************************************
+# ******************************************************
+
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the average and std. dev. from/across all the replicates (start)
+# ******************************************************
+# ******************************************************
+
+#@aggregator.groupby(key=statepoint_without_replica,
+#                    sort_by="production_temperature_K",
+#                    sort_ascending=True
+#)
+#@Project.operation.with_directives(
+#     {
+#         "np": 1,
+#         "ngpu": 0,
+#         "memory": memory_needed,
+#         "walltime": walltime_gomc_analysis_hr,
+#     }
+#)
+
+@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
+@Project.post(part_5b_analysis_replica_averages_completed)
+def part_5b_preliminary_analysis_replica_averages(*jobs):
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (start)
+    # ***************************************************
+    # output and labels
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
+
+    # get the list used in this function
+    temp_repilcate_list = []
+    solute_repilcate_list = []
+
+    delta_MBAR_repilcate_box_0_list = []
+    delta_TI_repilcate_box_0_list = []
+    delta_BAR_repilcate_box_0_list = []
+
+
+    output_txt_file_header = f"{output_column_temp_title: <30} " \
+                             f"{output_column_temp_std_title: <30} " \
+                             f"{output_column_solute_title: <30} "\
+                             f"{output_column_dFE_MBAR_title: <30} "\
+                             f"{output_column_dFE_MBAR_std_title: <30} "\
+                             f"{output_column_dFE_TI_title: <3    0} "\
+                             f"{output_column_dFE_TI_std_title: <30} "\
+                             f"{output_column_dFE_BAR_title: <30} "\
+                             f"{output_column_dFE_BAR_std_title: <30} "\
+                             f"\n"
+
+
+    write_file_path_and_name_box_0 = f'analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'
+    if os.path.isfile(write_file_path_and_name_box_0):
+        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
+    else:
+        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "w")
+        box_box_0_data_txt_file.write(output_txt_file_header)
+
+
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (end)
+    # ***************************************************
+
+    for job in jobs:
+
+        # *************************
+        # drawing in data from single file and extracting specific rows from box 0 (start)
+        # *************************
+        reading_file_box_box_0 = job.fn(preliminary_output_replicate_txt_file_name_box_0)
+
+        data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
+        data_box_box_0 = pd.DataFrame(data_box_box_0)
+
+        temp_repilcate_list.append(data_box_box_0.loc[:, output_column_temp_title][0])
+        solute_repilcate_list.append(data_box_box_0.loc[:, output_column_solute_title][0])
+
+        delta_MBAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_MBAR_title][0])
+        delta_TI_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_TI_title][0])
+        delta_BAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_BAR_title][0])
+
+        # *************************
+        # drawing in data from single file and extracting specific rows from box 0 (end)
+        # *************************
+
+
+    # *************************
+    # get the replica means and std.devs (start)
+    # *************************
+    temp_mean = np.mean(temp_repilcate_list)
+    temp_std = np.std(temp_repilcate_list, ddof=1)
+
+    solute_iter = solute_repilcate_list[0]
+
+    delta_MBAR_mean_box_box_0 = np.mean(delta_MBAR_repilcate_box_0_list)
+    delta_TI_mean_box_box_0 = np.mean(delta_TI_repilcate_box_0_list)
+    delta_BAR_mean_box_box_0 = np.mean(delta_BAR_repilcate_box_0_list)
+
+    delta_std_MBAR_mean_box_box_0 = np.std(delta_MBAR_repilcate_box_0_list, ddof=1)
+    delta_std_TI_mean_box_box_0 = np.std(delta_TI_repilcate_box_0_list, ddof=1)
+    delta_std_BAR_mean_box_box_0 = np.std(delta_BAR_repilcate_box_0_list, ddof=1)
+
+    # *************************
+    # get the replica means and std.devs (end)
+    # *************************
+
+    # ************************************
+    # write the analysis data files for the liquid and vapor boxes (start)
+    # ************************************
+
+    box_box_0_data_txt_file.write(
+        f"{temp_mean: <30} "
+        f"{temp_std: <30} "
+        f"{solute_iter: <30} "
+        f"{delta_MBAR_mean_box_box_0: <30} "
+        f"{delta_std_MBAR_mean_box_box_0: <30} "
+        f"{delta_TI_mean_box_box_0: <30} "
+        f"{delta_std_TI_mean_box_box_0: <30} "
+        f"{delta_BAR_mean_box_box_0: <30} "
+        f"{delta_std_BAR_mean_box_box_0: <30} "
+        f" \n"
+    )
+
+    # ************************************
+    # write the analysis data files for the liquid and vapor boxes (end)
+    # ************************************
+
+
+@Project.pre(part_4c_job_production_run_completed_properly)
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.post(part_5b_analysis_replica_averages_completed)
+def part_5b_analysis_replica_averages(*jobs):
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (start)
+    # ***************************************************
+    # output and labels
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
+    output_column_solute_title = 'solute'  # column title title for temp
+    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
+    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
+    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
+
+    # get the list used in this function
+    temp_repilcate_list = []
+    solute_repilcate_list = []
+
+    delta_MBAR_repilcate_box_0_list = []
+    delta_TI_repilcate_box_0_list = []
+    delta_BAR_repilcate_box_0_list = []
+
+
+    output_txt_file_header = f"{output_column_temp_title: <30} " \
+                             f"{output_column_temp_std_title: <30} " \
+                             f"{output_column_solute_title: <30} "\
+                             f"{output_column_dFE_MBAR_title: <30} "\
+                             f"{output_column_dFE_MBAR_std_title: <30} "\
+                             f"{output_column_dFE_TI_title: <3    0} "\
+                             f"{output_column_dFE_TI_std_title: <30} "\
+                             f"{output_column_dFE_BAR_title: <30} "\
+                             f"{output_column_dFE_BAR_std_title: <30} "\
+                             f"\n"
+
+
+    write_file_path_and_name_box_0 = f'analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'
+    if os.path.isfile(write_file_path_and_name_box_0):
+        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
+    else:
+        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "w")
+        box_box_0_data_txt_file.write(output_txt_file_header)
+
+
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (end)
+    # ***************************************************
+
+    for job in jobs:
+
+        # *************************
+        # drawing in data from single file and extracting specific rows from box 0 (start)
+        # *************************
+        reading_file_box_box_0 = job.fn(output_replicate_txt_file_name_box_0)
+
+        data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
+        data_box_box_0 = pd.DataFrame(data_box_box_0)
+
+        temp_repilcate_list.append(data_box_box_0.loc[:, output_column_temp_title][0])
+        solute_repilcate_list.append(data_box_box_0.loc[:, output_column_solute_title][0])
+
+        delta_MBAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_MBAR_title][0])
+        delta_TI_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_TI_title][0])
+        delta_BAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_BAR_title][0])
+
+        # *************************
+        # drawing in data from single file and extracting specific rows from box 0 (end)
+        # *************************
+
+
+    # *************************
+    # get the replica means and std.devs (start)
+    # *************************
+    temp_mean = np.mean(temp_repilcate_list)
+    temp_std = np.std(temp_repilcate_list, ddof=1)
+
+    solute_iter = solute_repilcate_list[0]
+
+    delta_MBAR_mean_box_box_0 = np.mean(delta_MBAR_repilcate_box_0_list)
+    delta_TI_mean_box_box_0 = np.mean(delta_TI_repilcate_box_0_list)
+    delta_BAR_mean_box_box_0 = np.mean(delta_BAR_repilcate_box_0_list)
+
+    delta_std_MBAR_mean_box_box_0 = np.std(delta_MBAR_repilcate_box_0_list, ddof=1)
+    delta_std_TI_mean_box_box_0 = np.std(delta_TI_repilcate_box_0_list, ddof=1)
+    delta_std_BAR_mean_box_box_0 = np.std(delta_BAR_repilcate_box_0_list, ddof=1)
+
+    # *************************
+    # get the replica means and std.devs (end)
+    # *************************
+
+    # ************************************
+    # write the analysis data files for the liquid and vapor boxes (start)
+    # ************************************
+
+    box_box_0_data_txt_file.write(
+        f"{temp_mean: <30} "
+        f"{temp_std: <30} "
+        f"{solute_iter: <30} "
+        f"{delta_MBAR_mean_box_box_0: <30} "
+        f"{delta_std_MBAR_mean_box_box_0: <30} "
+        f"{delta_TI_mean_box_box_0: <30} "
+        f"{delta_std_TI_mean_box_box_0: <30} "
+        f"{delta_BAR_mean_box_box_0: <30} "
+        f"{delta_std_BAR_mean_box_box_0: <30} "
+        f" \n"
+    )
+
+    # ************************************
+    # write the analysis data files for the liquid and vapor boxes (end)
+    # ************************************
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the average and std. dev. from/across all the replicates (end)
+# ******************************************************
+# ******************************************************
 
 
 # ******************************************************
