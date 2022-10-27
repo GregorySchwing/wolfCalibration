@@ -33,3 +33,4 @@ dependencies:
   - unyt
   - vmd-python
   - plotly
+  - alchemlyb
