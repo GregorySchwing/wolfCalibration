@@ -56,13 +56,14 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin"
-namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
+#local paths
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
-#gomc_binary_path = "/home6/greg/GOMC/bin"
-#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
+gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
+namd_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
 
 # local bin paths
 #gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
@@ -96,9 +97,10 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
-Calibration_MC_steps = 1000
-Calibration_MC_Eq_Steps = 500
 EqSteps = 1000
+Calibration_MC_steps = 1000000
+Calibration_MC_Eq_Steps = 10000
+Wolf_Sanity_MC_steps = 5 * 10**7
 number_of_lambda_spacing_including_zero_int = 1
 
 # force field (FF) file for all simulations in that job
