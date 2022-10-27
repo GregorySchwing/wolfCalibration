@@ -52,20 +52,25 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # set binary path to gomc binary files (the bin folder).
 # If the gomc binary files are callable directly from the terminal without a path,
 # please just enter and empty string (i.e., "" or '')
-
 # WSU grid binary paths
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin"
+namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
 
 # Potoff cluster bin paths
-gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+# Potoff cluster bin paths
 #gomc_binary_path = "/home6/greg/GOMC/bin"
-namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
+# local bin paths
+#gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
+
+#WSL local bin paths
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -273,7 +278,12 @@ def append_wolf_calibration_parameters(job):
 
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             myfile.write(alphaLine)
-            
+
+def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_file):
+    with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
+        checkpointLine = "Checkpoint\tTrue\t{}\n".format(path_to_previous_checkpoint_file)
+        myfile.write(checkpointLine)
+
 # ******************************************************
 # ******************************************************
 # functions for selecting/grouping/aggregating in different ways (end)
@@ -1669,8 +1679,6 @@ def build_charmm(job, write_files=True):
 )
 @flow.with_job
 def build_psf_pdb_ff_gomc_conf(job):
-    """Build the Charmm object and write the pdb, psd, and force field (FF)
-    files for all the simulations in the workspace."""
     [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
@@ -1779,6 +1787,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             job.doc.path_to_sseq_binCoordinates_box_1 =  ref_job.fn(Single_state_gomc_eq_binCoordinates_box_1)
             job.doc.path_to_sseq_extendedSystem_box_1 =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_1)
             job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
+            job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
        
     else:    
         job.doc.path_to_sseq_pdb =  job.fn(Single_state_gomc_eq_Coordinates_box_0)
@@ -1790,6 +1799,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_binCoordinates_box_1 =  job.fn(Single_state_gomc_eq_binCoordinates_box_1)
         job.doc.path_to_sseq_extendedSystem_box_1 =  job.fn(Single_state_gomc_eq_extendedSystem_box_1)
         job.doc.path_to_sseq_console =  job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
+        job.doc.path_to_sseq_checkpoint =  job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
     # This has to be off during calibration
@@ -2147,6 +2157,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
             },
         )
+        append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
 
     else:
         wolf_sanity_control_file_name = "wolf_sanity"
@@ -2208,6 +2219,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
             },
         )
+        append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
 
         print("#**********************")
         print("Finished: Wolf Sanity GOMC control file writing")
@@ -2391,6 +2403,8 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
             },
         )
+        append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
+
     else:
         # Only use namd run from ewald to ensure both start at exact same configuration.
         gomc_control.write_gomc_control_file(
@@ -2451,6 +2465,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
             },
         )
+        append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
     
         print("#**********************")
         print("Completed: equilb NPT or GEMC-NVT GOMC control file writing")
@@ -2676,6 +2691,8 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
                 },
             )
+            append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
+
         else:
             gomc_control.write_gomc_control_file(
                 gomc_charmm_object_with_files,
@@ -2735,6 +2752,8 @@ def build_psf_pdb_ff_gomc_conf(job):
                     #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
                 },
             )
+            append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
+
         print("#**********************")
         print("Completed: production NPT or GEMC-NVT GOMC control file writing")
         print("#**********************")
@@ -2889,6 +2908,8 @@ def build_psf_pdb_ff_gomc_conf(job):
                     },
                 )
                 append_wolf_calibration_parameters(job)
+                append_checkpoint_line(job, output_name_control_file_calibration_name, job.doc.path_to_sseq_checkpoint)
+
             else:
                 gomc_control.write_gomc_control_file(
                     gomc_charmm_object_with_files,
@@ -2949,6 +2970,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     },
                 )
                 append_wolf_calibration_parameters(job)
+                append_checkpoint_line(job, output_name_control_file_calibration_name, job.doc.path_to_sseq_checkpoint)
 
             ### Need to append Wolf Calibration lines since they aren't in MosDef
 
