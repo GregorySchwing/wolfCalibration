@@ -58,16 +58,16 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-#gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
-#namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
-
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
+
 # Potoff cluster bin paths
 # Potoff cluster bin paths
-gomc_binary_path = "/home6/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/home6/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/home6/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/home6/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # local bin paths
 #gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
