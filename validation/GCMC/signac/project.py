@@ -922,27 +922,31 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.replica_number_int != 0):
-        wolf_sp = job.statepoint()
-        wolf_sp['electrostatic_method']="Ewald"
-        wolf_sp['replica_number_int']=0
-        jobs = list(pr.find_jobs(wolf_sp))
-        for wolf_job in jobs:
-            if namd_sim_completed_properly(
-                wolf_job, namd_equilb_NPT_control_file_name_str
-            ) is False:
-                #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i))
-                return False
-        return True
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+    elif (job.sp.replica_number_int == 0):
+        return namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str)
     else:
-        x = namd_sim_completed_properly(
-            job, namd_equilb_NPT_control_file_name_str
-        )
-        #print(f'namd check = {x}')
-        return namd_sim_completed_properly(
-            job, namd_equilb_NPT_control_file_name_str
-        )
-
+        ewald_sp = job.statepoint()
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
 
 @Project.label
 @flow.with_job
