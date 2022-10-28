@@ -1682,7 +1682,7 @@ def build_charmm(job, write_files=True):
 @flow.with_job
 def build_psf_pdb_ff_gomc_conf(job):
     import sys
-    print(sys.path)
+    print("path", sys.path)
 
     [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
