@@ -3040,7 +3040,7 @@ def run_wolf_sanity_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(f"GOMC_CPU_NVT"),
         str(job.doc.gomc_ncpu),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
