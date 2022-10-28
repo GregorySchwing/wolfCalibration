@@ -32,18 +32,18 @@ class Project(FlowProject):
         super().__init__()
 
 
-class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
-    """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
-
-    #hostname_pattern = r".*reslab32ai8111"
-    template = "potoff.sh"
-
-
 class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
 
     hostname_pattern = r".*\.grid\.wayne\.edu"
     template = "grid.sh"
+
+class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
+    """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
+
+    hostname_pattern = r"potoff33"
+    template = "potoff.sh"
+
 # ******************************************************
 # users typical variables, but not all (start)
 # ******************************************************
@@ -3006,7 +3006,7 @@ def run_sseq_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": 4,
+        "np": 1,
         "ngpu": 1,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
@@ -3049,7 +3049,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": 4,
+        "np": 1,
         "ngpu": 1,
         "memory": memory_needed,
         "walltime": 26,
