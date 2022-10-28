@@ -30,7 +30,6 @@ print(densities)
 #production_temperatures = [275, 295, 315, 335, 355, 375] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 #production_temperatures = [275] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 production_temperatures = [298] * u.K # [275, 295, 315, 335, 355, 375] * u.K
-production_temperatures = [510] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 
  
 # *******************************************
