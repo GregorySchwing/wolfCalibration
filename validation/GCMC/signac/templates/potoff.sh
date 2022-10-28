@@ -1,8 +1,9 @@
 {% extends "slurm.sh" %}
 
 {% block header %}
+{{- super () -}}
 {% set gpus = operations|map(attribute='directives.ngpu')|sum %}
-    {{- super () -}}
+{% set cpus = operations|map(attribute='directives.np')|sum %}
 
 {% if gpus %}
 #SBATCH -N 1
