@@ -1476,6 +1476,9 @@ def build_charmm(job, write_files=True):
     )
 
     gomc_charmm.write_inp()
+    
+    gomc_charmm.write_psf()
+    gomc_charmm.write_pdb()
 
     namd_charmm.write_inp()
 
