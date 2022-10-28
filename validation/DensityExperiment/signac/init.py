@@ -9,7 +9,7 @@ import unyt as u
 # the main user varying state points (start)
 # *******************************************
 
-project=signac.init_project('free_energy')
+project=signac.init_project('density')
 
 forcefield = ["TRAPPE"] # ["Ne", "Rn"]
 solute = ["solvent_box"] # ["Ne", "Rn"]
