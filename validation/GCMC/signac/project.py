@@ -84,11 +84,13 @@ namd_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 10 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
+# number of simulation steps
+#gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
-
-gomc_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
+gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
