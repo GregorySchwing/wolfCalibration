@@ -3,10 +3,10 @@
 {% block header %}
 {% set gpus = operations|map(attribute='directives.ngpu')|sum %}
     {{- super () -}}
-
+    
+#SBATCH --nodelist=potoff3x
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
-
 echo  "Running on host" hostname
 echo  "Time is" date
 
