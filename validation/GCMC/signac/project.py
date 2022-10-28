@@ -1728,6 +1728,16 @@ def build_charmm(job, write_files=True):
             l = re.sub(r"%s" % "TIP3", solvent.name, l)
             sys.stdout.write(l)
 
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.psf"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "TIP3", solvent.name, l)
+            sys.stdout.write(l)
+
+    with fileinput.FileInput(job.fn(f"{mosdef_structure_box_1_name_str}.psf"), inplace=True) as f:
+        for l in f:
+            l = re.sub(r"%s" % "TIP3", solvent.name, l)
+            sys.stdout.write(l)
+
     return [namd_charmm, gomc_charmm]
 
 
