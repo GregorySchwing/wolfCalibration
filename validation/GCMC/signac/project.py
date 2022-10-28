@@ -7,6 +7,8 @@ import flow
 import mbuild as mb
 import mbuild.formats.charmm_writer as mf_charmm
 import mbuild.formats.gomc_conf_writer as gomc_control
+#import mosdef_gomc.formats.gmso_charmm_writer as mf_charmm
+#import mosdef_gomc.formats.gmso_gomc_conf_writer as gomc_control
 import numpy as np
 
 from alchemlyb.parsing.gomc import  extract_dHdl,  extract_u_nk
@@ -147,7 +149,7 @@ walltime_namd_hr = 24
 walltime_gomc_equilbrium_hr = 144
 walltime_gomc_production_hr = 144
 walltime_gomc_analysis_hr = 4
-memory_needed = 16
+memory_needed = 4
 
 
 
