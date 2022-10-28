@@ -1477,6 +1477,7 @@ def build_charmm(job, write_files=True):
 
     gomc_charmm.write_inp()
     
+    # Writes reservoir and box 0, though box 0 is always overridden by vmd. 
     gomc_charmm.write_psf()
     gomc_charmm.write_pdb()
 
@@ -1620,6 +1621,41 @@ def build_charmm(job, write_files=True):
         print("Making solvated sphere", job)
         ions = evaltcl("source " + job.fn("create_box_0_xsc.tcl"))
         ionsList = ions.split()
+
+
+    #box 1
+            
+    # convert water shell to namd bin coords file
+    # Replace the target string
+    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+
+    # Write the file out again
+    with open(job.fn("create_box_1_namdbin.tcl"), 'w') as file:
+        file.write(filedata)
+
+    print("Making solvated sphere namd bin file", job)
+    ions = evaltcl("source " + job.fn("create_box_1_namdbin.tcl"))
+    ionsList = ions.split()
+
+    template = get_pdb2xsc_path()
+    # Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+
+    # Replace the target string
+    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
+
+    # Write the file out again
+    with open(job.fn("create_box_1_xsc.tcl"), 'w') as file:
+        file.write(filedata)
+
+    print("Making solvated sphere", job)
+    ions = evaltcl("source " + job.fn("create_box_1_xsc.tcl"))
+    ionsList = ions.split()
+
 
     # GOMC checks the resname in GCMC
     with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
