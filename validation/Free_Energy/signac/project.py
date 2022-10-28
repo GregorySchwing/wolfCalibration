@@ -24,6 +24,8 @@ from src.utils.forcefields import get_ff_path
 from src.utils.forcefields import get_molecule_path
 from templates.NAMD_conf_template import generate_namd_equilb_control_file
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 class Project(FlowProject):
     """Subclass of FlowProject to provide custom methods and attributes."""
@@ -430,8 +432,15 @@ def initial_parameters(job):
     and water, respectively.
 
     """
+    angstrom3 = (u.angstrom * u.angstrom * u.angstrom)
+    cm3 = (u.cm * u.cm * u.cm)
+    job.doc.volume = ((31.3 * u.angstrom) * (31.3 * u.angstrom) * (31.3 * u.angstrom)).to(cm3)
 
-    job.doc.N_liquid_solvent = 1000
+    from scipy import constants
+    molar_mass_of_solvent = 18.01528 * u.mol
+    job.doc.N_liquid_solvent = int((constants.Avogadro * job.sp.density * job.doc.volume )/ molar_mass_of_solvent)
+
+    print(job.doc.N_liquid_solvent)
     if (job.sp.solute == "solvent_box"):
         job.doc.N_liquid_solute = 0
     else:
@@ -480,6 +489,11 @@ def initial_parameters(job):
     # set solvent and solute in doc
     job.doc.solvent = job.sp.solvent
     job.doc.solute = job.sp.solute
+    g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
+    kg_per_m3 = u.kg / (u.m * u.m * u.m)
+
+
+    job.doc.density = (job.sp.density * g_per_cm3).to(kg_per_m3)
 
     job.doc.namd_node_ncpu = 4
     job.doc.namd_node_ngpu = 0
