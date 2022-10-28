@@ -10,7 +10,7 @@
 echo  "Running on host" hostname
 echo  "Time is" date
 
-conda activate mosdef-study39
+conda activate mosdef-study38
 
 {% endblock header %}
 
