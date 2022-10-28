@@ -436,6 +436,7 @@ def initial_parameters(job):
     and water, respectively.
 
     """
+    """
     angstrom3 = (u.angstrom * u.angstrom * u.angstrom)
     cm3 = (u.cm * u.cm * u.cm)
     job.doc.volume = ((31.3 * u.angstrom) * (31.3 * u.angstrom) * (31.3 * u.angstrom)).to(cm3)
@@ -443,6 +444,8 @@ def initial_parameters(job):
     from scipy import constants
     molar_mass_of_solvent = 18.01528 * u.mol
     job.doc.N_liquid_solvent = int((constants.Avogadro * job.sp.density * job.doc.volume )/ molar_mass_of_solvent)
+    """
+    job.doc.N_liquid_solvent = 1000
 
     print(job.doc.N_liquid_solvent)
     if (job.sp.solute == "solvent_box"):
