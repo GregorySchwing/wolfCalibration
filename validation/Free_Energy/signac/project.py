@@ -104,7 +104,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 5 * 10**7
+Wolf_Sanity_MC_steps = 10 * 10**7
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -3028,7 +3028,7 @@ def run_sseq_run_gomc_command(job):
         "np": 8,
         "ngpu": 0,
         "memory": memory_needed,
-        "walltime": walltime_gomc_equilbrium_hr,
+        "walltime": walltime_gomc_production_hr,
     }
 )
 @flow.with_job
