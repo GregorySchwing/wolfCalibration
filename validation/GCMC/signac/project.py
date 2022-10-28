@@ -1624,7 +1624,30 @@ def build_charmm(job, write_files=True):
 
 
     #box 1
-            
+    from vmd import evaltcl
+    template = get_water_box_builder_path()
+    # Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+
+    box_length = job.doc.liq_box_lengths_ang
+    # Replace the target string
+    filedata = filedata.replace("R_ARG", str(box_length))
+    filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_1_name_str))
+
+    # Write the file out again
+    with open(job.fn("water_box_1_template.tcl"), 'w') as file:
+        file.write(filedata)
+
+    print("Making solvated water box", job)
+    ions = evaltcl("source " + job.fn("water_box_1_template.tcl"))
+    ionsList = ions.split()
+
+    template = get_pdb2bincoords_path()
+    # Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+    
     # convert water shell to namd bin coords file
     # Replace the target string
     filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
@@ -1655,7 +1678,7 @@ def build_charmm(job, write_files=True):
     print("Making solvated sphere", job)
     ions = evaltcl("source " + job.fn("create_box_1_xsc.tcl"))
     ionsList = ions.split()
-
+    
 
     # GOMC checks the resname in GCMC
     with fileinput.FileInput(job.fn(f"{mosdef_structure_box_0_name_str}.pdb"), inplace=True) as f:
