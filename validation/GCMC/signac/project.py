@@ -5,8 +5,8 @@
 import flow
 # from flow.environment import StandardEnvironment
 import mbuild as mb
-import mosdef_gomc.formats.gmso_charmm_writer as mf_charmm
-import mosdef_gomc.formats.gmso_gomc_conf_writer as gomc_control
+import mbuild.formats.charmm_writer as mf_charmm
+import mbuild.formats.gomc_conf_writer as gomc_control
 import numpy as np
 
 from alchemlyb.parsing.gomc import  extract_dHdl,  extract_u_nk
@@ -1681,6 +1681,9 @@ def build_charmm(job, write_files=True):
 )
 @flow.with_job
 def build_psf_pdb_ff_gomc_conf(job):
+    import sys
+    print(sys.path)
+
     [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
