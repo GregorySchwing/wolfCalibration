@@ -8,7 +8,7 @@
 {% if gpus %}
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
-#SBATCH --gres gpu:{{ gpus }}
+#SBATCH --nodelist=potoff3x
 {%- else %}
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
