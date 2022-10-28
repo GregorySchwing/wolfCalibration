@@ -5,8 +5,8 @@
 import flow
 # from flow.environment import StandardEnvironment
 import mbuild as mb
-import mbuild.formats.charmm_writer as mf_charmm
-import mbuild.formats.gomc_conf_writer as gomc_control
+import mosdef_gomc.formats.gmso_charmm_writer as mf_charmm
+import mosdef_gomc.formats.gmso_gomc_conf_writer as gomc_control
 import numpy as np
 
 from alchemlyb.parsing.gomc import  extract_dHdl,  extract_u_nk
