@@ -409,7 +409,8 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    equilibration_ensemble = "NPT"
+    equilibration_ensemble = "NVT"
+    #equilibration_ensemble = "NPT"
     production_ensemble = "NVT"
     production_ensemble = "NVT"
 
@@ -481,7 +482,7 @@ def initial_parameters(job):
     job.doc.solute = job.sp.solute
 
     job.doc.namd_node_ncpu = 4
-    job.doc.namd_node_ngpu = 1
+    job.doc.namd_node_ngpu = 0
     #job.doc.namd_node_ngpu = 0
 
     job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
@@ -2119,9 +2120,12 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     seed_no = job.doc.replica_number_int
 
-    namd_template_path_str = os.path.join(project_directory_path, "templates/NAMD_conf_template.conf")
+    if job.doc.equilibration_ensemble in ["NVT"]:
+        namd_template_path_str = os.path.join(project_directory_path, "templates/NAMD_NVT_conf_template.conf")
+    elif job.doc.equilibration_ensemble in ["NPT"]:
+        namd_template_path_str = os.path.join(project_directory_path, "templates/NAMD_conf_template.conf")
 
-    if job.doc.solvent in ["TIP3", "SPC", "MSPCE"]:
+    if job.doc.solvent in ["TIP3", "SPC", "SPCE", "MSPCE"]:
         namd_uses_water = True
         namd_water_model = 'tip3'
     elif job.doc.solvent in ["TIP4"]:
