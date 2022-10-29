@@ -923,7 +923,7 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.solute in ["solvent_box"]):
+        if (job.sp.solute in ["water_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Calibrator"
@@ -982,20 +982,27 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     Single_state_gomc_eq_control_file_name = "single_state_eq"
-    try:
-        wolf_sp = job.statepoint()
-        wolf_sp['electrostatic_method']="Ewald"
-        jobs = list(pr.find_jobs(wolf_sp))
-        for ewald_job in jobs:
-            if gomc_sim_completed_properly(
-                ewald_job,
-                Single_state_gomc_eq_control_file_name,
-            ) is False:
-                return False
-            else:
-                return True
-    except:
-        return False
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["water_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
+    else:
+        return gomc_sim_completed_properly(job, Single_state_gomc_eq_control_file_name)
+
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
