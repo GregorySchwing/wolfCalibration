@@ -677,7 +677,7 @@ def part_3a_output_namd_equilb_NPT_started(job):
     """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.solute in ["water_box"]):
+        if (job.sp.shell_radius in ["water_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Calibrator"
@@ -790,7 +790,7 @@ def part_3b_output_gomc_sseq_started(job):
     try:
 
         if(job.sp.electrostatic_method == "Wolf"):
-            if (job.sp.solute in ["water_box"]):
+            if (job.sp.shell_radius in ["water_box"]):
                 ewald_sp = job.statepoint()
                 ewald_sp['electrostatic_method']="Ewald"
                 ewald_sp['wolf_model']="Calibrator"
@@ -947,7 +947,7 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.solute in ["water_box"]):
+        if (job.sp.shell_radius in ["water_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Calibrator"
@@ -1008,7 +1008,7 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.solute in ["water_box"]):
+        if (job.sp.shell_radius in ["water_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Calibrator"
