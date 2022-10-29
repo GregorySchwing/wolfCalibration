@@ -3216,6 +3216,8 @@ def run_wolf_sanity_run_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
