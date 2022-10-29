@@ -2125,7 +2125,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
     else:
@@ -2184,7 +2184,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
 
@@ -2252,7 +2252,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2314,7 +2314,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2498,7 +2498,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2560,7 +2560,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2786,7 +2786,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": CBMC_Nth[-1],
                     "CBMC_Ang": CBMC_Ang[-1],
                     "CBMC_Dih": CBMC_Dih[-1],
-                    "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                    "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                 },
             )
             append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
@@ -2847,7 +2847,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": CBMC_Nth[-1],
                     "CBMC_Ang": CBMC_Ang[-1],
                     "CBMC_Dih": CBMC_Dih[-1],
-                    #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                    #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                 },
             )
             append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
@@ -3002,7 +3002,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                         "CBMC_Nth": CBMC_Nth[-1],
                         "CBMC_Ang": CBMC_Ang[-1],
                         "CBMC_Dih": CBMC_Dih[-1],
-                        "ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                        "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                     },
                 )
                 append_wolf_calibration_parameters(job)
@@ -3064,7 +3064,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                         "CBMC_Nth": CBMC_Nth[-1],
                         "CBMC_Ang": CBMC_Ang[-1],
                         "CBMC_Dih": CBMC_Dih[-1],
-                        #"ChemPot" : {job.doc.solvent : -4166, "Ne" : -8000}
+                        #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                     },
                 )
                 append_wolf_calibration_parameters(job)
