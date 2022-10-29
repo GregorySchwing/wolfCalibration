@@ -500,7 +500,7 @@ def initial_parameters(job):
     kg_per_m3 = u.kg / (u.m * u.m * u.m)
 
 
-    job.doc.density = (job.sp.density * g_per_cm3).to(kg_per_m3)
+    #job.doc.density = (job.sp.density * g_per_cm3).to(kg_per_m3)
 
     job.doc.namd_node_ncpu = 4
     job.doc.namd_node_ngpu = 1
