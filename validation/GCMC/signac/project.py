@@ -375,7 +375,7 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    #if (job.sp.shell_radius != "water_box"):
+    #if (job.sp.shell_radius != "solvent_box"):
     job.doc.equilibration_ensemble = "GCMC"
     job.doc.production_ensemble = "GCMC"
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
@@ -397,7 +397,7 @@ def initial_parameters(job):
 
     padding = 10
 
-    if (job.sp.shell_radius == "water_box"):
+    if (job.sp.shell_radius == "solvent_box"):
         job.doc.liq_box_lengths_ang = 30 * u.angstrom
     else:
         job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
@@ -677,7 +677,7 @@ def part_3a_output_namd_equilb_NPT_started(job):
     """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.shell_radius in ["water_box"]):
+        if (job.sp.shell_radius in ["solvent_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Calibrator"
@@ -790,7 +790,7 @@ def part_3b_output_gomc_sseq_started(job):
     try:
 
         if(job.sp.electrostatic_method == "Wolf"):
-            if (job.sp.shell_radius in ["water_box"]):
+            if (job.sp.shell_radius in ["solvent_box"]):
                 ewald_sp = job.statepoint()
                 ewald_sp['electrostatic_method']="Ewald"
                 ewald_sp['wolf_model']="Calibrator"
@@ -947,7 +947,7 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.shell_radius in ["water_box"]):
+        if (job.sp.shell_radius in ["solvent_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Calibrator"
@@ -1008,7 +1008,7 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.shell_radius in ["water_box"]):
+        if (job.sp.shell_radius in ["solvent_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
             ewald_sp['wolf_model']="Calibrator"
@@ -1607,7 +1607,7 @@ def build_charmm(job, write_files=True):
 
     elif(job.sp.electrostatic_method == "Ewald" \
         and job.sp.replica_number_int == 0 and \
-            job.sp.shell_radius == "water_box"
+            job.sp.shell_radius == "solvent_box"
     ):
 
         from vmd import evaltcl
