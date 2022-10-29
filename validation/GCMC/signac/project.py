@@ -788,27 +788,34 @@ def part_3b_output_gomc_sseq_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
     Single_state_gomc_eq_control_file_name = "single_state_eq"
     try:
-#This will cause Ewald sims to wait for Wolf calibration to complete.
-        #This will cause Ewald sims to wait for Wolf calibration to complete.
+
         if(job.sp.electrostatic_method == "Wolf"):
-            wolf_sp = job.statepoint()
-            wolf_sp['electrostatic_method']="Ewald"
-            jobs = list(pr.find_jobs(wolf_sp))
-            for ewald_job in jobs:
-                if ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat"):
-                    return True
-                else:
-                    return False
-
-
-        if job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat"):
-            return True
+            if (job.sp.solute in ["water_box"]):
+                ewald_sp = job.statepoint()
+                ewald_sp['electrostatic_method']="Ewald"
+                ewald_sp['wolf_model']="Calibrator"
+                ewald_sp['wolf_potential']="Calibrator"
+                jobs = list(pr.find_jobs(ewald_sp))
+                for ewald_job in jobs:
+                    return ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
+            else:
+                ewald_sp = job.statepoint()
+                ewald_sp['electrostatic_method']="Ewald"
+                ewald_sp['wolf_model']="Ewald"
+                ewald_sp['wolf_potential']="Ewald"
+                jobs = list(pr.find_jobs(ewald_sp))
+                for ewald_job in jobs:
+                    return ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
+        elif (job.sp.replica_number_int == 0):
+            return job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         else:
-            return False
+            ewald_sp = job.statepoint()
+            ewald_sp['replica_number_int']=0
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return ewald_job.isfile(f"out_{Single_state_gomc_eq_control_file_name}.dat")
     except:
         return False
-
-        return True
 
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
