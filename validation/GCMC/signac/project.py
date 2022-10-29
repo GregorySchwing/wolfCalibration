@@ -930,7 +930,7 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             ewald_sp['wolf_potential']="Calibrator"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                print(job.fn(), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
+                print(job.fn(""), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
                 return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
         else:
             ewald_sp = job.statepoint()
@@ -939,17 +939,17 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                print(job.fn(), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
+                print(job.fn(""), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
                 return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
     elif (job.sp.replica_number_int == 0):
-        print(job.fn(), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
+        print(job.fn(""), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
         return namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str)
     else:
         ewald_sp = job.statepoint()
         ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
-            print(job.fn(), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
+            print(job.fn(""), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
             return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
 
 @Project.label
