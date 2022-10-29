@@ -375,13 +375,13 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    if (job.sp.shell_radius != "water_box"):
-        job.doc.equilibration_ensemble = "GCMC"
-        job.doc.production_ensemble = "GCMC"
+    #if (job.sp.shell_radius != "water_box"):
+    job.doc.equilibration_ensemble = "GCMC"
+    job.doc.production_ensemble = "GCMC"
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
-    else:
-        job.doc.equilibration_ensemble = "NPT"
-        job.doc.production_ensemble = "NPT"
+    #else:
+    #    job.doc.equilibration_ensemble = "NPT"
+    #    job.doc.production_ensemble = "NPT"
     job.doc.production_pressure_bar = (1 * u.atm).to('bar')
     job.doc.production_temperature_K = job.sp.production_temperature_K
 
