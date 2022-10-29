@@ -340,7 +340,8 @@ def part_1a_initial_data_input_to_json(job):
     data_written_bool = False
     if job.isfile(f"{'signac_job_document.json'}"):
         data_written_bool = True
-
+    else:
+        print(job.fn(""))
     return data_written_bool
 
 
