@@ -8,7 +8,7 @@
 #SBATCH -q gpu
 #SBATCH --gres gpu:{{ gpus }}
 {%- else %}
-#SBATCH -q primary
+#SBATCH -q requeue
 {%- endif %}
 
 #SBATCH -N 1
@@ -19,7 +19,7 @@
 
 echo  "Running on host" hostname
 echo  "Time is" date
-conda activate nobel_gas
+conda activate mosdef-study38-new
 
 module load python/3.8
 
