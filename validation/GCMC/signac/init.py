@@ -20,7 +20,7 @@ electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 
 #replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
 replicas = [0]# [0, 1, 2, 3, 4]
-shell_radius = [10]# [0, 1, 2, 3, 4]
+shell_radius = [10, 20, 30, 40, 50, 100]# [0, 1, 2, 3, 4]
 
 #production_temperatures = [275, 295, 315, 335, 355, 375] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 #production_temperatures = [275] * u.K # [275, 295, 315, 335, 355, 375] * u.K
