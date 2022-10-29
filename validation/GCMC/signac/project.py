@@ -932,6 +932,8 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             for ewald_job in jobs:
                 print(job.fn(""), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
                 return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+            print(job.fn(""), namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str))
+
         else:
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
@@ -941,6 +943,8 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             for ewald_job in jobs:
                 print(job.fn(""), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
                 return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+            print(job.fn(""), namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str))
+
     elif (job.sp.replica_number_int == 0):
         print(job.fn(""), namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str))
         return namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str)
@@ -951,6 +955,7 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
         for ewald_job in jobs:
             print(job.fn(""), namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str))
             return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+        print(job.fn(""), namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str))
 
 @Project.label
 @flow.with_job
