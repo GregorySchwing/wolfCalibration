@@ -15,7 +15,7 @@
 {%- endif %}
 
 
-echo  "Running on host" hostname
+echo  "Running on host" $HOSTNAME
 echo  "Time is" date
 
 conda activate mosdef-study38
