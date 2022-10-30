@@ -1,3 +1,6 @@
 [submodule "alchemlyb"]
 	path = alchemlyb
 	url = https://github.com/GregorySchwing/alchemlyb.git
+[submodule "validation/GCMC/signac/py-MCMD"]
+	path = validation/GCMC/signac/py-MCMD
+	url = https://github.com/GregorySchwing/py-MCMD.git

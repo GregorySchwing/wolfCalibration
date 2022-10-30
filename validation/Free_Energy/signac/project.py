@@ -61,8 +61,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -74,8 +74,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free
 #namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
 #WSL local bin paths
-#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -102,8 +102,8 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 1000000
-Calibration_MC_Eq_Steps = 10000
+Calibration_MC_steps = 1000
+Calibration_MC_Eq_Steps = 100
 Wolf_Sanity_MC_steps = 10 * 10**7
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
@@ -544,11 +544,11 @@ def initial_parameters(job):
     if equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NPT"
     elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NVT"
     else:
         raise ValueError(
             "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
@@ -2544,8 +2544,8 @@ def build_psf_pdb_ff_gomc_conf(job):
         print("#**********************")
 
 
-    #if (job.doc.N_liquid_solute == 0):
-    #    return
+    if (job.doc.N_liquid_solute == 0):
+        return
     # ******************************************************
     # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (start)
     # Note: the control files are written for the max number of gomc_equilb_design_ensemble runs
