@@ -649,15 +649,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     # Spline and pymoo prefer convex surfaces.
     # All are convex at zero intercept when nonabs except for VDSP and VWICDSP
-    """
     if(wolfKind == "VLUGT" and potential == "DSP"):
         z = np.abs(df4.iloc[:,0].to_numpy())
     elif(wolfKind == "VLUGTWINTRACUTOFF" and potential == "DSP"):
         z = np.abs(df4.iloc[:,0].to_numpy())
     else:
         z = df4.iloc[:,0].to_numpy()
-    """
-    z = df4.iloc[:,0].to_numpy()
     z = np.reshape(z, (len(x),len(y)))
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
 
