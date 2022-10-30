@@ -646,14 +646,16 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     x = np.unique(x)
     y = np.unique(y)
 
-    #z = df4.iloc[:,0].to_numpy()
-    # I wonder if interpolation has problem with abs value
+    # Spline and pymoo prefer convex surfaces.
+    # All are convex at zero intercept when nonabs except for VDSP and VWICDSP
     if(wolfKind == "VLUGT" and potential == "DSP"):
         z = np.abs(df4.iloc[:,0].to_numpy())
     elif(wolfKind == "VLUGTWINTRACUTOFF" and potential == "DSP"):
         z = np.abs(df4.iloc[:,0].to_numpy())
     else:
-        z = np.reshape(z, (len(x),len(y)))
+        z = df4.iloc[:,0].to_numpy()
+    
+    z = np.reshape(z, (len(x),len(y)))
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
 
 
