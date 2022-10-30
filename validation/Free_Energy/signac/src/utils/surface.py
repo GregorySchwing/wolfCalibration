@@ -437,7 +437,7 @@ class MyDumProblem(ElementwiseProblem):
 
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power):
         super().__init__(n_var=2,
-                         n_obj=2,
+                         n_obj=1,
                          n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
@@ -457,8 +457,8 @@ class MyDumProblem(ElementwiseProblem):
         self.DEProblemDerivWRTAlpha_DD_max = DEProblemDerivWRTAlpha_DD_max
         self.DEProblemDerivWRT_RCut_and_Alpha_max = DEProblemDerivWRT_RCut_and_Alpha_max
         self.DEProblemDerivWRT_RCut_and_Alpha_DD_max = DEProblemDerivWRT_RCut_and_Alpha_DD_max
-        #self.tolerance = pow(10, -tolerance_power)
-        self.tolerance = pow(10, -2)
+        self.tolerance = pow(10, -tolerance_power)
+        #self.tolerance = pow(10, -2)
 
 
         self.pd_RCut_constant_alpha_constant = [0,0]
@@ -498,7 +498,7 @@ class MyDumProblem(ElementwiseProblem):
         g1 = (x[1])/(self.AlphaMax) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
         g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
 
-        out["F"] = [f1,f4]
+        out["F"] = [f4]
         #out["F"] = [f1, f2]
         out["G"] = [g2]
 
@@ -718,7 +718,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
 
     tolPower = 0
-    for tolPow in range(10, -1, -1):
+    for tolPow in range(8, -1, -1):
         print("Tolerance = ", pow(10, -tolPow))
         tolPower = tolPow
         problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
@@ -960,8 +960,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.title("Objective Space")
     plt.show()
     """
-    #x_opts, y_opts = zip(X)
-    x_opts, y_opts = zip(X[i])
+    x_opts, y_opts = zip(X)
+    #x_opts, y_opts = zip(X[i])
     
 
     print(x_opts)
@@ -972,8 +972,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
     print(X[i])
-    x_popts, y_popts = zip(X[i])
-    #x_popts, y_popts = zip(X)
+    #x_popts, y_popts = zip(X[i])
+    x_popts, y_popts = zip(X)
     print(x_popts)
     print(y_popts)
 
