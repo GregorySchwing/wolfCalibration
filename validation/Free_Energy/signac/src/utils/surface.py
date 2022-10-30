@@ -646,9 +646,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     x = np.unique(x)
     y = np.unique(y)
 
-    #z = df4.iloc[:,0].to_numpy()
+    z = df4.iloc[:,0].to_numpy()
     # I wonder if interpolation has problem with abs value
-    z = np.abs(df4.iloc[:,0].to_numpy())
+    #z = np.abs(df4.iloc[:,0].to_numpy())
 
     z = np.reshape(z, (len(x),len(y)))
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
