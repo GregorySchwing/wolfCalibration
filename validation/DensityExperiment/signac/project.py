@@ -490,7 +490,7 @@ def initial_parameters(job):
     job.doc.namd_node_ngpu = 0
     #job.doc.namd_node_ngpu = 1
 
-    job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+    job.doc.gomc_ncpu = 8  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     #job.doc.gomc_ngpu = 1
     job.doc.gomc_ngpu = 0
 
@@ -3006,8 +3006,8 @@ def run_sseq_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": 1,
-        "ngpu": 1,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
     }
@@ -3021,8 +3021,8 @@ def run_wolf_sanity_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_calibration_gomc_binary_file),
-        str(1),
+        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        str(job.doc.gomc_ncpu),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
     )
@@ -3065,7 +3065,7 @@ def run_calibration_run_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_calibration_gomc_binary_file),
-        str(4),
+        str(1),
         str(control_file_name_str),
         str(control_file_name_str),
     )
