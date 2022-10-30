@@ -490,7 +490,8 @@ class MyDumProblem(ElementwiseProblem):
         f0 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
         f2 = 1.0/(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max)
         f3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut_DD))/self.DEProblemDerivWRTRcut_DD_max)
-        f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
+        #f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
+        f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut)))
         f5 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max * np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max
         f6 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max)
         f7 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max)
@@ -648,13 +649,15 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     # Spline and pymoo prefer convex surfaces.
     # All are convex at zero intercept when nonabs except for VDSP and VWICDSP
+    """
     if(wolfKind == "VLUGT" and potential == "DSP"):
         z = np.abs(df4.iloc[:,0].to_numpy())
     elif(wolfKind == "VLUGTWINTRACUTOFF" and potential == "DSP"):
         z = np.abs(df4.iloc[:,0].to_numpy())
     else:
         z = df4.iloc[:,0].to_numpy()
-    
+    """
+    z = df4.iloc[:,0].to_numpy()
     z = np.reshape(z, (len(x),len(y)))
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
 
