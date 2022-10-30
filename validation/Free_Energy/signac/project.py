@@ -1210,7 +1210,10 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
             if DensRegex.match(line):
                 #print('\n'.join(line.split()[1] for line in f))
                 try:
-                    densities.append(float(line.split()[8]))
+                    if (job.doc.equilibration_ensemble in ["NVT"]):
+                        densities.append(float(line.split()[7]))
+                    elif (job.doc.equilibration_ensemble in ["NPT"]):
+                        densities.append(float(line.split()[8]))
                 except:
                     print("An exception occurred") 
     steps_np = np.array(steps)
@@ -3043,7 +3046,7 @@ def run_wolf_sanity_run_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str("GOMC_CPU_NVT"),
-        str(8),
+        str(job.doc.gomc_ncpu),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
     )
