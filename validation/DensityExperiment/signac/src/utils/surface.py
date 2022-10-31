@@ -1090,7 +1090,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
 def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface=False):
-    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
+    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box+"all_surfaces"
     plotPath = job.fn(title)
     iteractivefig = go.Figure()
 

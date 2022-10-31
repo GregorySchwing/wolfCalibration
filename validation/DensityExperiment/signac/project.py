@@ -1475,7 +1475,27 @@ def part_4b_job_gomc_wolf_parameters_found(job):
         else:
             return True
         
-
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+@flow.with_job
+def part_4b_job_gomc_all_surface_plot_created(job):
+    import re
+    regex = re.compile("*_all_surfaces.html")
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['solute']="solvent_box"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    for ewald_job in jobs:
+        for root, dirs, files in os.walk(ewald_job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    return True
+    return False
+        
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 # For some reason this is failing on all but replica 0..
 
@@ -3175,6 +3195,8 @@ def part_4b_job_gomc_calibration_find_minimum(job):
 @Project.pre(lambda j: j.sp.density == 0.001)
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
+@Project.post(part_4b_job_gomc_all_surface_plot_created)
+
 @Project.operation.with_directives(
     {
         "np": 1,
