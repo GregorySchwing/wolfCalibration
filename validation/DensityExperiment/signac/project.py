@@ -3167,6 +3167,41 @@ def part_4b_job_gomc_calibration_find_minimum(job):
         with open(bestValueFileName+".pickle", 'wb') as handle:
             pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(lambda j: j.sp.density == 0.001)
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_4b_job_gomc_wolf_parameters_found)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@flow.with_job
+def part_4b_job_gomc_plot_surfaces(job):
+
+    from src.utils.surface import plot_all_surfaces
+    import pickle as pickle
+    import re
+    regex = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_(\w+?).dat")
+    try:
+        model2BestWolfAlphaRCut = dict()
+        for root, dirs, files in os.walk(job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    groups = regex.search(file)
+                    wolfKind = groups.group(1)
+                    potential = groups.group(2)
+                    box = groups.group(3)
+                    allSurfacesFile = job.sp.solute+"_"+wolfKind+"_"+potential+"_Box_"+box+"_allSurfaces.html"
+                    if (not job.isfile(allSurfacesFile+".html")):
+                        tupleMin = plot_all_surfaces(job, file, job.sp.solute, wolfKind, potential, box, True)
 
 # ******************************************************
 # ******************************************************
