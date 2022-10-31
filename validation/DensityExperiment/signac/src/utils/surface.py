@@ -1341,8 +1341,8 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
         if(plotSuface):
 
 
-            xx_forplotting = np.linspace(x.min(), x.max(), 1000)
-            yy_forplotting = np.linspace(y.min(), y.max(), 1000)
+            xx_forplotting = np.linspace(x.min(), x.max(), 100)
+            yy_forplotting = np.linspace(y.min(), y.max(), 100)
 
             X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting)
             zs = np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel()))
@@ -1392,6 +1392,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
                             showlegend=True)
             )
             """
+    """
     layout = go.Layout(title=title,autosize=True, margin=dict(l=65, r=65, b=65, t=65))
     iteractivefig.update_layout(layout)
     iteractivefig.update_layout(scene = dict(
@@ -1402,6 +1403,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
                 margin=dict(r=20, b=10, l=10, t=10))
     iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                             highlightcolor="limegreen", project_z=True))
+    """                        
     pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
