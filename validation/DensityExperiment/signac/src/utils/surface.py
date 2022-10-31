@@ -1099,7 +1099,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_potential']="Calibrator"
     ewald_sp['wolf_model']="Calibrator"
-    jobs = list(pr.find_jobs(ewald_sp, {'density': {'$exists': True}}))
+    jobs = list(pr.find_jobs({"sp.replica_number_int": 0, "sp.electrostatic_method": "Wolf", "sp.wolf_potential": "Calibrator", "sp.wolf_model": "Calibrator"}))
     for ewald_job in jobs:
         df = pd.read_csv(ewald_job.fn(file),sep='\t',index_col=0)
         # remove the nan column
