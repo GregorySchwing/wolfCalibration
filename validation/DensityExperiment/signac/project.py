@@ -1044,8 +1044,8 @@ def part_4b_job_gomc_calibration_completed_properly(job):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
         ewald_sp['solute']="solvent_box"
-        ewald_sp['wolf_model']="Ewald"        
-        ewald_sp['wolf_potential']="Ewald"
+        ewald_sp['wolf_model']="Calibrator"        
+        ewald_sp['wolf_potential']="Calibrator"
         ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
