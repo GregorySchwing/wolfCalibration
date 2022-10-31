@@ -22,7 +22,7 @@ from scipy.optimize import OptimizeResult, least_squares
 from  scipy.interpolate import UnivariateSpline
 import math
 
-import flow
+ImportError flow
 import unyt as u
 from flow import FlowProject, aggregator
 from flow.environment import DefaultSlurmEnvironment
@@ -1140,7 +1140,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
         z = np.reshape(z, (len(x),len(y)))
         #This is wrong : z = np.reshape(z, (len(y),len(x)))
 
-
+        
         sptbf_mins = {}
         sptgd_mins = {}
         sptbf_auc = {}
@@ -1204,7 +1204,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
         # Since I only use gradient, it's a single objective, no need to scale.
         #problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
         #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
-
+        """
         tolPower = 0
         for tolPow in range(8, -1, -1):
             print("Tolerance = ", pow(10, -tolPow))
@@ -1337,7 +1337,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
         x_popts, y_popts = zip(X)
         print(x_popts)
         print(y_popts)
-
+        """
         if(plotSuface):
 
 
@@ -1351,18 +1351,18 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             iteractivefig.add_surface(autocolorscale=True, x=X_forplotting, y=Y_forplotting, z=Z)
 
 
-
+            """
             #x_opts, y_opts = zip(X[i])
             #print(x_opts)
             #print(y_opts)
             iteractivefig.add_trace(
-                go.Scatter3d(x=x_popts,
-                            y=y_popts,
-                            z=rect_B_spline.ev(x_popts,y_popts),
-                            mode='markers',
-                            name="M.O. 3 - psuedo",
-                            #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
-                            showlegend=True)
+            go.Scatter3d(x=x_popts,
+                        y=y_popts,
+                        z=rect_B_spline.ev(x_popts,y_popts),
+                        mode='markers',
+                        name="M.O. 3 - psuedo",
+                        #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
+                        showlegend=True)
             )
             iteractivefig.add_trace(
                 go.Scatter3d(x=x_opts,
@@ -1391,6 +1391,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
                             #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                             showlegend=True)
             )
+            """
     layout = go.Layout(title=title,autosize=True, margin=dict(l=65, r=65, b=65, t=65))
     iteractivefig.update_layout(layout)
     iteractivefig.update_layout(scene = dict(
