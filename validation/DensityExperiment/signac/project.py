@@ -98,7 +98,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 5 * 10**7
+Wolf_Sanity_MC_steps = 10 * 10**7
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -2354,7 +2354,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "DCDFreq": output_true_list_input,
             "Potential": cutoff_style,
             "LRC": True,
-            "RcutLow": 0,
+            "RcutLow": 1.0,
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -2426,7 +2426,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "DCDFreq": output_true_list_input,
             "Potential": cutoff_style,
             "LRC": True,
-            "RcutLow": 0,
+            "RcutLow": 1.0,
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -2561,7 +2561,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "DCDFreq": output_true_list_input,
                 "Potential": cutoff_style,
                 "LRC": True,
-                "RcutLow": 0,
+                "RcutLow": 1.0,
                 "CBMC_First": CBMC_First[-1],
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
