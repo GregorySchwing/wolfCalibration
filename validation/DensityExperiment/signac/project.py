@@ -2381,7 +2381,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         wolf_sanity_control_file_name,
         job.doc.equilibration_ensemble,
         Wolf_Sanity_MC_steps,
-        production_temperature_K,
+        510,
         ff_psf_pdb_file_directory=None,
         check_input_files_exist=False,
         Parameters="{}.inp".format(gomc_ff_filename_str),
