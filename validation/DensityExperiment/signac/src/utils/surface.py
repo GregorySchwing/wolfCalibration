@@ -22,7 +22,7 @@ from scipy.optimize import OptimizeResult, least_squares
 from  scipy.interpolate import UnivariateSpline
 import math
 
-ImportError flow
+import flow
 import unyt as u
 from flow import FlowProject, aggregator
 from flow.environment import DefaultSlurmEnvironment
