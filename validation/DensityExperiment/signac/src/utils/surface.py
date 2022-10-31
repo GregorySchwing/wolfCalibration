@@ -1096,6 +1096,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
 
     ewald_sp = job.statepoint()
     ewald_sp['replica_number_int']=0
+    ewald_sp['density']=None 
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_potential']="Calibrator"
     ewald_sp['wolf_model']="Calibrator"
