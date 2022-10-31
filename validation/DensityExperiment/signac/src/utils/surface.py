@@ -727,7 +727,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     for tolPow in range(8, -1, -1):
         print("Tolerance = ", pow(10, -tolPow))
         tolPower = tolPow
-        problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
+        #problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
         
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.operators.crossover.sbx import SBX
@@ -746,7 +746,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         from pymoo.optimize import minimize
-        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTRcut_DD_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+        #prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTRcut_DD_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 0, 0, 0, 0, 0, 0, 0, tolPower)
 
         res = minimize(prob,
                     algorithm,
