@@ -1338,8 +1338,6 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
         print(x_popts)
         print(y_popts)
         """
-        if (ewald_job.sp.density == 0.001):
-            continue
         if(plotSuface):
 
 
@@ -1347,7 +1345,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             yy_forplotting = np.linspace(y.min(), y.max(), 100)
 
             X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting)
-            zs = np.log(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+            zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
             Z = zs.reshape(X_forplotting.shape)
 
             iteractivefig.add_surface(autocolorscale=True, x=X_forplotting, y=Y_forplotting, z=Z)
