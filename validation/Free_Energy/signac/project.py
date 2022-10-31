@@ -3188,18 +3188,27 @@ def part_4b_create_wolf_sanity_histograms(job):
     numBins = 100
     ref_ewald = df1["Ewald_Ewald"]
 
+    from pymbar import timeseries
+    t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald) # compute indices of uncorrelated timeseries
+    A_t_equil_ewald = ref_ewald[t0:]
+    A_t_equil_steps_ewald = ref_ewald[t0:]
+
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
     for col, col_i in zip(colList, range(0, len(colList))):
 
         wolf = df1[col]
+        t0, g, Neff_max = timeseries.detectEquilibration(wolf) # compute indices of uncorrelated timeseries
+        A_t_equil_wolf = wolf[t0:]
+        A_t_equil_steps_wolf = wolf[t0:]
 
-        ref_min = min(ref_ewald)
-        ref_max = max(ref_ewald)
 
-        wolf_min = min(wolf)
-        wolf_max = max(wolf)
+        ref_min = min(A_t_equil_ewald)
+        ref_max = max(A_t_equil_ewald)
+
+        wolf_min = min(A_t_equil_wolf)
+        wolf_max = max(A_t_equil_wolf)
 
         xmin = min(ref_min, wolf_min)
         xmax = min(ref_max, wolf_max)
@@ -3207,12 +3216,12 @@ def part_4b_create_wolf_sanity_histograms(job):
         binWidth =  (xmax - xmin)/float(numBins)
         binList = np.arange(xmin, xmax+binWidth, binWidth)
         # estimate the line with probability density function (PDF)
-        kde1 = st.gaussian_kde(ref_ewald).pdf(binList)
+        kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
 
         #Plot Ewald
         plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald_Ewald")
 
-        kde2 = st.gaussian_kde(wolf).pdf(binList)
+        kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
         #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
         plt.plot(binList, kde2, linewidth=2, label=col)
         plt.xlim(min(ref_min, wolf_min), max(wolf_max, ref_max))
