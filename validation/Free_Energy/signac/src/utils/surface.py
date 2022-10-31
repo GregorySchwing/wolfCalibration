@@ -719,7 +719,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     
     from pymoo.termination import get_termination
     # Create problem to get the unnormalized Pareto Front
-    problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+    # Since I only use gradient, it's a single objective, no need to scale.
+    #problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
 
     tolPower = 0
