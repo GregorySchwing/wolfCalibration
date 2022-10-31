@@ -836,7 +836,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(HyperVolumeFigPath)
     """
 
-    xl, xu = problem.bounds()
+    xl, xu = prob.bounds()
 
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
