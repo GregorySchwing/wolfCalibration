@@ -1338,6 +1338,8 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
         print(x_popts)
         print(y_popts)
         """
+        if (ewald_job.sp.density == 0.001):
+            continue
         if(plotSuface):
 
 
