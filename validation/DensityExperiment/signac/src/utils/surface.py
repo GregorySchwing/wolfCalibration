@@ -21,6 +21,12 @@ import scipy
 from scipy.optimize import OptimizeResult, least_squares
 from  scipy.interpolate import UnivariateSpline
 import math
+
+from flow
+import unyt as u
+from flow import FlowProject, aggregator
+from flow.environment import DefaultSlurmEnvironment
+
 def pareto_frontier_multi(myArray):
     # Sort on first dimension
     myArray = myArray[myArray[:,0].argsort()]
@@ -1083,7 +1089,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     return (("GD_rcut",x_popts[0]), ("GD_alpha",y_popts[0]), ("GD_relerr",rect_B_spline.ev(x_popts,y_popts)[0]))
 
 
-def plot_all_surfaces(job, file, model, wolfKind, potential, box, plotSuface=False):
+def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface=False):
     title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
     plotPath = job.fn(title)
     iteractivefig = go.Figure()
