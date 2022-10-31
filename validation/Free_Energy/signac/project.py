@@ -3184,15 +3184,9 @@ def part_4b_create_wolf_sanity_histograms(job):
     import numpy as np
     import matplotlib.pyplot as plt
     import scipy.stats as st
-    xmin = 1000
-    xmax = 0
+
     numBins = 100
     ref_ewald = df1["Ewald_Ewald"]
-    ref_min = min(ref_ewald)
-    ref_max = max(ref_ewald)
-
-    xmin = ref_min
-    xmax = ref_max
 
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
@@ -3200,6 +3194,10 @@ def part_4b_create_wolf_sanity_histograms(job):
     for col, col_i in zip(colList, range(0, len(colList))):
 
         wolf = df1[col]
+
+        ref_min = min(ref_ewald)
+        ref_max = max(ref_ewald)
+
         wolf_min = min(wolf)
         wolf_max = max(wolf)
 
