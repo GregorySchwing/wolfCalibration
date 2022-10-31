@@ -3052,6 +3052,7 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
+@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
