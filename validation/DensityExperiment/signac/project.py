@@ -1358,6 +1358,25 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 def part_4b_wolf_sanity_analysis(job):
     df1 = pd.DataFrame()
     df3 = pd.DataFrame()
+    df5 = pd.DataFrame()
+
+
+    jobs = list(pr.find_jobs({"replica_number_int": 0}))
+    print(jobs)
+    for other_job in jobs:
+            print("reading wolf_sanity_equilibrated_energies_{}.csv".format(other_job.id))
+            try:
+                df6 = pd.read_csv (other_job.fn('wolf_sanity_equilibrated_energies_{}.csv'.format(other_job.id)), sep=' ')
+                #print(df2)
+                if (df1.empty):
+                    df5 = df6
+                else:
+                    #df1 = df1.merge(df2, on="steps")
+                    df5 = pd.merge(df5, df6, on='steps', how='outer')
+            except:
+                print("failed to read dataframe")
+                
+
 
     jobs = list(pr.find_jobs({"replica_number_int": 0}))
     print(jobs)
@@ -1390,11 +1409,28 @@ def part_4b_wolf_sanity_analysis(job):
     print(df1)
     df1.to_csv('wolf_sanity_uncorr_energies.csv')
     df3.to_csv('wolf_sanity_all_energies.csv')
+    df5.to_csv('wolf_sanity_equilibrated_energies.csv')
 
-    statistics = pd.DataFrame()
+
+    statistics_equilibrated = pd.DataFrame()
     import scipy
     from scipy.stats import ttest_ind
     from scipy.spatial.distance import jensenshannon
+    listOfWolfMethods = list(df5.columns.values.tolist())
+    listOfWolfMethods.remove("steps")
+    print(listOfWolfMethods)
+    ref_mean = df5["Ewald_Ewald"].mean()
+    for method in listOfWolfMethods:
+        print("Comparing statistical identicallness of Ewald and", method)
+        welchs_output = scipy.stats.ttest_ind(df5["Ewald_Ewald"], df5[method], equal_var=False, nan_policy='omit')
+        statistics_equilibrated[method] = [df5[method].mean(), df5[method].std(),(df5[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
+
+    # Change the row indexes
+    statistics_equilibrated.index = ['mean', 'std', 'relative_error', 't-statistic', 'p-value']   
+    statistics_equilibrated = statistics_equilibrated.T.sort_values('p-value', ascending=False).T
+    statistics_equilibrated.to_csv('wolf_statistics_equilibrated.csv', sep = ' ', )
+
+    statistics = pd.DataFrame()
     listOfWolfMethods = list(df1.columns.values.tolist())
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
@@ -1408,6 +1444,7 @@ def part_4b_wolf_sanity_analysis(job):
     statistics.index = ['mean', 'std', 'relative_error', 't-statistic', 'p-value']   
     statistics = statistics.T.sort_values('p-value', ascending=False).T
     statistics.to_csv('wolf_statistics.csv', sep = ' ', )
+
     job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
