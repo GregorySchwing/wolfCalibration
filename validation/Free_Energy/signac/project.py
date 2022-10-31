@@ -3186,10 +3186,11 @@ def part_4b_create_wolf_sanity_histograms(job):
     import scipy.stats as st
 
     numBins = 100
+    nskip = 10000
     ref_ewald = df1["Ewald_Ewald"]
 
     from pymbar import timeseries
-    t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald) # compute indices of uncorrelated timeseries
+    t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald, nskip=nskip) # compute indices of uncorrelated timeseries
     A_t_equil_ewald = ref_ewald[t0:]
     A_t_equil_steps_ewald = ref_ewald[t0:]
 
@@ -3199,7 +3200,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     for col, col_i in zip(colList, range(0, len(colList))):
 
         wolf = df1[col]
-        t0, g, Neff_max = timeseries.detectEquilibration(wolf) # compute indices of uncorrelated timeseries
+        t0, g, Neff_max = timeseries.detectEquilibration(wolf, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil_wolf = wolf[t0:]
         A_t_equil_steps_wolf = wolf[t0:]
 
