@@ -1248,7 +1248,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     dict_of_equilibrated_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil_densities
 
     dfUC1 = pd.DataFrame.from_dict(dict_of_equilibrated_energies)
-    dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id))
+    dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
     
     dfUC2 = pd.DataFrame.from_dict(dict_of_equilibrated_densities)
     dfUC2.to_csv('wolf_sanity_equilibrated_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
