@@ -1368,7 +1368,7 @@ def part_4b_wolf_sanity_analysis(job):
             try:
                 df6 = pd.read_csv (other_job.fn('wolf_sanity_equilibrated_energies_{}.csv'.format(other_job.id)), sep=' ')
                 #print(df2)
-                if (df1.empty):
+                if (df5.empty):
                     df5 = df6
                 else:
                     #df1 = df1.merge(df2, on="steps")
