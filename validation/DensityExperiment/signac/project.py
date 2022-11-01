@@ -1486,6 +1486,7 @@ def part_4b_job_gomc_all_surface_plot_created(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['density']=0.001
     ewald_sp['solute']="solvent_box"   
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
