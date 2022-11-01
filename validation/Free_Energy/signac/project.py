@@ -1242,7 +1242,9 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     A_t_equil_densities = densities_np[t0:]
     A_t_equil_steps = steps_np[t0:]
 
+    dict_of_equilibrated_energies["steps"] = A_t_equil_steps
     dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
+    dict_of_equilibrated_densities["steps"] = A_t_equil_steps
     dict_of_equilibrated_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil_densities
 
     dfUC1 = pd.DataFrame.from_dict(dict_of_equilibrated_energies)
