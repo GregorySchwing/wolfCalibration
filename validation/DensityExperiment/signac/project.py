@@ -3223,7 +3223,7 @@ def part_4b_job_gomc_plot_surfaces(job):
                     box = groups.group(3)
                     allSurfacesFile = job.sp.solute+"_"+wolfKind+"_"+potential+"_Box_"+box+"_allSurfaces.html"
                     if (not job.isfile(allSurfacesFile+".html")):
-                        tupleMin = plot_all_surfaces(pr, job, file, job.sp.solute, wolfKind, potential, box, True)
+                        plot_all_surfaces(pr, job, file, job.sp.solute, wolfKind, potential, box, True)
     except:
         return False
 # ******************************************************

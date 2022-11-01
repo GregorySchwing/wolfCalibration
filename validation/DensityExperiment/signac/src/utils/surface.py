@@ -1410,7 +1410,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
     # The question is which of the above optimizations to use.  For now, I am going with "REF" AUC as the metric.
 
-    print("GD_rcut",x_popts[0])
-    print("GD_alpha",y_popts[0])
-    print("GD_relerr",rect_B_spline.ev(x_popts,y_popts)[0])
-    return (("GD_rcut",x_popts[0]), ("GD_alpha",y_popts[0]), ("GD_relerr",rect_B_spline.ev(x_popts,y_popts)[0]))
+    #print("GD_rcut",x_popts[0])
+    #print("GD_alpha",y_popts[0])
+    #print("GD_relerr",rect_B_spline.ev(x_popts,y_popts)[0])
+    #return (("GD_rcut",x_popts[0]), ("GD_alpha",y_popts[0]), ("GD_relerr",rect_B_spline.ev(x_popts,y_popts)[0]))
