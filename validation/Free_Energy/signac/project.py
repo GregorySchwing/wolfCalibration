@@ -1190,6 +1190,8 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     k_b_T = temperature * k_b
     dict_of_energies = {}
     dict_of_densities = {}
+    dict_of_equilibrated_energies = {}
+    dict_of_equilibrated_densities = {}
     dict_of_uncorr_energies = {}
     dict_of_uncorr_densities = {}
     dict_of_full_energies = {}
@@ -1213,12 +1215,14 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     if (job.doc.equilibration_ensemble in ["NVT"]):
                         densities.append(float(line.split()[7]))
                     elif (job.doc.equilibration_ensemble in ["NPT"]):
-                        densities.append(float(line.split()[8]))
+                        densities.append(float(line.split()[8]))                
                 except:
                     print("An exception occurred") 
     steps_np = np.array(steps)
     energies_np = np.array(energies)
     densities_np = np.array(densities)
+
+    nskip = 10000
 
     dict_of_full_energies["steps"] = steps_np
     dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
@@ -1233,10 +1237,19 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     df4.to_csv('wolf_sanity_full_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
     from pymbar import timeseries
-    t0, g, Neff_max = timeseries.detectEquilibration(energies_np) # compute indices of uncorrelated timeseries
+    t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
     A_t_equil = energies_np[t0:]
     A_t_equil_densities = densities_np[t0:]
     A_t_equil_steps = steps_np[t0:]
+
+    dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
+    dict_of_equilibrated_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil_densities
+
+    dfUC1 = pd.DataFrame.from_dict(dict_of_equilibrated_energies)
+    dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id))
+    
+    dfUC2 = pd.DataFrame.from_dict(dict_of_equilibrated_densities)
+    dfUC2.to_csv('wolf_sanity_equilibrated_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
     indices = timeseries.subsampleCorrelatedData(A_t_equil, g=g)
     steps_np = A_t_equil_steps[indices]
@@ -1361,6 +1374,24 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 def part_4b_wolf_sanity_analysis(job):
     df1 = pd.DataFrame()
     df3 = pd.DataFrame()
+    df5 = pd.DataFrame()
+
+
+    jobs = list(pr.find_jobs({"replica_number_int": 0}))
+    print(jobs)
+    for other_job in jobs:
+            print("reading wolf_sanity_equilibrated_energies_{}.csv".format(other_job.id))
+            try:
+                df6 = pd.read_csv (other_job.fn('wolf_sanity_equilibrated_energies_{}.csv'.format(other_job.id)), sep=' ')
+                #print(df2)
+                if (df1.empty):
+                    df5 = df6
+                else:
+                    #df1 = df1.merge(df2, on="steps")
+                    df5 = pd.merge(df5, df6, on='steps', how='outer')
+            except:
+                print("failed to read dataframe")
+                
 
     jobs = list(pr.find_jobs({"replica_number_int": 0}))
     print(jobs)
