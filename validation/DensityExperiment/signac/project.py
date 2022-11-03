@@ -1481,7 +1481,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 @flow.with_job
 def part_4b_job_gomc_all_surface_plot_created(job):
     import re
-    regex = re.compile("*_all_surfaces.html")
+    regex = re.compile("(.*)_all_surfaces.html")
     ewald_sp = job.statepoint()
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
