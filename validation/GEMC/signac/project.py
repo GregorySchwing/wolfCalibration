@@ -23,6 +23,7 @@ from flow.environment import DefaultSlurmEnvironment
 from src.utils.forcefields import get_ff_path
 from src.utils.forcefields import get_molecule_path
 from templates.NAMD_conf_template import generate_namd_equilb_control_file
+from templates.sphere_builder_template import get_sphere_builder_path, get_pdb2bincoords_path, get_pdb2xsc_path, get_water_box_builder_path
 
 
 class Project(FlowProject):
@@ -83,6 +84,13 @@ gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
+
+gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
+
+gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
+
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -99,6 +107,10 @@ EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 10 * 10**7
+
+Calibration_MC_steps = 1000
+Calibration_MC_Eq_Steps = 100
+Wolf_Sanity_MC_steps = 5 * 10**3
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -118,7 +130,8 @@ mosdef_structure_box_1_name_str = "mosdef_box_1"
 
 # melt equilb simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-namd_equilb_NPT_control_file_name_str = "namd_equilb_NVT"
+namd_equilb_NVT_control_file_box_0_name_str = "namd_equilb_NVT_box_0"
+namd_equilb_NVT_control_file_box_1_name_str = "namd_equilb_NVT_box_1"
 
 # The equilb using the ensemble used for the simulation design, which
 # includes the simulation runs GOMC control file input and simulation outputs
@@ -457,7 +470,8 @@ def initial_parameters(job):
 
 
     job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
-    job.doc.vap_box_lengths_ang = 62.6 * u.angstrom
+    #job.doc.vap_box_lengths_ang = 62.6 * u.angstrom
+    job.doc.vap_box_lengths_ang = 600.0 * u.angstrom
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
         job.doc.Rcut_ang = 15 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
@@ -538,7 +552,7 @@ def initial_parameters(job):
             "or GPU selection is is not 0 or 1."
         )
 
-    job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
+    job.doc.namd_equilb_NVT_gomc_binary_file = f"namd2"
     # set the initial iteration number of the simulation
     if equilibration_ensemble == "NPT":
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
@@ -678,10 +692,18 @@ def part_2a_wolf_sanity_control_file_written(job):
 # checking if the NAMD control file is written for the melt equilb NVT run
 @Project.label
 @flow.with_job
-def part_2a_namd_equilb_NPT_control_file_written(job):
+def part_2a_namd_equilb_NVT_box_0_control_file_written(job):
     """General check that the namd_equilb_NPT_control_file
     (high temperature to set temp NAMD control file) is written."""
-    return namd_control_file_written(job, namd_equilb_NPT_control_file_name_str)
+    return namd_control_file_written(job, namd_equilb_NVT_control_file_box_0_name_str)
+
+# checking if the NAMD control file is written for the melt equilb NVT run
+@Project.label
+@flow.with_job
+def part_2a_namd_equilb_NVT_box_1_control_file_written(job):
+    """General check that the namd_equilb_NPT_control_file
+    (high temperature to set temp NAMD control file) is written."""
+    return namd_control_file_written(job, namd_equilb_NVT_control_file_box_1_name_str)
 
 # checking if the GOMC control file is written for the equilb run with the selected ensemble
 @Project.label
@@ -771,7 +793,7 @@ def namd_simulation_started(job, control_filename_str):
 # check if melt equilb_NVT namd run is started
 @Project.label
 @flow.with_job
-def part_3a_output_namd_equilb_NPT_started(job):
+def part_3a_output_namd_equilb_NVT_box_0_started(job):
     """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
     if(job.sp.electrostatic_method == "Wolf"):
@@ -782,7 +804,7 @@ def part_3a_output_namd_equilb_NPT_started(job):
             ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                return namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+                return namd_simulation_started(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
         else:
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
@@ -790,25 +812,37 @@ def part_3a_output_namd_equilb_NPT_started(job):
             ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                return namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+                return namd_simulation_started(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
 
-    return namd_simulation_started(job, namd_equilb_NPT_control_file_name_str)
+    return namd_simulation_started(job, namd_equilb_NVT_control_file_box_0_name_str)
 
 
 # check if melt equilb_NVT namd run is started
 @Project.label
 @flow.with_job
-def part_3a_output_namd_equilb_NPT_hasnt_started(job):
+def part_3a_output_namd_equilb_NVT_box_1_started(job):
     """Check to see if the namd_equilb_NPT_control_file is started
     (high temperature to set temperature in NAMD control file)."""
-    ewald_sp = job.statepoint()
-    ewald_sp['replica_number_int']=0
-    ewald_sp['electrostatic_method']="Ewald"
-    ewald_sp['wolf_model']="Ewald"
-    ewald_sp['wolf_potential']="Ewald"
-    jobs = list(pr.find_jobs(ewald_sp))
-    for ewald_job in jobs:
-        return not namd_simulation_started(ewald_job, namd_equilb_NPT_control_file_name_str)
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_simulation_started(ewald_job, namd_equilb_NVT_control_file_box_1_name_str)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_simulation_started(ewald_job, namd_equilb_NVT_control_file_box_1_name_str)
+
+    return namd_simulation_started(job, namd_equilb_NVT_control_file_box_1_name_str)
+
 
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
@@ -1015,7 +1049,7 @@ def namd_sim_completed_properly(job, control_filename_str):
 # check if melt equilb NVT GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
-def part_4a_job_namd_equilb_NPT_completed_properly(job):
+def part_4a_job_namd_equilb_NVT_box_0_completed_properly(job):
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1027,7 +1061,7 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
         else:
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
@@ -1035,15 +1069,48 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
             ewald_sp['wolf_potential']="Ewald"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
-                return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
     elif (job.sp.replica_number_int == 0):
-        return namd_sim_completed_properly(job, namd_equilb_NPT_control_file_name_str)
+        return namd_sim_completed_properly(job, namd_equilb_NVT_control_file_box_0_name_str)
     else:
         ewald_sp = job.statepoint()
         ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
-            return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
+            return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
+
+# check if melt equilb NVT GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4a_job_namd_equilb_NVT_box_1_completed_properly(job):
+    """Check to see if the  namd_equilb_NPT_control_file was completed properly
+    (high temperature to set temperature NAMD control file)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.solute in ["solvent_box"]):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_1_name_str)
+        else:
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_1_name_str)
+    elif (job.sp.replica_number_int == 0):
+        return namd_sim_completed_properly(job, namd_equilb_NVT_control_file_box_1_name_str)
+    else:
+        ewald_sp = job.statepoint()
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_1_name_str)
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1636,7 +1703,10 @@ def part_4b_job_gomc_append_wolf_parameters(job):
 
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-    box = "0"
+    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
+        box_list = ["0", "1"]
+    else:
+        box_list = ["0"]
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
@@ -1648,10 +1718,11 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         myfile.write(defPotLine)
                         defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
                         myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_rcut"])
-                        myfile.write(defRCutLine)
+                        for box in box_list:
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_alpha"])
+                            myfile.write(defAlphaLine)
+                            defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_rcut"])
+                            myfile.write(defRCutLine)
                     else:
                         defWolfLine = "Wolf\tTrue\n"
                         myfile.write(defWolfLine)
@@ -1927,7 +1998,17 @@ def build_charmm(job, write_files=True):
                         )
     print('Completed: filling liquid box')
 
-    
+    print('Running: filling vapor box')
+    box_1 = mb.fill_box(compound=[solvent],
+                        density=job.doc.vapor_density,
+                        box=[u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            ],
+                        seed=mbuild_box_seed_no
+                        )
+    print('Completed: filling vapor box')
+    """
     angstrom3 = (u.angstrom * u.angstrom * u.angstrom)
     cm3 = (u.cm * u.cm * u.cm)
     job.doc.volume = ((job.doc.vap_box_lengths_ang * u.angstrom) * (job.doc.vap_box_lengths_ang * u.angstrom) * (job.doc.vap_box_lengths_ang * u.angstrom)).to(cm3)
@@ -1947,6 +2028,7 @@ def build_charmm(job, write_files=True):
                         seed=mbuild_box_seed_no
                         )
     print('Completed: filling vapor box')
+    """
 
     print('Running: GOMC FF file, and the psf and pdb files')
     gomc_charmm = mf_charmm.Charmm(
@@ -1974,6 +2056,18 @@ def build_charmm(job, write_files=True):
         gomc_fix_bonds_angles=None,
     )
 
+    namd_charmm_box_1 = mf_charmm.Charmm(
+        box_1,
+        mosdef_structure_box_1_name_str,
+        structure_box_1=None,
+        filename_box_1=None,
+        ff_filename= namd_ff_filename_str,
+        forcefield_selection=minimal_forcefield_dict,
+        residues=residues_list,
+        bead_to_atom_name_dict=bead_to_atom_name_dict,
+        gomc_fix_bonds_angles=None,
+    )
+
     gomc_charmm.write_inp()
     gomc_charmm.write_psf()
     gomc_charmm.write_pdb()
@@ -1982,6 +2076,48 @@ def build_charmm(job, write_files=True):
     namd_charmm.write_psf()
     namd_charmm.write_pdb()
 
+    namd_charmm_box_1.write_inp()
+    namd_charmm_box_1.write_psf()
+    namd_charmm_box_1.write_pdb()
+
+    """
+    template = get_pdb2bincoords_path()
+    # Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+    
+    # convert water shell to namd bin coords file
+    # Replace the target string
+    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+
+    # Write the file out again
+    with open(job.fn("create_box_1_namdbin.tcl"), 'w') as file:
+        file.write(filedata)
+
+    from vmd import evaltcl
+    print("Making solvated sphere namd bin file", job)
+    ions = evaltcl("source " + job.fn("create_box_1_namdbin.tcl"))
+    ionsList = ions.split()
+
+    template = get_pdb2xsc_path()
+    # Read in the file
+    with open(template, 'r') as file :
+        filedata = file.read()
+
+    # Replace the target string
+    filedata = filedata.replace("PDB_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("PSF_FILE", job.fn(mosdef_structure_box_1_name_str))
+    filedata = filedata.replace("XSC_FILE", job.fn(mosdef_structure_box_1_name_str))
+
+    # Write the file out again
+    with open(job.fn("create_box_1_xsc.tcl"), 'w') as file:
+        file.write(filedata)
+
+    print("Making solvated sphere", job)
+    ions = evaltcl("source " + job.fn("create_box_1_xsc.tcl"))
+    ionsList = ions.split()
+    """
     print("#**********************")
     print("Completed: GOMC Charmm Object")
     print("#**********************")
@@ -2002,7 +2138,8 @@ def build_charmm(job, write_files=True):
 # ******************************************************
 # ******************************************************
 @Project.pre(part_1a_initial_data_input_to_json)
-@Project.post(part_2a_namd_equilb_NPT_control_file_written)
+@Project.post(part_2a_namd_equilb_NVT_box_0_control_file_written)
+@Project.post(part_2a_namd_equilb_NVT_box_1_control_file_written)
 @Project.post(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.post(part_2c_gomc_production_control_file_written)
 @Project.post(mosdef_input_written)
@@ -2020,8 +2157,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     files for all the simulations in the workspace."""
     [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
-    namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
-    restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
+    namd_restart_pdb_psf_file_box_0_name_str = namd_equilb_NVT_control_file_box_0_name_str
+    namd_restart_pdb_psf_file_box_1_name_str = namd_equilb_NVT_control_file_box_1_name_str
 
     prefix = ""
     if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
@@ -2047,19 +2184,21 @@ def build_psf_pdb_ff_gomc_conf(job):
         prefix+mosdef_structure_box_1_name_str
     )
     binCoordinates_box_0 = "{}.restart.coor".format(
-        prefix+restart_control_file_name_str
+        prefix+namd_restart_pdb_psf_file_box_0_name_str
     )
     extendedSystem_box_0 = "{}.restart.xsc".format(
-        prefix+restart_control_file_name_str
+        prefix+namd_restart_pdb_psf_file_box_0_name_str
     )
-    binCoordinates_box_1 = "{}.coor".format(
-        prefix+mosdef_structure_box_1_name_str
+    binCoordinates_box_1 = "{}.restart.coor".format(
+        prefix+namd_restart_pdb_psf_file_box_1_name_str
     )
-    extendedSystem_box_1 = "{}.xsc".format(
-        prefix+mosdef_structure_box_1_name_str
+    extendedSystem_box_1 = "{}.restart.xsc".format(
+        prefix+namd_restart_pdb_psf_file_box_1_name_str
     )
 
-    job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
+    job.doc.path_to_namd_box_0_console =  prefix+f"out_{namd_equilb_NVT_control_file_box_0_name_str}.dat"
+    job.doc.path_to_namd_box_1_console =  prefix+f"out_{namd_equilb_NVT_control_file_box_1_name_str}.dat"
+
     job.doc.path_to_ref_pdb =  Coordinates_box_0
     job.doc.path_to_ref_psf =  Structure_box_0
     job.doc.path_to_ref_binCoordinates =  binCoordinates_box_0
@@ -2116,7 +2255,9 @@ def build_psf_pdb_ff_gomc_conf(job):
         jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
             #if (ref_job.isfile(f"{Coordinates_box_0}")):
-            job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NPT_control_file_name_str}.dat")
+            job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NVT_control_file_box_0_name_str}.dat")
+            job.doc.path_to_namd_console =  ref_job.fn(f"out_{namd_equilb_NVT_control_file_box_1_name_str}.dat")
+
             job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
             job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
             job.doc.path_to_sseq_pdb_box_1 =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_1)
@@ -2170,9 +2311,14 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     production_pressure_bar = (job.doc.production_pressure_bar * u.bar).to_value("bar")
 
-    box_lengths_ang = [u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("angstrom"),
+    box_lengths_liq_ang = [u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("angstrom"),
                        u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("angstrom"),
                        u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("angstrom"),
+                       ]
+
+    box_lengths_vap_ang = [u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("angstrom"),
+                       u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("angstrom"),
+                       u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("angstrom"),
                        ]
 
     seed_no = job.doc.replica_number_int
@@ -2193,8 +2339,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     # NOTE: the production and melt temps are converted to intergers so they can be ramped down
     # from hot to cool to equilibrate the system.
     generate_namd_equilb_control_file(template_path_filename=namd_template_path_str,
-                                      namd_path_conf_filename=namd_equilb_NPT_control_file_name_str,
-                                      namd_path_file_output_names=namd_equilb_NPT_control_file_name_str,
+                                      namd_path_conf_filename=namd_equilb_NVT_control_file_box_0_name_str,
+                                      namd_path_file_output_names=namd_equilb_NVT_control_file_box_0_name_str,
                                       namd_uses_water=namd_uses_water,
                                       namd_water_model=namd_water_model,
                                       namd_electrostatics_bool=use_ElectroStatics,
@@ -2208,11 +2354,33 @@ def build_psf_pdb_ff_gomc_conf(job):
                                       non_bonded_cutoff=job.doc.Rcut_for_switch_namd_ang,
                                       non_bonded_switch_distance=job.doc.Rcut_ang,
                                       pairlist_distance=job.doc.neighbor_list_dist_namd_ang,
-                                      box_lengths=box_lengths_ang,
+                                      box_lengths=box_lengths_liq_ang,
+                                      )
+
+    # generate the namd file
+    # NOTE: the production and melt temps are converted to intergers so they can be ramped down
+    # from hot to cool to equilibrate the system.
+    generate_namd_equilb_control_file(template_path_filename=namd_template_path_str,
+                                      namd_path_conf_filename=namd_equilb_NVT_control_file_box_1_name_str,
+                                      namd_path_file_output_names=namd_equilb_NVT_control_file_box_1_name_str,
+                                      namd_uses_water=namd_uses_water,
+                                      namd_water_model=namd_water_model,
+                                      namd_electrostatics_bool=use_ElectroStatics,
+                                      namd_vdw_geometric_sigma_bool=VDWGeometricSigma,
+                                      namd_psf_path_filename=f"{mosdef_structure_box_1_name_str}.psf",
+                                      namd_pdb_path_filename=f"{mosdef_structure_box_1_name_str}.pdb",
+                                      namd_ff_path_filename=f"{namd_ff_filename_str}.inp",
+                                      namd_production_temp_K= int(production_temperature_K),
+                                      namd_production_pressure_bar=production_pressure_bar,
+                                      electrostatic_1_4=namd_charmm_object_with_files.coul_1_4,
+                                      non_bonded_cutoff=job.doc.Rcut_for_switch_namd_ang,
+                                      non_bonded_switch_distance=job.doc.Rcut_ang,
+                                      pairlist_distance=job.doc.neighbor_list_dist_namd_ang,
+                                      box_lengths=box_lengths_vap_ang,
                                       )
 
     print("#**********************")
-    print("Completed: namd_equilb_NPT GOMC control file writing")
+    print("Completed: namd_equilb_GEMC GOMC control file writing")
     print("#**********************")
     # ******************************************************
     # namd_equilb_NPT - psf, pdb, force field (FF) file writing and GOMC control file writing  (end)
@@ -2358,13 +2526,13 @@ def build_psf_pdb_ff_gomc_conf(job):
         Restart=True,
         RestartCheckpoint=True,
         ExpertMode=False,
-        Coordinates_box_0=job.doc.path_to_ref_pdb,
-        Structure_box_0=job.doc.path_to_ref_psf,
+        Coordinates_box_0=job.doc.path_to_sseq_pdb,
+        Structure_box_0=job.doc.path_to_sseq_psf,
         binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
         extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
         binVelocities_box_0=None,
-        Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
-        Structure_box_1=job.doc.path_to_ref_psf_box_1,
+        Coordinates_box_1=job.doc.path_to_sseq_pdb_box_1,
+        Structure_box_1=job.doc.path_to_sseq_psf_box_1,
         binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
         extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
         binVelocities_box_1=None,
@@ -2506,13 +2674,13 @@ def build_psf_pdb_ff_gomc_conf(job):
             Restart=True,
             RestartCheckpoint=True,
             ExpertMode=False,
-            Coordinates_box_0=job.doc.path_to_ref_pdb,
-            Structure_box_0=job.doc.path_to_ref_psf,
+            Coordinates_box_0=job.doc.path_to_sseq_pdb,
+            Structure_box_0=job.doc.path_to_sseq_psf,
             binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
-            Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
-            Structure_box_1=job.doc.path_to_ref_psf_box_1,
+            Coordinates_box_1=job.doc.path_to_sseq_pdb_box_1,
+            Structure_box_1=job.doc.path_to_sseq_psf_box_1,
             binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
             extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
             binVelocities_box_1=None,
@@ -2693,13 +2861,15 @@ def build_psf_pdb_ff_gomc_conf(job):
             Restart= True,
             RestartCheckpoint=True,
             ExpertMode=False,
-            Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
-            Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
+            #Coordinates_box_0= Coordinates_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_pdb,
+            #Structure_box_0=Structure_box_0 if job.sp.electrostatic_method == "Ewald" else job.doc.path_to_ref_psf,
+            Coordinates_box_0=job.doc.path_to_sseq_pdb,
+            Structure_box_0=job.doc.path_to_sseq_psf,
             binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
-            Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
-            Structure_box_1=job.doc.path_to_ref_psf_box_1,
+            Coordinates_box_1=job.doc.path_to_sseq_pdb_box_1,
+            Structure_box_1=job.doc.path_to_sseq_psf_box_1,
             binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
             extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
             binVelocities_box_1=None,
@@ -2966,9 +3136,12 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.post(part_3a_output_namd_equilb_NPT_started)
-@Project.post(part_4a_job_namd_equilb_NPT_completed_properly)
+@Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
+@Project.post(part_3a_output_namd_equilb_NVT_box_0_started)
+@Project.post(part_3a_output_namd_equilb_NVT_box_1_started)
+@Project.post(part_4a_job_namd_equilb_NVT_box_0_completed_properly)
+@Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.operation.with_directives(
     {
         "np": lambda job: job.doc.namd_node_ncpu,
@@ -2979,19 +3152,19 @@ def build_psf_pdb_ff_gomc_conf(job):
 )
 @flow.with_job
 @flow.cmd
-def run_namd_equilb_NPT_gomc_command(job):
+def run_namd_equilb_NVT_box_0_gomc_command(job):
     """Run the namd_equilb_NPT simulation."""
     print("#**********************")
-    print("# Started the run_namd_equilb_NPT_gomc_command.")
+    print("# Started the run_namd_equilb_NVT_box_0_gomc_command.")
     print("#**********************")
     """Run the gomc_calibration_run_ensemble simulation."""
     
-    control_file_name_str = namd_equilb_NPT_control_file_name_str
+    control_file_name_str = namd_equilb_NVT_control_file_box_0_name_str
     
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
-        str(job.doc.namd_equilb_NPT_gomc_binary_file),
+        str(job.doc.namd_equilb_NVT_gomc_binary_file),
         str(job.doc.namd_node_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
@@ -3009,6 +3182,59 @@ def run_namd_equilb_NPT_gomc_command(job):
 
 # ******************************************************
 # ******************************************************
+# namd_equilb_NPT -starting the NAMD simulations (start)
+# ******************************************************
+# ******************************************************
+# Only run namd on the Ewald directories, then use the same 
+# final trajectory for Wolf.
+@Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(mosdef_input_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
+@Project.post(part_3a_output_namd_equilb_NVT_box_0_started)
+@Project.post(part_3a_output_namd_equilb_NVT_box_1_started)
+@Project.post(part_4a_job_namd_equilb_NVT_box_0_completed_properly)
+@Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
+@Project.operation.with_directives(
+    {
+        "np": lambda job: job.doc.namd_node_ncpu,
+        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "memory": memory_needed,
+        "walltime": walltime_namd_hr,
+    }
+)
+@flow.with_job
+@flow.cmd
+def run_namd_equilb_NVT_box_1_gomc_command(job):
+    """Run the namd_equilb_NPT simulation."""
+    print("#**********************")
+    print("# Started the run_namd_equilb_NVT_box_1_gomc_command.")
+    print("#**********************")
+    """Run the gomc_calibration_run_ensemble simulation."""
+    
+    control_file_name_str = namd_equilb_NVT_control_file_box_1_name_str
+    
+    print(f"Running simulation job id {job}")
+    run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
+        str(namd_binary_path),
+        str(job.doc.namd_equilb_NVT_gomc_binary_file),
+        str(job.doc.namd_node_ncpu),
+        str(control_file_name_str),
+        str(control_file_name_str),
+    )
+
+    print('namd run_command = ' + str(run_command))
+
+    return run_command
+    """
+    run_command = "echo namdcopied"
+    print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
+    
+    return run_command
+    """
+# ******************************************************
+# ******************************************************
 # namd_equilb_NPT -starting the NAMD simulations (end)
 # ******************************************************
 # ******************************************************
@@ -3018,9 +3244,11 @@ def run_namd_equilb_NPT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
+@Project.pre(part_4a_job_namd_equilb_NVT_box_0_completed_properly)
+@Project.pre(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
 @Project.post(part_3b_output_gomc_sseq_started)
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
@@ -3053,7 +3281,8 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
@@ -3096,10 +3325,12 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
+@Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
+@Project.pre(part_4a_job_namd_equilb_NVT_box_0_completed_properly)
+@Project.pre(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.post(part_3b_output_gomc_calibration_started)
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
@@ -3294,8 +3525,10 @@ def part_4b_create_wolf_sanity_histograms(job):
   
 
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
-    @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-    @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
+    @Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
+    @Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
+    @Project.pre(part_4a_job_namd_equilb_NVT_box_0_completed_properly)
+    @Project.pre(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
     @Project.pre(part_4b_job_gomc_sseq_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
     @Project.pre(part_4b_wolf_sanity_histograms_created)  
