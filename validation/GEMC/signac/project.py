@@ -85,6 +85,7 @@ gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 *
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 
+
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -102,6 +103,9 @@ Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 10 * 10**7
 
+Calibration_MC_steps = 1000
+Calibration_MC_Eq_Steps = 100
+Wolf_Sanity_MC_steps = 5 * 10**3
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -161,7 +165,7 @@ walltime_gomc_production_hr = 240
 #GPU
 #walltime_gomc_production_hr = 96
 walltime_gomc_analysis_hr = 4
-memory_needed = 4
+memory_needed = 16
 
 
 
@@ -462,7 +466,7 @@ def initial_parameters(job):
 
     job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
     #job.doc.vap_box_lengths_ang = 62.6 * u.angstrom
-    job.doc.vap_box_lengths_ang = 600.0 * u.angstrom
+    job.doc.vap_box_lengths_ang = 300.0 * u.angstrom
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
         job.doc.Rcut_ang = 15 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
@@ -509,7 +513,7 @@ def initial_parameters(job):
     job.doc.namd_node_ngpu = 0
     #job.doc.namd_node_ngpu = 1
 
-    job.doc.gomc_ncpu = 1  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+    job.doc.gomc_ncpu = 8  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     #job.doc.gomc_ngpu = 1
     job.doc.gomc_ngpu = 1
 
