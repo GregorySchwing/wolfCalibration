@@ -56,8 +56,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
-#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -65,8 +65,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 # local bin paths
-gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
-namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
 
 #WSL local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
@@ -85,12 +85,6 @@ gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 *
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 
-gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
-
-gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
-
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -108,9 +102,6 @@ Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 10 * 10**7
 
-Calibration_MC_steps = 1000
-Calibration_MC_Eq_Steps = 100
-Wolf_Sanity_MC_steps = 5 * 10**3
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -518,9 +509,9 @@ def initial_parameters(job):
     job.doc.namd_node_ngpu = 0
     #job.doc.namd_node_ngpu = 1
 
-    job.doc.gomc_ncpu = 8  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+    job.doc.gomc_ncpu = 1  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     #job.doc.gomc_ngpu = 1
-    job.doc.gomc_ngpu = 0
+    job.doc.gomc_ngpu = 1
 
     # set rcut, ewalds
     job.doc.winningWolfPotential = ""
@@ -2519,7 +2510,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         wolf_sanity_control_file_name,
         job.doc.equilibration_ensemble,
         Wolf_Sanity_MC_steps,
-        510,
+        production_temperature_K,
         ff_psf_pdb_file_directory=None,
         check_input_files_exist=False,
         Parameters="{}.inp".format(gomc_ff_filename_str),
