@@ -274,7 +274,7 @@ def append_wolf_calibration_parameters(job):
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             print(alphaLine)
             myfile.write(alphaLine)
-        quit()
+
 def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_file):
     with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
         checkpointLine = "Checkpoint\tTrue\t{}\n".format(path_to_previous_checkpoint_file)
