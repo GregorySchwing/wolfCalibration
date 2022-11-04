@@ -232,15 +232,26 @@ def append_wolf_calibration_parameters(job):
     WolfDefaultPotential = "DSP"
     WolfDefaultAlpha = [0.21]
 
-    WolfCutoffBoxList = [0]
+    if job.doc.production_ensemble in ["GEMC_NVT", "GEMC_NPT"]:
+        WolfCutoffBoxList = [0,1]
 
-    WolfCutoffCoulombLowerBoundList = [10]
-    WolfCutoffCoulombUpperBoundList = [15]
-    WolfCutoffCoulombIntervalList = [0.1]
+        WolfCutoffCoulombLowerBoundList = [10,10]
+        WolfCutoffCoulombUpperBoundList = [15,60]
+        WolfCutoffCoulombIntervalList = [0.1,1.0]
 
-    WolfAlphaLowerBoundList = [0.0]
-    WolfAlphabUpperBoundList = [0.5]
-    WolfAlphaIntervalList = [0.01]
+        WolfAlphaLowerBoundList = [0.0, 0.0]
+        WolfAlphabUpperBoundList = [0.5, 0.5]
+        WolfAlphaIntervalList = [0.01, 0.01]
+    else:
+        WolfCutoffBoxList = [0]
+
+        WolfCutoffCoulombLowerBoundList = [10]
+        WolfCutoffCoulombUpperBoundList = [15]
+        WolfCutoffCoulombIntervalList = [0.1]
+
+        WolfAlphaLowerBoundList = [0.0]
+        WolfAlphabUpperBoundList = [0.5]
+        WolfAlphaIntervalList = [0.01]
 
     wolfCalFreq = 10000
 
@@ -253,18 +264,17 @@ def append_wolf_calibration_parameters(job):
         myfile.write(defKindLine)
         defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
         myfile.write(defPotLine)
-        for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \
+        for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, \
         in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
-        WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
-            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
-            myfile.write(defAlphaLine)
-
+        WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
             CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
+            print(CutoffLine)
             myfile.write(CutoffLine)
 
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
+            print(alphaLine)
             myfile.write(alphaLine)
-
+        quit()
 def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_file):
     with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
         checkpointLine = "Checkpoint\tTrue\t{}\n".format(path_to_previous_checkpoint_file)
