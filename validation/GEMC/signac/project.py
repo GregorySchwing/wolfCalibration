@@ -2167,7 +2167,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     seed_no = job.doc.replica_number_int
 
-    namd_template_path_str = os.path.join(project_directory_path, "templates/NAMD_conf_template.conf")
+    namd_template_path_str = os.path.join(project_directory_path, "templates/NAMD_NVT_conf_template.conf")
 
     if job.doc.solvent in ["TIP3", "SPC", "SPCE", "MSPCE"]:
         namd_uses_water = True
