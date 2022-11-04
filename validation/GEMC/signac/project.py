@@ -55,8 +55,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
+#gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
+#namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -64,8 +64,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Dens
 #namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
 
 # local bin paths
-#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
-#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
+gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
 
 #WSL local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
@@ -410,9 +410,8 @@ def initial_parameters(job):
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
 
-    equilibration_ensemble = "NVT"
-    production_ensemble = "NVT"
-    production_ensemble = "NVT"
+    equilibration_ensemble = "GEMC_NVT"
+    production_ensemble = "GEMC_NVT"
 
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
     job.doc.equilibration_ensemble = equilibration_ensemble
@@ -423,7 +422,11 @@ def initial_parameters(job):
     kg_per_m3 = u.kg / (u.m * u.m * u.m)
     
     
-    job.doc.density = (job.sp.density * g_per_cm3).to(kg_per_m3)
+    job.doc.liquid_density = (job.sp.liquid_density * g_per_cm3).to(kg_per_m3)
+    job.doc.vapor_density = (job.sp.vapor_density * g_per_cm3).to(kg_per_m3)
+
+
+
     job.doc.solvent = job.sp.solvent
     """
 
@@ -444,6 +447,7 @@ def initial_parameters(job):
 
 
     job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
+    job.doc.vap_box_lengths_ang = 62.6 * u.angstrom
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
         job.doc.Rcut_ang = 15 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
@@ -524,28 +528,25 @@ def initial_parameters(job):
             "or GPU selection is is not 0 or 1."
         )
 
+    job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
     # set the initial iteration number of the simulation
     if equilibration_ensemble == "NPT":
-        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
         job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
     elif equilibration_ensemble == "NVT":
-        job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
         job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
+    elif job.doc.production_ensemble in ["GEMC_NVT", "GEMC_NPT"]:
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_GEMC"
+        job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GEMC"
+        job.doc.production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GEMC"
+    elif job.doc.production_ensemble in ["GCMC"]:
+        job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GCMC"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_GCMC"
+        job.doc.production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_GCMC"
     else:
         raise ValueError(
-            "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
-        )
-    
-
-    if production_ensemble == "NPT":
-        job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-    elif production_ensemble == "NVT":
-        job.doc.gomc_production_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
-    else:
-        raise ValueError(
-            "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
+            "ERROR: A wrong ensemble has been specified for the gomc binary file"
         )
 
 
@@ -1884,125 +1885,92 @@ def build_charmm(job, write_files=True):
                       )
     solvent.name = job.doc.solvent
 
-    #if job.doc.solvent not in ["TIP4"]:
-        #solvent.energy_minimize(forcefield=forcefield_dict[job.doc.solvent], steps=10 ** 5)
-    if (job.doc.N_liquid_solute > 0):
-        smiles_or_mol2_solute = get_molecule_path(smiles_or_mol2_name_to_value_dict[job.sp.solute][job.sp.forcefield])
+    solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
 
-        if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-            solute = mb.Compound(name=job.doc.solute)
-        else:
-            solute = mb.load(smiles_or_mol2_solute[1],
-                            smiles=smiles_or_mol2_solute[0]
-                            )
-        solute.name = job.sp.solute
+    # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
+    minimal_forcefield_dict = {solvent.name: solvent_ff
+                            }
 
-        solute_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solute][job.sp.forcefield])
-        solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
+    #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
 
-        # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
-        minimal_forcefield_dict = {solute.name: solute_ff,
-                                solvent.name: solvent_ff
-                                }
-
-        #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
-
-        # for trappe, currently unused'
-        if (job.sp.forcefield == "TRAPPE"):
-            bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
-        else:
-            bead_to_atom_name_dict = None
-
-        residues_list = [solute.name, solvent.name]
-        print("residues_list  = " +str(residues_list ))
-
-        #if job.doc.solvent in ["TIP4", "TIP3"]:
-        gomc_fix_bonds_angles_residues_list = [solvent.name]
-        #else:
-        #    gomc_fix_bonds_angles_residues_list  = None
-        print('Running: filling liquid box')
-        box_0 = mb.fill_box(compound=[solvent],
-                            density=job.doc.density,
-                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                ],
-                            seed=mbuild_box_seed_no
-                            )
-        print('Completed: filling liquid box')
-
+    # for trappe, currently unused'
+    if (job.sp.forcefield == "TRAPPE"):
+        bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
     else:
-        solvent_ff = get_ff_path(forcefield_residue_to_ff_filename_dict[job.sp.solvent][job.sp.forcefield])
+        bead_to_atom_name_dict = None
 
-        # only put the FF molecules in the simulation in the dictionaly input into the Chamm object.
-        minimal_forcefield_dict = {solvent.name: solvent_ff
-                                }
+    residues_list = [solvent.name]
+    print("residues_list  = " +str(residues_list ))
 
-        #solute.energy_minimize(forcefield=forcefield_dict[job.sp.solute], steps=10 ** 5)
+    #if job.doc.solvent in ["TIP4", "TIP3"]:
+    gomc_fix_bonds_angles_residues_list = [solvent.name]
+    #else:
+    #    gomc_fix_bonds_angles_residues_list  = None
+    print('Running: filling liquid box')
+    box_0 = mb.fill_box(compound=[solvent],
+                        density=job.doc.liquid_density,
+                        box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                            ],
+                        seed=mbuild_box_seed_no
+                        )
+    print('Completed: filling liquid box')
 
-        # for trappe, currently unused'
-        if (job.sp.forcefield == "TRAPPE"):
-            bead_to_atom_name_dict = { '_CH3':'C', '_CH2':'C',  'O':'O', 'H':'H'}
-        else:
-            bead_to_atom_name_dict = None
+    
+    angstrom3 = (u.angstrom * u.angstrom * u.angstrom)
+    cm3 = (u.cm * u.cm * u.cm)
+    job.doc.volume = ((job.doc.vap_box_lengths_ang * u.angstrom) * (job.doc.vap_box_lengths_ang * u.angstrom) * (job.doc.vap_box_lengths_ang * u.angstrom)).to(cm3)
 
-        residues_list = [solvent.name]
-        print("residues_list  = " +str(residues_list ))
+    from scipy import constants
+    molar_mass_of_solvent = 18.01528 * u.mol
+    job.doc.N_vapor_solvent = int((constants.Avogadro * job.sp.vapor_density * job.doc.volume )/ molar_mass_of_solvent)
+    
 
-        #if job.doc.solvent in ["TIP4", "TIP3"]:
-        gomc_fix_bonds_angles_residues_list = [solvent.name]
-        #else:
-        #    gomc_fix_bonds_angles_residues_list  = None
-        print('Running: filling liquid box')
-        box_0 = mb.fill_box(compound=[solvent],
-                            density=job.doc.density,
-                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                ],
-                            seed=mbuild_box_seed_no
-                            )
-        print('Completed: filling liquid box')
+    print('Running: filling vapor box : ', job.doc.N_vapor_solvent)
+    box_1 = mb.fill_box(compound=[solvent],
+                        n_compounds=job.doc.N_vapor_solvent,
+                        box=[u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            ],
+                        seed=mbuild_box_seed_no
+                        )
+    print('Completed: filling vapor box')
 
     print('Running: GOMC FF file, and the psf and pdb files')
-    if job.doc.production_ensemble in ["NVT", "NPT"]:
-        print('Running: namd_charmm')
-        namd_charmm = mf_charmm.Charmm(
-            box_0,
-            mosdef_structure_box_0_name_str,
-            structure_box_1=None,
-            filename_box_1=None,
-            ff_filename= namd_ff_filename_str,
-            forcefield_selection=minimal_forcefield_dict,
-            residues=residues_list,
-            bead_to_atom_name_dict=bead_to_atom_name_dict,
-            gomc_fix_bonds_angles=None,
-        )
+    gomc_charmm = mf_charmm.Charmm(
+        box_0,
+        mosdef_structure_box_0_name_str,
+        structure_box_1=box_1,
+        filename_box_1=mosdef_structure_box_1_name_str,
+        ff_filename=  gomc_ff_filename_str,
+        forcefield_selection=minimal_forcefield_dict,
+        residues=residues_list,
+        bead_to_atom_name_dict=bead_to_atom_name_dict,
+        gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
+    )
 
-        print('Running: gomc_charmm')
-        gomc_charmm = mf_charmm.Charmm(
-            box_0,
-            mosdef_structure_box_0_name_str,
-            structure_box_1=None,
-            filename_box_1=None,
-            ff_filename=  gomc_ff_filename_str,
-            forcefield_selection=minimal_forcefield_dict,
-            residues=residues_list,
-            bead_to_atom_name_dict=bead_to_atom_name_dict,
-            gomc_fix_bonds_angles=gomc_fix_bonds_angles_residues_list,
-        )
+    print('Running: namd_charmm')
+    namd_charmm = mf_charmm.Charmm(
+        box_0,
+        mosdef_structure_box_0_name_str,
+        structure_box_1=None,
+        filename_box_1=None,
+        ff_filename= namd_ff_filename_str,
+        forcefield_selection=minimal_forcefield_dict,
+        residues=residues_list,
+        bead_to_atom_name_dict=bead_to_atom_name_dict,
+        gomc_fix_bonds_angles=None,
+    )
 
-    else:
-        raise ValueError("ERROR: The GCMC and GEMC ensembles are not supported in this script.")
+    gomc_charmm.write_inp()
+    gomc_charmm.write_psf()
+    gomc_charmm.write_pdb()
 
-    if write_files == True:
-        gomc_charmm.write_inp()
-
-        namd_charmm.write_inp()
-
-        namd_charmm.write_psf()
-
-        namd_charmm.write_pdb()
+    namd_charmm.write_inp()
+    namd_charmm.write_psf()
+    namd_charmm.write_pdb()
 
     print("#**********************")
     print("Completed: GOMC Charmm Object")
@@ -2087,7 +2055,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     job.doc.path_to_ref_binCoordinates =  binCoordinates_box_0
     job.doc.path_to_ref_extendedSystem =  extendedSystem_box_0
 
-    if (job.doc.equilibration_ensemble in ["GCMC"]):  
+    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
         job.doc.path_to_ref_pdb_box_1 =  Coordinates_box_1
         job.doc.path_to_ref_psf_box_1 =  Structure_box_1
         job.doc.path_to_ref_binCoordinates_box_1 =  binCoordinates_box_1
@@ -2201,7 +2169,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     namd_template_path_str = os.path.join(project_directory_path, "templates/NAMD_conf_template.conf")
 
-    if job.doc.solvent in ["TIP3", "SPC", "MSPCE"]:
+    if job.doc.solvent in ["TIP3", "SPC", "SPCE", "MSPCE"]:
         namd_uses_water = True
         namd_water_model = 'tip3'
     elif job.doc.solvent in ["TIP4"]:
@@ -2254,41 +2222,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         False,
         int(gomc_output_data_every_X_steps),
     ]
-    # namd and gomc integrators are off by ~2%, which may cause drift
-    # if you calibrate wolf using the restart files from namd
-    # therefore a single state npt equilibration is performed
-    # in gomc before wolf calibration.
-    if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-        useCoul = False
-        CBMC_First = (12,)
-        CBMC_Nth = (10,)
-        CBMC_Ang = (50,)
-        CBMC_Dih = (50,)
-        if job.doc.equilibration_ensemble in ["NVT"]:
-            VolFreq = (0.00,)
-            MultiParticleFreq = (None,)
-            IntraSwapFreq = (0.0,)
-            CrankShaftFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.4,)
-            RotFreq = (0.3,)
-            RegrowthFreq = (0.3,)
-
-        elif job.doc.equilibration_ensemble in ["NPT"]:
-            VolFreq = (0.01,)
-            MultiParticleFreq = (None,)
-            IntraSwapFreq = (0.0,)
-            CrankShaftFreq = (None,)
-            SwapFreq = (None,)
-            DisFreq = (0.39,)
-            RotFreq = (0.3,)
-            RegrowthFreq = (0.3,)
-
-        else:
-            raise ValueError(
-                "Moleules MC move ratios not listed for this solvent and solute or ensemble "
-                "in the GOMC control file writer."
-            )
 
     if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
         useCoul = True
@@ -2315,12 +2248,23 @@ def build_psf_pdb_ff_gomc_conf(job):
             DisFreq = (0.49,)
             RotFreq = (0.2,)
             RegrowthFreq = (0.20,)
-
+            
+        elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
+            VolFreq = (0.01,)
+            MultiParticleFreq = (0.02,)
+            IntraSwapFreq = (0.20,)
+            CrankShaftFreq = (0.1,)
+            SwapFreq = (0.20,)
+            DisFreq = (0.17,)
+            RotFreq = (0.20,)
+            RegrowthFreq = (0.20,)
+            CrankShaftFreq = (0.0,)
         else:
             raise ValueError(
                 "Moleules MC move ratios not listed for this solvent and solute or ensemble "
                 "in the GOMC control file writer."
             )
+
     print("#**********************")
     print("Started: equilb NPT NAMD -> NPT GOMC control file writing")
     print("#**********************")
@@ -2342,10 +2286,10 @@ def build_psf_pdb_ff_gomc_conf(job):
         binCoordinates_box_0=job.doc.path_to_ref_binCoordinates,
         extendedSystem_box_0=job.doc.path_to_ref_extendedSystem,
         binVelocities_box_0=None,
-        Coordinates_box_1=None,
-        Structure_box_1=None,
-        binCoordinates_box_1=None,
-        extendedSystem_box_1=None,
+        Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
+        Structure_box_1=job.doc.path_to_ref_psf_box_1,
+        binCoordinates_box_1=job.doc.path_to_ref_binCoordinates_box_1,
+        extendedSystem_box_1=job.doc.path_to_ref_extendedSystem_box_1,
         binVelocities_box_1=None,
         input_variables_dict={
             "PRNG": seed_no,
@@ -2380,11 +2324,6 @@ def build_psf_pdb_ff_gomc_conf(job):
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
             "CBMC_Dih": CBMC_Dih[-1],
-            #"FreeEnergyCalc": NoFreeEnergyCalc,
-            #"MoleculeType": MoleculeType,
-            #"InitialState": initial_state_sims_i,
-            #"LambdaVDW": list(job.doc.LambdaVDW_list),
-            #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
         },
     )
 
@@ -2414,10 +2353,10 @@ def build_psf_pdb_ff_gomc_conf(job):
         binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
         extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
         binVelocities_box_0=None,
-        Coordinates_box_1=None,
-        Structure_box_1=None,
-        binCoordinates_box_1=None,
-        extendedSystem_box_1=None,
+        Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
+        Structure_box_1=job.doc.path_to_ref_psf_box_1,
+        binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
+        extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
         binVelocities_box_1=None,
         input_variables_dict={
             "PRNG": seed_no,
@@ -2452,11 +2391,6 @@ def build_psf_pdb_ff_gomc_conf(job):
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
             "CBMC_Dih": CBMC_Dih[-1],
-            #"FreeEnergyCalc": NoFreeEnergyCalc,
-            #"MoleculeType": MoleculeType,
-            #"InitialState": initial_state_sims_i,
-            #"LambdaVDW": list(job.doc.LambdaVDW_list),
-            #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
         },
     )
     append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2493,7 +2427,16 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.39,)
                 RotFreq = (0.3,)
                 RegrowthFreq = (0.3,)
-
+            elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (0.02,)
+                IntraSwapFreq = (0.20,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (0.20,)
+                DisFreq = (0.17,)
+                RotFreq = (0.20,)
+                RegrowthFreq = (0.20,)
+                CrankShaftFreq = (0.0,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2525,7 +2468,16 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.49,)
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
-
+            elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (0.02,)
+                IntraSwapFreq = (0.20,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (0.20,)
+                DisFreq = (0.17,)
+                RotFreq = (0.20,)
+                RegrowthFreq = (0.20,)
+                CrankShaftFreq = (0.0,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2549,10 +2501,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
-            Coordinates_box_1=None,
-            Structure_box_1=None,
-            binCoordinates_box_1=None,
-            extendedSystem_box_1=None,
+            Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
+            Structure_box_1=job.doc.path_to_ref_psf_box_1,
+            binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
+            extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
             binVelocities_box_1=None,
             input_variables_dict={
                 "PRNG": seed_no,
@@ -2661,7 +2613,16 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.39,)
                 RotFreq = (0.3,)
                 RegrowthFreq = (0.3,)
-
+            elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (0.02,)
+                IntraSwapFreq = (0.20,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (0.20,)
+                DisFreq = (0.17,)
+                RotFreq = (0.20,)
+                RegrowthFreq = (0.20,)
+                CrankShaftFreq = (0.0,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2693,7 +2654,16 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.49,)
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
-
+            elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
+                VolFreq = (0.01,)
+                MultiParticleFreq = (0.02,)
+                IntraSwapFreq = (0.20,)
+                CrankShaftFreq = (0.1,)
+                SwapFreq = (0.20,)
+                DisFreq = (0.17,)
+                RotFreq = (0.20,)
+                RegrowthFreq = (0.20,)
+                CrankShaftFreq = (0.0,)
             else:
                 raise ValueError(
                     "Moleules MC move ratios not listed for this solvent and solute or ensemble "
@@ -2718,10 +2688,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
             extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
             binVelocities_box_0=None,
-            Coordinates_box_1=None,
-            Structure_box_1=None,
-            binCoordinates_box_1=None,
-            extendedSystem_box_1=None,
+            Coordinates_box_1=job.doc.path_to_ref_pdb_box_1,
+            Structure_box_1=job.doc.path_to_ref_psf_box_1,
+            binCoordinates_box_1=job.doc.path_to_sseq_binCoordinates_box_1,
+            extendedSystem_box_1=job.doc.path_to_sseq_extendedSystem_box_1,
             binVelocities_box_1=None,
             input_variables_dict={
                 "PRNG": seed_no,
@@ -3193,7 +3163,6 @@ def part_4b_job_gomc_calibration_find_minimum(job):
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(lambda j: j.sp.density == 0.001)
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_all_surface_plot_created)
