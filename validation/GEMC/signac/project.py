@@ -56,8 +56,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -67,6 +67,9 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Dens
 # local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
+
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 
 #WSL local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
@@ -84,7 +87,12 @@ gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
+gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
 
+gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 1 * 10**3 # set value for paper = 100 * 10**3
+#gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 
 """
 During the
@@ -106,6 +114,8 @@ Wolf_Sanity_MC_steps = 10 * 10**7
 Calibration_MC_steps = 1000
 Calibration_MC_Eq_Steps = 100
 Wolf_Sanity_MC_steps = 5 * 10**3
+
+
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -1272,7 +1282,9 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     if (job.doc.equilibration_ensemble in ["NVT"]):
                         densities.append(float(line.split()[7]))
                     elif (job.doc.equilibration_ensemble in ["NPT"]):
-                        densities.append(float(line.split()[8]))                
+                        densities.append(float(line.split()[8]))      
+                    elif (job.doc.equilibration_ensemble in ["GEMC_NVT"]):
+                        densities.append(float(line.split()[4]))              
                 except:
                     print("An exception occurred") 
     steps_np = np.array(steps)
@@ -1299,12 +1311,13 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     A_t_equil_densities = densities_np[t0:]
     A_t_equil_steps = steps_np[t0:]
 
+    dict_of_equilibrated_energies["steps"] = A_t_equil_steps
     dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
     dict_of_equilibrated_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil_densities
+    dict_of_equilibrated_densities["steps"] = A_t_equil_steps
 
     dfUC1 = pd.DataFrame.from_dict(dict_of_equilibrated_energies)
-    dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id))
-    
+    dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
     dfUC2 = pd.DataFrame.from_dict(dict_of_equilibrated_densities)
     dfUC2.to_csv('wolf_sanity_equilibrated_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
@@ -1490,6 +1503,7 @@ def part_4b_wolf_sanity_analysis(job):
     from scipy.stats import ttest_ind
     from scipy.spatial.distance import jensenshannon
     listOfWolfMethods = list(df5.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df5["Ewald_Ewald"].mean()
@@ -1505,6 +1519,7 @@ def part_4b_wolf_sanity_analysis(job):
 
     statistics = pd.DataFrame()
     listOfWolfMethods = list(df1.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df1["Ewald_Ewald"].mean()
@@ -1744,10 +1759,11 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         myfile.write(defPotLine)
                         defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
                         myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_rcut"])
-                        myfile.write(defRCutLine)
+                        for box in box_list:
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_alpha"])
+                            myfile.write(defAlphaLine)
+                            defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_rcut"])
+                            myfile.write(defRCutLine)
                     else:
                         defWolfLine = "Wolf\tTrue\n"
                         myfile.write(defWolfLine)
