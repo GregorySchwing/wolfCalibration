@@ -61,6 +61,9 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 
@@ -1215,7 +1218,9 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     if (job.doc.equilibration_ensemble in ["NVT"]):
                         densities.append(float(line.split()[7]))
                     elif (job.doc.equilibration_ensemble in ["NPT"]):
-                        densities.append(float(line.split()[8]))                
+                        densities.append(float(line.split()[8]))      
+                    elif (job.doc.equilibration_ensemble in ["GEMC_NVT"]):
+                        densities.append(float(line.split()[4]))              
                 except:
                     print("An exception occurred") 
     steps_np = np.array(steps)
@@ -1244,12 +1249,11 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
 
     dict_of_equilibrated_energies["steps"] = A_t_equil_steps
     dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
-    dict_of_equilibrated_densities["steps"] = A_t_equil_steps
     dict_of_equilibrated_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil_densities
+    dict_of_equilibrated_densities["steps"] = A_t_equil_steps
 
     dfUC1 = pd.DataFrame.from_dict(dict_of_equilibrated_energies)
     dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
-    
     dfUC2 = pd.DataFrame.from_dict(dict_of_equilibrated_densities)
     dfUC2.to_csv('wolf_sanity_equilibrated_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
@@ -1373,7 +1377,6 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
                                for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
-def part_4b_wolf_sanity_analysis(job):
     df1 = pd.DataFrame()
     df3 = pd.DataFrame()
     df5 = pd.DataFrame()
@@ -1435,6 +1438,7 @@ def part_4b_wolf_sanity_analysis(job):
     from scipy.stats import ttest_ind
     from scipy.spatial.distance import jensenshannon
     listOfWolfMethods = list(df5.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df5["Ewald_Ewald"].mean()
@@ -1450,6 +1454,7 @@ def part_4b_wolf_sanity_analysis(job):
 
     statistics = pd.DataFrame()
     listOfWolfMethods = list(df1.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df1["Ewald_Ewald"].mean()
@@ -1466,6 +1471,7 @@ def part_4b_wolf_sanity_analysis(job):
     job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
+
 
 
 # ******************************************************
