@@ -8,7 +8,7 @@
 #SBATCH -q gpu
 #SBATCH --gres gpu:{{ gpus }}
 {%- else %}
-#SBATCH -q primary
+#SBATCH -q secondary
 {%- endif %}
 
 #SBATCH -N 1
