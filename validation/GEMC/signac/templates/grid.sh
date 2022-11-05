@@ -5,10 +5,10 @@
     {{- super () -}}
 
 {% if gpus %}
-#SBATCH -q gpu
+#SBATCH -q requeue
 #SBATCH --gres gpu:{{ gpus }}
 {%- else %}
-#SBATCH -q secondary
+#SBATCH -q primary
 {%- endif %}
 
 #SBATCH -N 1
