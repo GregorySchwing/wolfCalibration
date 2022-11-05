@@ -3168,7 +3168,7 @@ def run_namd_equilb_NVT_box_0_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
         str(job.doc.namd_equilb_NVT_gomc_binary_file),
-        str(job.doc.namd_node_ncpu),
+        str(1),
         str(control_file_name_str),
         str(control_file_name_str),
     )
@@ -3222,7 +3222,7 @@ def run_namd_equilb_NVT_box_1_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
         str(job.doc.namd_equilb_NVT_gomc_binary_file),
-        str(job.doc.namd_node_ncpu),
+        str(1),
         str(control_file_name_str),
         str(control_file_name_str),
     )
