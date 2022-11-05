@@ -512,7 +512,7 @@ def initial_parameters(job):
     job.doc.solute = job.sp.solute
 
     job.doc.namd_node_ncpu = 8
-    job.doc.namd_node_ngpu = 0
+    job.doc.namd_node_ngpu = 1
     #job.doc.namd_node_ngpu = 1
 
     job.doc.gomc_ncpu = 8  # 1 is optimal but I want data quick.  run time is set for 1 cpu
