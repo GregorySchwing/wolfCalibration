@@ -1379,6 +1379,8 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
                                for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
+def part_4b_wolf_sanity_analysis(job):
+
     df1 = pd.DataFrame()
     df3 = pd.DataFrame()
     df5 = pd.DataFrame()
