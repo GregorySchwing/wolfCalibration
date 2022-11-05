@@ -3147,8 +3147,8 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.namd_node_ncpu,
-        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "np": 1,
+        "ngpu": 1,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
@@ -3201,8 +3201,8 @@ def run_namd_equilb_NVT_box_0_gomc_command(job):
 @Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.namd_node_ncpu,
-        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "np": 1,
+        "ngpu": 1,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
