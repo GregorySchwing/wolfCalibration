@@ -3147,8 +3147,8 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": 1,
-        "ngpu": 1,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
@@ -3168,7 +3168,7 @@ def run_namd_equilb_NVT_box_0_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
         str(job.doc.namd_equilb_NVT_gomc_binary_file),
-        str(1),
+        str(job.doc.namd_node_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
     )
@@ -3201,8 +3201,8 @@ def run_namd_equilb_NVT_box_0_gomc_command(job):
 @Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": 1,
-        "ngpu": 1,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
@@ -3222,7 +3222,7 @@ def run_namd_equilb_NVT_box_1_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(namd_binary_path),
         str(job.doc.namd_equilb_NVT_gomc_binary_file),
-        str(1),
+        str(job.doc.namd_node_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
     )
