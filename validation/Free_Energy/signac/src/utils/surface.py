@@ -1012,7 +1012,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     yaxis_title='Alpha',
                     zaxis_title='Relative Error'),
                     width=700,
-                    margin=dict(r=20, b=10, l=10, t=10))
+                    margin=dict(r=20, b=10, l=10, t=10),
+                    font=dict(size=18))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
 
@@ -1052,6 +1053,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
+        """
         iteractivefig.add_trace(
             go.Scatter3d(x=[14],
                         y=[0.12],
@@ -1070,6 +1072,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
+        """
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
