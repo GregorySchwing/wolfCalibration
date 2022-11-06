@@ -59,8 +59,8 @@ gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC
 namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC/signac/bin"
 # Potoff cluster bin paths
 # Potoff cluster bin paths
-gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac"
-namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac"
+gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 
 # local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
