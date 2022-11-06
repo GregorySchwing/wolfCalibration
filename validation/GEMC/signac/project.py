@@ -2078,11 +2078,11 @@ def build_charmm(job, write_files=True):
 
     namd_charmm.write_inp()
 
-    if (job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
-        gomc_charmm.write_psf()
-        gomc_charmm.write_pdb()
-        namd_charmm.write_psf()
-        namd_charmm.write_pdb()
+    #if (job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
+    gomc_charmm.write_psf()
+    gomc_charmm.write_pdb()
+    namd_charmm.write_psf()
+    namd_charmm.write_pdb()
 
     #namd_charmm_box_1.write_inp()
     #namd_charmm_box_1.write_psf()
