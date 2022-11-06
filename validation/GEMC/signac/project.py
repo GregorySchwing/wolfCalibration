@@ -470,7 +470,7 @@ def initial_parameters(job):
 
     job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
     #job.doc.vap_box_lengths_ang = 62.6 * u.angstrom
-    job.doc.vap_box_lengths_ang = 150.0 * u.angstrom
+    job.doc.vap_box_lengths_ang = 200.0 * u.angstrom
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
         job.doc.Rcut_ang = 15 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
