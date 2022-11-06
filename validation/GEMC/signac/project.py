@@ -44,13 +44,6 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #    hostname_pattern = r".*\.grid\.wayne\.edu"
 #    template = "grid.sh"
 
-
-class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
-    """Subclass of DefaultSlurmEnvironment for WSU's Grid cluster."""
-
-    hostname_pattern = r".*reslab32ai8111"
-    template = "potoff.sh"
-
 # ******************************************************
 # users typical variables, but not all (start)
 # ******************************************************
