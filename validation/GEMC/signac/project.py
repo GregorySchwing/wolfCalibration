@@ -1994,7 +1994,7 @@ def build_charmm(job, write_files=True):
     #    gomc_fix_bonds_angles_residues_list  = None
     print('Running: filling liquid box')
     box_0 = mb.fill_box(compound=[solvent],
-                        density=0.01,
+                        density=job.doc.liquid_density,
                         box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
@@ -2005,10 +2005,10 @@ def build_charmm(job, write_files=True):
 
     print('Running: filling vapor box')
     box_1 = mb.fill_box(compound=[solvent],
-                        density=0.01,
-                        box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                        density=job.doc.vapor_density,
+                        box=[u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
                             ],
                         seed=mbuild_box_seed_no
                         )
@@ -2073,13 +2073,16 @@ def build_charmm(job, write_files=True):
         gomc_fix_bonds_angles=None,
     )
 
-    #gomc_charmm.write_inp()
-    #gomc_charmm.write_psf()
-    #gomc_charmm.write_pdb()
+    gomc_charmm.write_inp()
 
-    #namd_charmm.write_inp()
-    #namd_charmm.write_psf()
-    #namd_charmm.write_pdb()
+
+    namd_charmm.write_inp()
+
+    if (job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
+        gomc_charmm.write_psf()
+        gomc_charmm.write_pdb()
+        namd_charmm.write_psf()
+        namd_charmm.write_pdb()
 
     #namd_charmm_box_1.write_inp()
     #namd_charmm_box_1.write_psf()
