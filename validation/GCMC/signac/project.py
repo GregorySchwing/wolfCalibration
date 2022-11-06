@@ -67,31 +67,31 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
-#gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
-#namd_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
+gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
+namd_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
 
 # local bin paths
 #gomc_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
 #WSL local bin paths
-gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
 #namd_binary_path = "/home/brad/Programs/NAMD/NAMD_2.14_RTX_3080_build_Source_CUDA"
 
 # number of simulation steps
+#gomc_steps_equilb_design_ensemble = 10 * 10**6 # set value for paper = 10 * 10**6
+# number of simulation steps
+#gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
-
-gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
-gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
+#gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -108,13 +108,6 @@ EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 5 * 10**7
-number_of_lambda_spacing_including_zero_int = 1
-
-MC_steps = int(gomc_steps_equilb_design_ensemble)
-EqSteps = 100
-Calibration_MC_steps = 1000
-Calibration_MC_Eq_Steps = 100
-Wolf_Sanity_MC_steps = 1 * 10**3
 number_of_lambda_spacing_including_zero_int = 1
 
 # force field (FF) file for all simulations in that job
@@ -381,13 +374,13 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    if (job.sp.shell_radius != "solvent_box"):
-        job.doc.equilibration_ensemble = "GCMC"
-        job.doc.production_ensemble = "GCMC"
+    #if (job.sp.shell_radius != "solvent_box"):
+    job.doc.equilibration_ensemble = "GCMC"
+    job.doc.production_ensemble = "GCMC"
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
-    else:
-        job.doc.equilibration_ensemble = "NPT"
-        job.doc.production_ensemble = "NPT"
+    #else:
+    #    job.doc.equilibration_ensemble = "NPT"
+    #    job.doc.production_ensemble = "NPT"
     job.doc.production_pressure_bar = (1 * u.atm).to('bar')
     job.doc.production_temperature_K = job.sp.production_temperature_K
 
@@ -760,25 +753,32 @@ def part_3b_output_gomc_equilb_design_ensemble_started(job):
 def part_3b_output_gomc_calibration_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
     try:
-        ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['solute']="solvent_box"
-        ewald_sp['shell_radius']="solvent_box"
-        ewald_sp['wolf_model']="Calibrator"        
-        ewald_sp['wolf_potential']="Calibrator"
-        ewald_sp['replica_number_int']=0
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
-            if ewald_job.isfile(
-                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
-            ):
-                return True
-            else:
-                return False
+#This will cause Ewald sims to wait for Wolf calibration to complete.
+        #This will cause Ewald sims to wait for Wolf calibration to complete.
+
+        if(job.sp.electrostatic_method != "Wolf"):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Wolf"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                if ewald_job.isfile(
+                    "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+                ):
+                    return True
+                else:
+                    return False
 
 
+        if job.isfile(
+            "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+        ):
+            return True
+        else:
+            return False
     except:
         return False
+
+        return True
 
 # check if equilb_with design ensemble GOMC run is started
 @Project.label
@@ -975,15 +975,10 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     try:
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['solute']="solvent_box"
-        ewald_sp['shell_radius']="solvent_box"
-        ewald_sp['wolf_model']="Calibrator"        
-        ewald_sp['wolf_potential']="Calibrator"
         ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
@@ -1001,6 +996,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                 return False
     except:
         return False
+
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1064,20 +1060,77 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
-    ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
-    ewald_sp['wolf_model']="Calibrator"        
-    ewald_sp['wolf_potential']="Calibrator"
-    ewald_sp['solute']="solvent_box"   
-    ewald_sp['shell_radius']="solvent_box"
-    ewald_sp['replica_number_int']=0
-    jobs = list(pr.find_jobs(ewald_sp))
-    for ewald_job in jobs:
-        if (not ewald_job.isfile("bestWolfParameters.pickle")):
-            return False
-        else:
-            return True
+    if(job.sp.replica_number_int != 0):
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Wolf"
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            if (not ewald_job.isfile("bestWolfParameters.pickle")):
+                return False
+            return ewald_job.isfile("winningWolfParameters.pickle")
+    try:
+        import pickle as pickle
+        import re
+        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+        with open(job.fn("bestWolfParameters.pickle"), 'rb') as handle:
+            model2BestWolfAlphaRCut = pickle.load(handle)
         
+        bestModel = ""
+        bestOpt = ""
+        smallestRelErr = 1.0
+        smallestAUC = 1000000000
+        largestAUC = 0
+
+        bestRCut = 0
+        bestAlpha = 0
+
+        #print("Replica :", job.sp.replica)
+        for model in model2BestWolfAlphaRCut:
+            print("Model :", model)
+            print("Winning Optimizer :", model2BestWolfAlphaRCut[model]['WINNING_OPT'])
+            print("AUC :", model2BestWolfAlphaRCut[model]['GD_AUC'])
+            print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
+            print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
+            print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
+            if (model2BestWolfAlphaRCut[model]['GD_AUC']  < smallestAUC):
+                bestModel = model
+                smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                smallestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                bestOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']
+            if (model2BestWolfAlphaRCut[model]['GD_AUC']  > largestAUC):
+                worstModel = model
+                largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
+                largestAUC = model2BestWolfAlphaRCut[model]['GD_AUC']                
+                worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
+                worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
+                worstOpt =  model2BestWolfAlphaRCut[model]['WINNING_OPT']              
+        print("worstModel :", worstModel)
+        print("worstOpt :", worstOpt)
+
+        print("largestRelErr :", largestRelErr)
+        print("largestAUC :", largestAUC)
+        print("worstRCut :", worstRCut)
+        print("worstAlpha :", worstAlpha)
+
+        print("bestModel :", bestModel)
+        print("bestOpt :", bestOpt)
+
+        print("smallestRelErr :", smallestRelErr)
+        print("smallestAUC :", smallestAUC)
+        print("bestRCut :", bestRCut)
+        print("bestAlpha :", bestAlpha)
+
+        Dict = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
+        "Alpha":bestAlpha}
+        with open("winningWolfParameters.pickle", 'wb') as handle:
+            pickle.dump(Dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        return job.isfile("winningWolfParameters.pickle")
+    except:
+        return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -2108,7 +2161,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
     else:
@@ -2167,7 +2220,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
 
@@ -2235,7 +2288,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2297,7 +2350,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2481,7 +2534,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                "ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2543,7 +2596,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
                 "CBMC_Dih": CBMC_Dih[-1],
-                #"ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
             },
         )
         append_checkpoint_line(job, output_name_control_file_name, job.doc.path_to_sseq_checkpoint)
@@ -2769,7 +2822,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": CBMC_Nth[-1],
                     "CBMC_Ang": CBMC_Ang[-1],
                     "CBMC_Dih": CBMC_Dih[-1],
-                    "ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                    "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                 },
             )
             append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
@@ -2830,7 +2883,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                     "CBMC_Nth": CBMC_Nth[-1],
                     "CBMC_Ang": CBMC_Ang[-1],
                     "CBMC_Dih": CBMC_Dih[-1],
-                    #"ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                    #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                 },
             )
             append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
@@ -2985,7 +3038,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                         "CBMC_Nth": CBMC_Nth[-1],
                         "CBMC_Ang": CBMC_Ang[-1],
                         "CBMC_Dih": CBMC_Dih[-1],
-                        "ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                        "ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                     },
                 )
                 append_wolf_calibration_parameters(job)
@@ -3047,7 +3100,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                         "CBMC_Nth": CBMC_Nth[-1],
                         "CBMC_Ang": CBMC_Ang[-1],
                         "CBMC_Dih": CBMC_Dih[-1],
-                        #"ChemPot" : {job.doc.solvent : -4540, "Ne" : -8000}
+                        #"ChemPot" : {job.doc.solvent : -4210, "Ne" : -8000}
                     },
                 )
                 append_wolf_calibration_parameters(job)
