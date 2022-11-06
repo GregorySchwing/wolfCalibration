@@ -9,6 +9,7 @@
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
 #SBATCH --exclude=ressrv7ai8111,ressrv8ai8111,ressrv13ai8111,ressrv14ai8111,ressrv15ai8111,res-lab34-ai8111,res-lab35-ai8111,res-lab41-ai8111,res-lab43-ai8111,reslab44ai8111
+#SBATCH --exclusive 
 {%- else %}
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
