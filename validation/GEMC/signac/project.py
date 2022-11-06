@@ -2006,9 +2006,9 @@ def build_charmm(job, write_files=True):
     print('Running: filling vapor box')
     box_1 = mb.fill_box(compound=[solvent],
                         density=0.01,
-                        box=[u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
-                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
-                            u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
+                        box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                            u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
                             ],
                         seed=mbuild_box_seed_no
                         )
