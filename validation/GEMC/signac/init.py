@@ -31,13 +31,6 @@ liquid_densities = np.array([0.995, 0.914, 0.787])* g_per_cm3
 vapor_densities = np.array([7.8e-6, 6.7e-4, 9.4e-3])* g_per_cm3
 #vapor_densities = np.array([1e-3, 1e-3, 1e-3])* g_per_cm3
 
-#  MC temperatures from PyMCMD
-production_temperatures = [300] * u.K 
-#  MC Densitities from PyMCMD
-liquid_densities = np.array([0.995])* g_per_cm3
-#  MC Densitities from PyMCMD
-vapor_densities = np.array([7.8e-6])* g_per_cm3
-#vapor_densities = np.array([1e-3, 1e-3, 1e-3])* g_per_cm3
 print(production_temperatures)
 print(liquid_densities)
 print(vapor_densities)

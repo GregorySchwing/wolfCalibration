@@ -61,6 +61,9 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
 
@@ -138,11 +141,13 @@ gomc_production_control_file_name_str = "gomc_production_run"
 
 
 preliminary_output_replicate_txt_file_name_box_0 = "preliminary_analysis_avg_data_box_0.txt"
+preliminary_uncorrelated_output_replicate_txt_file_name_box_0 = "preliminary_analysis_uncorrelated_data_avg_data_box_0.txt"
 
 # Analysis (each replicates averages):
 # Output text (txt) file names for each replicates averages
 # directly put in each replicate folder (.txt, .dat, etc)
 output_replicate_txt_file_name_box_0 = "analysis_avg_data_box_0.txt"
+output_uncorrelated_replicate_txt_file_name_box_0 = "analysis_uncorrelated_avg_data_box_0.txt"
 
 # Analysis (averages and std. devs. of  # all the replcates):
 # Output text (txt) file names for the averages and std. devs. of all the replcates,
@@ -1215,7 +1220,9 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     if (job.doc.equilibration_ensemble in ["NVT"]):
                         densities.append(float(line.split()[7]))
                     elif (job.doc.equilibration_ensemble in ["NPT"]):
-                        densities.append(float(line.split()[8]))                
+                        densities.append(float(line.split()[8]))      
+                    elif (job.doc.equilibration_ensemble in ["GEMC_NVT"]):
+                        densities.append(float(line.split()[4]))              
                 except:
                     print("An exception occurred") 
     steps_np = np.array(steps)
@@ -1244,12 +1251,11 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
 
     dict_of_equilibrated_energies["steps"] = A_t_equil_steps
     dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
-    dict_of_equilibrated_densities["steps"] = A_t_equil_steps
     dict_of_equilibrated_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil_densities
+    dict_of_equilibrated_densities["steps"] = A_t_equil_steps
 
     dfUC1 = pd.DataFrame.from_dict(dict_of_equilibrated_energies)
     dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
-    
     dfUC2 = pd.DataFrame.from_dict(dict_of_equilibrated_densities)
     dfUC2.to_csv('wolf_sanity_equilibrated_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
@@ -1374,6 +1380,7 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
+
     df1 = pd.DataFrame()
     df3 = pd.DataFrame()
     df5 = pd.DataFrame()
@@ -1435,6 +1442,7 @@ def part_4b_wolf_sanity_analysis(job):
     from scipy.stats import ttest_ind
     from scipy.spatial.distance import jensenshannon
     listOfWolfMethods = list(df5.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df5["Ewald_Ewald"].mean()
@@ -1450,6 +1458,7 @@ def part_4b_wolf_sanity_analysis(job):
 
     statistics = pd.DataFrame()
     listOfWolfMethods = list(df1.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df1["Ewald_Ewald"].mean()
@@ -1466,6 +1475,7 @@ def part_4b_wolf_sanity_analysis(job):
     job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
+
 
 
 # ******************************************************
@@ -3433,6 +3443,64 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
     df = pd.DataFrame.from_dict(dict_of_states)
     df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
 
+    # Read the data for TI estimator and BAR or MBAR estimators.
+    list_data_TI = []
+    list_data_BAR = []
+    for f in files:
+        dHdl = extract_dHdl(f, T=temperature)
+        u_nkr = extract_u_nk(f, T=temperature)
+        #Detect uncorrelated samples using VDW+Coulomb term in derivative 
+        # of energy time series (calculated for TI)
+        srs = dHdl['VDW'] + dHdl['Coulomb'] 
+        list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
+        list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
+
+    # Correlated samples
+    #for TI estimator
+    print("Working on TI method ...")
+    dHdl = pd.concat([ld for ld in list_data_TI])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+
+    #for MBAR estimator
+    print("Working on MBAR method ...")
+    u_nk = pd.concat([ld for ld in list_data_BAR])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+
+    #for BAR estimator
+    print("Working on BAR method ...")
+    u_nk = pd.concat([ld for ld in list_data_BAR])
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(preliminary_uncorrelated_output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
+
+    #All samples
     # for TI estimator
     dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
     ti = TI().fit(dHdl)

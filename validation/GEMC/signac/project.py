@@ -56,8 +56,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolf/GOMC/bin"
 #namd_binary_path = "/wsu/home/go/go24/go2432/NAMD_2.14_Linux-x86_64-multicore-CUDA"
 
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/DensityExperiment/signac/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC/signac/bin"
 
 # Potoff cluster bin paths
 # Potoff cluster bin paths
@@ -67,6 +67,9 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Dens
 # local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
+
+#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 
 #WSL local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
@@ -84,7 +87,7 @@ gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
-
+gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
 
 """
 During the
@@ -103,9 +106,7 @@ Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 10 * 10**7
 
-Calibration_MC_steps = 1000
-Calibration_MC_Eq_Steps = 100
-Wolf_Sanity_MC_steps = 5 * 10**3
+
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -140,6 +141,7 @@ gomc_production_control_file_name_str = "gomc_production_run"
 
 
 preliminary_output_replicate_txt_file_name_box_0 = "preliminary_analysis_avg_data_box_0.txt"
+preliminary_uncorrelated_output_replicate_txt_file_name_box_0 = "preliminary_analysis_uncorrelated_data_avg_data_box_0.txt"
 
 # Analysis (each replicates averages):
 # Output text (txt) file names for each replicates averages
@@ -510,7 +512,7 @@ def initial_parameters(job):
     job.doc.solute = job.sp.solute
 
     job.doc.namd_node_ncpu = 8
-    job.doc.namd_node_ngpu = 0
+    job.doc.namd_node_ngpu = 1
     #job.doc.namd_node_ngpu = 1
 
     job.doc.gomc_ncpu = 8  # 1 is optimal but I want data quick.  run time is set for 1 cpu
@@ -1272,7 +1274,9 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
                     if (job.doc.equilibration_ensemble in ["NVT"]):
                         densities.append(float(line.split()[7]))
                     elif (job.doc.equilibration_ensemble in ["NPT"]):
-                        densities.append(float(line.split()[8]))                
+                        densities.append(float(line.split()[8]))      
+                    elif (job.doc.equilibration_ensemble in ["GEMC_NVT"]):
+                        densities.append(float(line.split()[4]))              
                 except:
                     print("An exception occurred") 
     steps_np = np.array(steps)
@@ -1299,12 +1303,13 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     A_t_equil_densities = densities_np[t0:]
     A_t_equil_steps = steps_np[t0:]
 
+    dict_of_equilibrated_energies["steps"] = A_t_equil_steps
     dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
     dict_of_equilibrated_densities[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil_densities
+    dict_of_equilibrated_densities["steps"] = A_t_equil_steps
 
     dfUC1 = pd.DataFrame.from_dict(dict_of_equilibrated_energies)
-    dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id))
-    
+    dfUC1.to_csv('wolf_sanity_equilibrated_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
     dfUC2 = pd.DataFrame.from_dict(dict_of_equilibrated_densities)
     dfUC2.to_csv('wolf_sanity_equilibrated_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
@@ -1490,6 +1495,7 @@ def part_4b_wolf_sanity_analysis(job):
     from scipy.stats import ttest_ind
     from scipy.spatial.distance import jensenshannon
     listOfWolfMethods = list(df5.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df5["Ewald_Ewald"].mean()
@@ -1505,6 +1511,7 @@ def part_4b_wolf_sanity_analysis(job):
 
     statistics = pd.DataFrame()
     listOfWolfMethods = list(df1.columns.values.tolist())
+    print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
     ref_mean = df1["Ewald_Ewald"].mean()
@@ -1744,10 +1751,11 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         myfile.write(defPotLine)
                         defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
                         myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_rcut"])
-                        myfile.write(defRCutLine)
+                        for box in box_list:
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_alpha"])
+                            myfile.write(defAlphaLine)
+                            defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_rcut"])
+                            myfile.write(defRCutLine)
                     else:
                         defWolfLine = "Wolf\tTrue\n"
                         myfile.write(defWolfLine)
@@ -3139,8 +3147,8 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.namd_node_ncpu,
-        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
@@ -3193,8 +3201,8 @@ def run_namd_equilb_NVT_box_0_gomc_command(job):
 @Project.post(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.namd_node_ncpu,
-        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
@@ -3670,6 +3678,64 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
     df = pd.DataFrame.from_dict(dict_of_states)
     df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
 
+    # Read the data for TI estimator and BAR or MBAR estimators.
+    list_data_TI = []
+    list_data_BAR = []
+    for f in files:
+        dHdl = extract_dHdl(f, T=temperature)
+        u_nkr = extract_u_nk(f, T=temperature)
+        #Detect uncorrelated samples using VDW+Coulomb term in derivative 
+        # of energy time series (calculated for TI)
+        srs = dHdl['VDW'] + dHdl['Coulomb'] 
+        list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
+        list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
+
+    # Correlated samples
+    #for TI estimator
+    print("Working on TI method ...")
+    dHdl = pd.concat([ld for ld in list_data_TI])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+
+    #for MBAR estimator
+    print("Working on MBAR method ...")
+    u_nk = pd.concat([ld for ld in list_data_BAR])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+
+    #for BAR estimator
+    print("Working on BAR method ...")
+    u_nk = pd.concat([ld for ld in list_data_BAR])
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(preliminary_uncorrelated_output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
+
+    #All samples
     # for TI estimator
     dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
     ti = TI().fit(dHdl)
