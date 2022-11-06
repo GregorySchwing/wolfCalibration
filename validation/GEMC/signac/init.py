@@ -48,7 +48,9 @@ print("os.getcwd() = " +str(os.getcwd()))
 pr_root = os.path.join(os.getcwd(), "src")
 pr = signac.get_project(pr_root)
 
-wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
+# DSP is difficult to calibrate.  dont even bother.
+#wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
+wolfPotential = ["DSF"] # ["Ne", "Rn"]
 wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
 
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
