@@ -58,11 +58,10 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 
 gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC/signac/bin"
 namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/GEMC/signac/bin"
-
 # Potoff cluster bin paths
 # Potoff cluster bin paths
-#gomc_binary_path = "/home6/greg/GOMC/bin"
-#namd_binary_path = "/home6/greg/wolfCalibration/validation/Free_Energy/signac/bin/NAMD_2.14_Linux-x86_64-multicore"
+gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac"
+namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac"
 
 # local bin paths
 #gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
