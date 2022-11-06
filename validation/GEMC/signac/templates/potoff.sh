@@ -8,14 +8,14 @@
 {% if gpus %}
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
-#SBATCH --exclude=ressrv7ai8111,ressrv8ai8111,ressrv13ai8111,ressrv14ai8111,ressrv15ai8111,res-lab43-ai8111,reslab44ai8111
+#SBATCH --exclude=ressrv7ai8111,ressrv8ai8111,ressrv13ai8111,ressrv14ai8111,ressrv15ai8111,res-lab34-ai8111,res-lab43-ai8111,reslab44ai8111
 {%- else %}
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
 {%- endif %}
 
 
-echo  "Running on host" hostname
+echo  "Running on host" $HOSTNAME
 echo  "Time is" date
 
 conda activate mosdef-study38
