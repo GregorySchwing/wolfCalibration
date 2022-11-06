@@ -169,7 +169,7 @@ walltime_gomc_production_hr = 240
 #GPU
 #walltime_gomc_production_hr = 96
 walltime_gomc_analysis_hr = 4
-memory_needed = 0
+memory_needed = 8
 
 
 
