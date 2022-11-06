@@ -85,7 +85,7 @@ gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
-gomc_steps_equilb_design_ensemble = 3 * 10**3 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 100 * 10**3 # set value for paper = 10 * 10**6
 
 """
 During the
@@ -103,6 +103,10 @@ EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 10 * 10**7
+
+Calibration_MC_steps = 10000
+Calibration_MC_Eq_Steps = 1000
+Wolf_Sanity_MC_steps = 6 * 10**7
 
 
 # Free energy calcs: set free energy data in doc
