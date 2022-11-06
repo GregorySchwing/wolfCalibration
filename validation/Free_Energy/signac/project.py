@@ -3293,6 +3293,7 @@ def part_4b_create_wolf_sanity_histograms(job):
         plt.ylabel('Probability')
         plt.xlabel('Total Energy (K)')
         plt.legend()
+        plt.rcParams.update({'font.size': 22})
         plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300)
         plt.figure().clear()
   
