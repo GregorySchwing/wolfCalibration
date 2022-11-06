@@ -3255,6 +3255,9 @@ def part_4b_create_wolf_sanity_histograms(job):
     A_t_equil_ewald = ref_ewald[t0:]
     A_t_equil_steps_ewald = ref_ewald[t0:]
 
+    Col_Dict = {"GROSS_DSF": "Waibel2018a", "VLUGT_DSF": 'Rahbari', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b',
+    "GROSS_DSP": 'Waibel2018a', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
+
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
@@ -3281,14 +3284,14 @@ def part_4b_create_wolf_sanity_histograms(job):
         kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
 
         #Plot Ewald
-        plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald_Ewald")
+        plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald")
 
         kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
         #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-        plt.plot(binList, kde2, linewidth=2, label=col)
+        plt.plot(binList, kde2, linewidth=2, label=Col_Dict[col])
         plt.xlim(min(ref_min, wolf_min), max(wolf_max, ref_max))
-        plt.ylabel('Probability (Total E)')
-        plt.xlabel('Potential Energy (kcal/mol)')
+        plt.ylabel('Probability')
+        plt.xlabel('Total Energy (K)')
         plt.legend()
         plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300)
         plt.figure().clear()
