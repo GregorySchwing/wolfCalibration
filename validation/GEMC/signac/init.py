@@ -43,6 +43,23 @@ print(production_temperatures)
 print(liquid_densities)
 print(vapor_densities)
 
+"""
+#  MC temperatures from PyMCMD
+production_temperatures = [300] * u.K 
+#  vap_box_lengths_ang
+liq_box_lengths_ang = [26.08238859] * u.angstrom
+#  liq_box_lengths_ang
+vap_box_lengths_ang = [358.8047306] * u.angstrom 
+#  vap_box_lengths_ang
+N_liquid_solvent = [970]
+#  liq_box_lengths_ang
+N_vapor_solvent = [30]
+#  MC Densitities from PyMCMD
+liquid_densities = np.array([0.995])* g_per_cm3
+#  MC Densitities from PyMCMD
+vapor_densities = np.array([7.8e-6])* g_per_cm3
+#vapor_densities = np.array([1e-3, 1e-3, 1e-3])* g_per_cm3
+"""
 pymcmd_conditions = zip(production_temperatures, liquid_densities, vapor_densities, liq_box_lengths_ang, vap_box_lengths_ang, N_liquid_solvent, N_vapor_solvent)
  
 # *******************************************
@@ -57,8 +74,8 @@ pr_root = os.path.join(os.getcwd(), "src")
 pr = signac.get_project(pr_root)
 
 # DSP is difficult to calibrate.  dont even bother.
-#wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
-wolfPotential = ["DSF"] # ["Ne", "Rn"]
+wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
+#wolfPotential = ["DSF"] # ["Ne", "Rn"]
 wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
 
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
@@ -90,6 +107,8 @@ for replica_i in replicas:
                                     "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                     "electrostatic_method": e_method,
                                 }
+                                if ("VLUGT" in wolfM and wolfP == "DSP"):
+                                    continue
                                 total_statepoints.append(statepoint)
                     else:
                         statepoint = {
