@@ -145,7 +145,7 @@ gomc_production_control_file_name_str = "gomc_production_run"
 preliminary_output_replicate_txt_file_name_box_0 = "preliminary_analysis_avg_data_box_0.txt"
 preliminary_uncorrelated_output_replicate_txt_file_name_box_0 = "preliminary_analysis_uncorrelated_data_avg_data_box_0.txt"
 output_uncorrelated_replicate_txt_file_name_box_0 = "analysis_uncorrelated_avg_data_box_0.txt"
-# Analysis (each replicates averages):
+## Analysis (each replicates averages):
 # Output text (txt) file names for each replicates averages
 # directly put in each replicate folder (.txt, .dat, etc)
 output_replicate_txt_file_name_box_0 = "analysis_avg_data_box_0.txt"
