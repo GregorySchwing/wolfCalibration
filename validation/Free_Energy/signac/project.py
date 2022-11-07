@@ -3451,6 +3451,46 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
     df = pd.DataFrame.from_dict(dict_of_states)
     df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
 
+    #All samples
+    # for TI estimator
+    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+
+    # for MBAR estimator
+    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+
+    # for BAR estimator
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
+
     # Read the data for TI estimator and BAR or MBAR estimators.
     list_data_TI = []
     list_data_BAR = []
@@ -3508,45 +3548,7 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
         f" \n"
     )
 
-    #All samples
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
 
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
 # ******************************************************
 # ******************************************************
 # data analysis - get the average data from each individual simulation (start)
@@ -3593,6 +3595,45 @@ def part_5a_analysis_individual_simulation_averages(job):
         files.append(reading_filename_box_0_iter)
 
 
+    #All samples
+    # for TI estimator
+    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
+    ti = TI().fit(dHdl)
+    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
+
+    # for MBAR estimator
+    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
+    mbar = MBAR().fit(u_nk)
+    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
+
+    # for BAR estimator
+    bar = BAR().fit(u_nk)
+    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
+
+    # write the data out in each job
+    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
+    box_0_replicate_data_txt_file.write(
+        f"{output_column_temp_title: <30} "
+        f"{output_column_solute_title: <30} "
+        f"{output_column_dFE_MBAR_title: <30} "
+        f"{output_column_dFE_MBAR_std_title: <30} "
+        f"{output_column_dFE_TI_title: <30} "
+        f"{output_column_dFE_TI_std_title: <30} "
+        f"{output_column_dFE_BAR_title: <30} "
+        f"{output_column_dFE_BAR_std_title: <30} "
+        f" \n"
+    )
+    box_0_replicate_data_txt_file.write(
+        f"{job.sp.production_temperature_K: <30} "
+        f"{job.sp.solute: <30} "
+        f"{delta_mbar: <30} "
+        f"{delta_std_mbar: <30} "
+        f"{delta_ti: <30} "
+        f"{delta_std_ti: <30} "
+        f"{delta_bar: <30} "
+        f"{delta_std_bar: <30} "
+        f" \n"
+    )
 
     # Read the data for TI estimator and BAR or MBAR estimators.
     list_data_TI = []
@@ -3651,45 +3692,6 @@ def part_5a_analysis_individual_simulation_averages(job):
         f" \n"
     )
 
-    #All samples
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
 ###
 
     """
