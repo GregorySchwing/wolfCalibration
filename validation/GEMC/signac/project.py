@@ -239,7 +239,7 @@ def statepoint_without_temperature(job):
     return [(key, job.sp[key]) for key in keys]
 
 def append_wolf_calibration_parameters(job):
-
+    import math
     WolfDefaultKind = "VlugtWIntraCutoff"
     WolfDefaultPotential = "DSP"
     WolfDefaultAlpha = [0.21]
@@ -248,8 +248,8 @@ def append_wolf_calibration_parameters(job):
         WolfCutoffBoxList = [0,1]
 
         WolfCutoffCoulombLowerBoundList = [10,10]
-        WolfCutoffCoulombUpperBoundList = [15,60]
-        WolfCutoffCoulombIntervalList = [0.1,1.0]
+        WolfCutoffCoulombUpperBoundList = [math.floor(job.doc.liq_box_lengths_ang/2.0),math.floor(job.doc.vap_box_lengths_ang/2.0)]
+        WolfCutoffCoulombIntervalList = [(math.floor(job.doc.liq_box_lengths_ang/2.0) - 10)/50,(math.floor(job.doc.vap_box_lengths_ang/2.0) - 10)/50]
 
         WolfAlphaLowerBoundList = [0.0, 0.0]
         WolfAlphabUpperBoundList = [0.5, 0.5]
@@ -258,8 +258,8 @@ def append_wolf_calibration_parameters(job):
         WolfCutoffBoxList = [0]
 
         WolfCutoffCoulombLowerBoundList = [10]
-        WolfCutoffCoulombUpperBoundList = [15]
-        WolfCutoffCoulombIntervalList = [0.1]
+        WolfCutoffCoulombUpperBoundList = [math.floor(job.doc.liq_box_lengths_ang/2.0)]
+        WolfCutoffCoulombIntervalList = [(math.floor(job.doc.liq_box_lengths_ang/2.0) - 10)/50]
 
         WolfAlphaLowerBoundList = [0.0]
         WolfAlphabUpperBoundList = [0.5]
