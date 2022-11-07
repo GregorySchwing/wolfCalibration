@@ -102,10 +102,6 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 10 * 10**7
-
-Calibration_MC_steps = 5 * 10**5
-Calibration_MC_Eq_Steps = 1000
 Wolf_Sanity_MC_steps = 1 * 10**8
 
 
