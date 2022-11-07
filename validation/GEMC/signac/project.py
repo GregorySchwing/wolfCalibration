@@ -85,7 +85,7 @@ gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
-gomc_steps_equilb_design_ensemble = 2 * 10**6 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 2 * 10**7 # set value for paper = 10 * 10**6
 
 """
 During the
@@ -104,9 +104,9 @@ Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 10 * 10**7
 
-Calibration_MC_steps = 10000
+Calibration_MC_steps = 5 * 10**5
 Calibration_MC_Eq_Steps = 1000
-Wolf_Sanity_MC_steps = 1 * 10**7
+Wolf_Sanity_MC_steps = 1 * 10**8
 
 
 # Free energy calcs: set free energy data in doc
@@ -472,12 +472,12 @@ def initial_parameters(job):
     job.doc.vap_box_lengths_ang = job.sp.vap_box_lengths_ang
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-        job.doc.Rcut_ang = 12 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
+        job.doc.Rcut_ang = 13 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
     else:
-        job.doc.Rcut_ang = 12 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
+        job.doc.Rcut_ang = 13 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
 
-    job.doc.Rcut_for_switch_namd_ang = 12 * u.angstrom  # Switch Rcut for NAMD's Switch function
-    job.doc.neighbor_list_dist_namd_ang = 12 * u.angstrom # NAMD's neighbor list
+    job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
+    job.doc.neighbor_list_dist_namd_ang = 22 * u.angstrom # NAMD's neighbor list
 
     # list replica seed numbers
     replica_no_to_seed_dict = {
@@ -516,7 +516,7 @@ def initial_parameters(job):
     job.doc.namd_node_ngpu = 1
     #job.doc.namd_node_ngpu = 0
 
-    job.doc.gomc_ncpu = 6  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+    job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     job.doc.gomc_ngpu = 1
     #job.doc.gomc_ngpu = 0
 
