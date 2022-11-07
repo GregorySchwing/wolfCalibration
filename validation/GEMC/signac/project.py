@@ -3343,8 +3343,8 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": 1,
-        "ngpu": 1,
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": 26,
     }
@@ -3359,7 +3359,7 @@ def run_calibration_run_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_calibration_gomc_binary_file),
-        str(1),
+        str(job.doc.gomc_ncpu),
         str(control_file_name_str),
         str(control_file_name_str),
     )
