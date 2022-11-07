@@ -25,6 +25,14 @@ g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 
 #  MC temperatures from PyMCMD
 production_temperatures = [300, 400, 500] * u.K 
+#  vap_box_lengths_ang
+liq_box_lengths_ang = [26.08238859, 26.64739186, 27.41378201] * u.angstrom
+#  liq_box_lengths_ang
+vap_box_lengths_ang = [358.8047306, 102.2538638, 57.65501349] * u.angstrom 
+#  vap_box_lengths_ang
+N_liquid_solvent = [970, 950, 890]
+#  liq_box_lengths_ang
+N_vapor_solvent = [30, 50, 110]
 #  MC Densitities from PyMCMD
 liquid_densities = np.array([0.995, 0.914, 0.787])* g_per_cm3
 #  MC Densitities from PyMCMD
@@ -35,7 +43,7 @@ print(production_temperatures)
 print(liquid_densities)
 print(vapor_densities)
 
-pymcmd_conditions = zip(production_temperatures, liquid_densities, vapor_densities)
+pymcmd_conditions = zip(production_temperatures, liquid_densities, vapor_densities, liq_box_lengths_ang, vap_box_lengths_ang, N_liquid_solvent, N_vapor_solvent)
  
 # *******************************************
 # the main user varying state points (end)
@@ -60,7 +68,8 @@ total_statepoints = list()
 for replica_i in replicas:
     for solvent_i in solvent:
         for solute_i in solute:
-            for prod_temp_i, liquid_densities_i, vapor_densities_i in pymcmd_conditions:
+            for prod_temp_i, liquid_densities_i, vapor_densities_i, liq_box_lengths_ang_i, \
+                vap_box_lengths_ang_i, N_liquid_solvent_i, N_vapor_solvent_i  in pymcmd_conditions:
                 for e_method in electrostatic_method:
                     if (e_method == "Wolf"):
                         for wolfM in wolfModel:
@@ -71,6 +80,10 @@ for replica_i in replicas:
                                     "solute": solute_i,
                                     "liquid_density" : liquid_densities_i,
                                     "vapor_density" : vapor_densities_i,
+                                    "liq_box_lengths_ang" : liq_box_lengths_ang_i,
+                                    "vap_box_lengths_ang" : vap_box_lengths_ang_i,
+                                    "N_liquid_solvent" : N_liquid_solvent_i,
+                                    "N_vapor_solvent" : N_vapor_solvent_i,
                                     "forcefield" : forcefield[0],
                                     "wolf_model": wolfM,
                                     "wolf_potential": wolfP,
@@ -85,6 +98,10 @@ for replica_i in replicas:
                                 "solute": solute_i,
                                 "liquid_density" : liquid_densities_i,
                                 "vapor_density" : vapor_densities_i,
+                                "liq_box_lengths_ang" : liq_box_lengths_ang_i,
+                                "vap_box_lengths_ang" : vap_box_lengths_ang_i,
+                                "N_liquid_solvent" : N_liquid_solvent_i,
+                                "N_vapor_solvent" : N_vapor_solvent_i,
                                 "forcefield" : forcefield[0],
                                 "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                 "electrostatic_method": "Ewald",
@@ -99,6 +116,10 @@ for replica_i in replicas:
                                 "solute": solute_i,
                                 "liquid_density" : liquid_densities_i,
                                 "vapor_density" : vapor_densities_i,
+                                "liq_box_lengths_ang" : liq_box_lengths_ang_i,
+                                "vap_box_lengths_ang" : vap_box_lengths_ang_i,
+                                "N_liquid_solvent" : N_liquid_solvent_i,
+                                "N_vapor_solvent" : N_vapor_solvent_i,
                                 "forcefield" : forcefield[0],
                                 "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                 "electrostatic_method": "Wolf",

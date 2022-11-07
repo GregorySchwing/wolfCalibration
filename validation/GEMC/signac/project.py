@@ -446,8 +446,8 @@ def initial_parameters(job):
     
     job.doc.liquid_density = (job.sp.liquid_density * g_per_cm3).to(kg_per_m3)
     job.doc.vapor_density = (job.sp.vapor_density * g_per_cm3).to(kg_per_m3)
-
-
+    job.doc.N_liquid_solvent = job.sp.N_liquid_solvent
+    job.doc.N_vapor_solvent = job.sp.N_vapor_solvent
 
     job.doc.solvent = job.sp.solvent
     """
@@ -460,25 +460,24 @@ def initial_parameters(job):
     and water, respectively.
 
     """
-
+    """
     job.doc.N_liquid_solvent = 1000
     if (job.sp.solute == "solvent_box"):
         job.doc.N_liquid_solute = 0
     else:
         job.doc.N_liquid_solute = 1
+    """
 
-
-    job.doc.liq_box_lengths_ang = 31.3 * u.angstrom
-    #job.doc.vap_box_lengths_ang = 62.6 * u.angstrom
-    job.doc.vap_box_lengths_ang = 200.0 * u.angstrom
+    job.doc.liq_box_lengths_ang = job.sp.liq_box_lengths_ang
+    job.doc.vap_box_lengths_ang = job.sp.vap_box_lengths_ang
 
     if job.sp.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-        job.doc.Rcut_ang = 15 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
+        job.doc.Rcut_ang = 12 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
     else:
-        job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
+        job.doc.Rcut_ang = 12 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
 
-    job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
-    job.doc.neighbor_list_dist_namd_ang = 22 * u.angstrom # NAMD's neighbor list
+    job.doc.Rcut_for_switch_namd_ang = 12 * u.angstrom  # Switch Rcut for NAMD's Switch function
+    job.doc.neighbor_list_dist_namd_ang = 12 * u.angstrom # NAMD's neighbor list
 
     # list replica seed numbers
     replica_no_to_seed_dict = {
@@ -710,7 +709,7 @@ def part_2a_namd_equilb_NVT_box_1_control_file_written(job):
 def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
     """General check that the gomc_equilb_design_ensemble (run temperature) gomc control file is written."""
     try:
-        if (job.doc.N_liquid_solute == 0):
+        if (job.sp.solute == "solvent_box"):
             return True
     except:
         return False
@@ -736,7 +735,7 @@ def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
 def part_2c_gomc_production_control_file_written(job):
     """General check that the gomc_production_control_file (run temperature) is written."""
     try:
-        if (job.doc.N_liquid_solute == 0):
+        if (job.sp.solute == "solvent_box"):
             return True
     except:
         return False
@@ -1994,7 +1993,7 @@ def build_charmm(job, write_files=True):
     #    gomc_fix_bonds_angles_residues_list  = None
     print('Running: filling liquid box')
     box_0 = mb.fill_box(compound=[solvent],
-                        density=job.doc.liquid_density,
+                        n_compounds=[job.doc.N_liquid_solvent],
                         box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
                             u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
@@ -2005,7 +2004,7 @@ def build_charmm(job, write_files=True):
 
     print('Running: filling vapor box')
     box_1 = mb.fill_box(compound=[solvent],
-                        density=job.doc.vapor_density,
+                        n_compounds=[job.doc.N_vapor_solvent],
                         box=[u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
                             u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
                             u.unyt_quantity(job.doc.vap_box_lengths_ang, 'angstrom').to_value("nm"),
@@ -2737,7 +2736,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         print("#**********************")
 
 
-    if (job.doc.N_liquid_solute == 0):
+    if (job.sp.solute == "solvent_box"):
         return
     # ******************************************************
     # equilb selected_ensemble, if NVT -> NPT - GOMC control file writing  (start)
