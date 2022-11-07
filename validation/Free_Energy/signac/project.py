@@ -1226,7 +1226,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     energies_np = np.array(energies)
     densities_np = np.array(densities)
 
-    nskip = 10000
+    nskip = 100
 
     dict_of_full_energies["steps"] = steps_np
     dict_of_full_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = energies_np
@@ -3244,7 +3244,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     import scipy.stats as st
 
     numBins = 100
-    nskip = 10000
+    nskip = 100
     ref_ewald = df1["Ewald_Ewald"]
 
     from pymbar import timeseries
@@ -3490,7 +3490,9 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
         f"{delta_std_bar: <30} "
         f" \n"
     )
-
+    
+    from pymbar import timeseries
+    nskip = 100
     # Read the data for TI estimator and BAR or MBAR estimators.
     list_data_TI = []
     list_data_BAR = []
@@ -3500,6 +3502,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
         #Detect uncorrelated samples using VDW+Coulomb term in derivative 
         # of energy time series (calculated for TI)
         srs = dHdl['VDW'] + dHdl['Coulomb'] 
+        t0, g, Neff_max = timeseries.detectEquilibration(srs, nskip=nskip) # compute indices of uncorrelated timeseries
+        A_t_equil = srs[t0:]
         list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
         list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
 
