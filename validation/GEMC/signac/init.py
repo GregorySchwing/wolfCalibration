@@ -26,13 +26,13 @@ g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 #  MC temperatures from PyMCMD
 production_temperatures = [300, 400, 500] * u.K 
 #  vap_box_lengths_ang
-liq_box_lengths_ang = [26.08238859, 26.64739186, 27.41378201] * u.angstrom
+liq_box_lengths_ang = [30.99084602, 31.77283891, 33.05311174] * u.angstrom
 #  liq_box_lengths_ang
-vap_box_lengths_ang = [358.8047306, 102.2538638, 57.65501349] * u.angstrom 
+vap_box_lengths_ang = [386.0364202, 102.7549658, 55.65414048] * u.angstrom 
 #  vap_box_lengths_ang
-N_liquid_solvent = [970, 950, 890]
+N_liquid_solvent = [988, 978, 948]
 #  liq_box_lengths_ang
-N_vapor_solvent = [30, 50, 110]
+N_vapor_solvent = [12, 22, 52]
 #  MC Densitities from PyMCMD
 liquid_densities = np.array([0.995, 0.914, 0.787])* g_per_cm3
 #  MC Densitities from PyMCMD
