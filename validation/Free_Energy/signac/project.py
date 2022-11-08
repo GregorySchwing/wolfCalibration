@@ -3253,7 +3253,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     A_t_equil_steps_ewald = ref_ewald[t0:]
 
     Col_Dict = {"GROSS_DSF": "Waibel2018a", "VLUGT_DSF": 'Rahbari', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b',
-    "GROSS_DSP": 'Waibel2018a_DSP', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
+    "GROSS_DSP": 'Waibel2018a', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
 
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
@@ -3272,6 +3272,12 @@ def part_4b_create_wolf_sanity_histograms(job):
         wolf_min = min(A_t_equil_wolf)
         wolf_max = max(A_t_equil_wolf)
 
+        print(ref_min)
+        print(ref_max)
+
+        print(wolf_min)
+        print(wolf_max)
+
         xmin = min(ref_min, wolf_min)
         xmax = min(ref_max, wolf_max)
 
@@ -3285,10 +3291,10 @@ def part_4b_create_wolf_sanity_histograms(job):
 
         kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
         #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-        plt.plot(binList, kde2, linewidth=2, label=Col_Dict[col])
-        plt.xlim(min(ref_min, wolf_min), max(wolf_max, ref_max))
-        plt.ylabel('Probability', fontsize=22)
-        plt.xlabel('Total Energy (K)', fontsize=22)
+        plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+        plt.xlim(xmin, xmax)
+        plt.ylabel('Probability')
+        plt.xlabel('Total Energy (K)')
         plt.legend()
         ax = plt.subplot(111)
         plt.rcParams.update({'font.size': 22})
