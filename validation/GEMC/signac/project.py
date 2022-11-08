@@ -102,7 +102,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 5 * 10**7
+Wolf_Sanity_MC_steps = 1 * 10**7
 
 
 # Free energy calcs: set free energy data in doc
