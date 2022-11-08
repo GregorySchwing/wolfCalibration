@@ -3258,6 +3258,9 @@ def part_4b_create_wolf_sanity_histograms(job):
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
+
+    figSP, axs = plt.subplots(2, 3)
+    counter = 0
     for col, col_i in zip(colList, range(0, len(colList))):
 
         wolf = df1[col]
@@ -3295,17 +3298,14 @@ def part_4b_create_wolf_sanity_histograms(job):
         plt.xlim(xmin, xmax)
         plt.ylabel('Probability')
         plt.xlabel('Total Energy (K)')
-        plt.legend()
-        ax = plt.subplot(111)
+        #plt.legend()
         plt.rcParams.update({'font.size': 22})
-        # Shrink current axis by 20%
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        axs[counter / 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
+        axs[counter / 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
 
-        # Put a legend to the right of the current axis
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
         plt.figure().clear()
+    figSP.savefig("PotentialEnergyDistribution_Ewald_vs_All", dpi=300, bbox_inches='tight')
   
 
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
