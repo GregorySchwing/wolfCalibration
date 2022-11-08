@@ -3230,8 +3230,8 @@ def part_4b_create_wolf_sanity_histograms(job):
     jobs = list(pr.find_jobs(ewald_sp))
     try:
         for ewald_job in jobs:
-            if (ewald_job.isfile("wolf_sanity_all_energies.csv")):
-                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+            if (ewald_job.isfile("wolf_sanity_equilibrated_energies.csv")):
+                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_equilibrated_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
             else:
                 return False
     except:
