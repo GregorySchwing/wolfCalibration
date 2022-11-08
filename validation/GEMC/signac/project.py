@@ -2501,7 +2501,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "Potential": cutoff_style,
             "LRC": True,
             "RcutLow": 1.0,
-            "RcutCoulomb_box_1" : min((math.floor(job.doc.liq_box_lengths_ang/2.0)-1), 20),
+            "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1)-1), 20),
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -2569,7 +2569,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "Potential": cutoff_style,
             "LRC": True,
             "RcutLow": 1.0,
-            "RcutCoulomb_box_1" : min((math.floor(job.doc.liq_box_lengths_ang/2.0)-1), 20) if job.sp.electrostatic_method == "Ewald" else None,
+            "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1)-1), 20) if job.sp.electrostatic_method == "Ewald" else None,
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -3504,6 +3504,9 @@ def part_4b_create_wolf_sanity_histograms(job):
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
+
+    figSP, axs = plt.subplots(2, 3)
+    counter = 0
     for col, col_i in zip(colList, range(0, len(colList))):
 
         wolf = df1[col]
@@ -3518,6 +3521,12 @@ def part_4b_create_wolf_sanity_histograms(job):
         wolf_min = min(A_t_equil_wolf)
         wolf_max = max(A_t_equil_wolf)
 
+        print(ref_min)
+        print(ref_max)
+
+        print(wolf_min)
+        print(wolf_max)
+
         xmin = min(ref_min, wolf_min)
         xmax = min(ref_max, wolf_max)
 
@@ -3531,22 +3540,18 @@ def part_4b_create_wolf_sanity_histograms(job):
 
         kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
         #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-        plt.plot(binList, kde2, linewidth=2, label=Col_Dict[col])
-        plt.xlim(min(ref_min, wolf_min), max(wolf_max, ref_max))
+        plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+        plt.xlim(xmin, xmax)
         plt.ylabel('Probability')
         plt.xlabel('Total Energy (K)')
-        plt.legend()
-        ax = plt.subplot(111)
+        #plt.legend()
         plt.rcParams.update({'font.size': 22})
-        # Shrink current axis by 20%
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        axs[counter / 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
+        axs[counter / 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
 
-        # Put a legend to the right of the current axis
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
         plt.figure().clear()
-  
+    figSP.savefig("PotentialEnergyDistribution_Ewald_vs_All", dpi=300, bbox_inches='tight')
 
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
