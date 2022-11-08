@@ -3287,8 +3287,8 @@ def part_4b_create_wolf_sanity_histograms(job):
         #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
         plt.plot(binList, kde2, linewidth=2, label=Col_Dict[col])
         plt.xlim(min(ref_min, wolf_min), max(wolf_max, ref_max))
-        plt.ylabel('Probability')
-        plt.xlabel('Total Energy (K)')
+        plt.ylabel('Probability', fontsize=22)
+        plt.xlabel('Total Energy (K)', fontsize=22)
         plt.legend()
         ax = plt.subplot(111)
         plt.rcParams.update({'font.size': 22})
