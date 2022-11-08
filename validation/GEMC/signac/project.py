@@ -100,7 +100,7 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 1000000
+Calibration_MC_steps = 500000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 1 * 10**7
 
