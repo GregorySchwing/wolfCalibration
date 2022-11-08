@@ -3253,7 +3253,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     A_t_equil_steps_ewald = ref_ewald[t0:]
 
     Col_Dict = {"GROSS_DSF": "Waibel2018a", "VLUGT_DSF": 'Rahbari', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b',
-    "GROSS_DSP": 'Waibel2018a', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
+    "GROSS_DSP": 'Waibel2018a_DSP', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
 
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
