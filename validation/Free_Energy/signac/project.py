@@ -3246,28 +3246,34 @@ def part_4b_create_wolf_sanity_histograms(job):
     numBins = 100
     nskip = 100
     ref_ewald = df1["Ewald_Ewald"]
-
+    """
     from pymbar import timeseries
     t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald, nskip=nskip) # compute indices of uncorrelated timeseries
     A_t_equil_ewald = ref_ewald[t0:].dropna()
     A_t_equil_steps_ewald = ref_ewald[t0:].dropna()
+    """
+    A_t_equil_ewald = ref_ewald.dropna()
+    print(A_t_equil_ewald)
 
-    Col_Dict = {"GROSS_DSF": "Waibel2018a", "VLUGT_DSF": 'Rahbari', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b',
-    "GROSS_DSP": 'Waibel2018a', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
+    Col_Dict = {"GROSS_DSF": "Waibel2018a (DSF)", "VLUGT_DSF": 'Rahbari (DSF)', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b (DSF)',
+    "GROSS_DSP": 'Waibel2018a (DSP)', "VLUGT_DSP": 'Rahbari (DSP)', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b (DSP)'}
 
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
 
-    figSP, axs = plt.subplots(2, 3)
-    counter = 0
+    colList = ["GROSS_DSP", "VLUGTWINTRACUTOFF_DSP", "VLUGT_DSP", "GROSS_DSF", "VLUGTWINTRACUTOFF_DSF", "VLUGT_DSF"]
+
     for col, col_i in zip(colList, range(0, len(colList))):
 
         wolf = df1[col]
+        """
         t0, g, Neff_max = timeseries.detectEquilibration(wolf, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil_wolf = wolf[t0:].dropna()
         A_t_equil_steps_wolf = wolf[t0:].dropna()
-
+        """
+        A_t_equil_wolf = wolf.dropna()
+        print(A_t_equil_wolf)
 
         ref_min = min(A_t_equil_ewald)
         ref_max = max(A_t_equil_ewald)
@@ -3275,37 +3281,131 @@ def part_4b_create_wolf_sanity_histograms(job):
         wolf_min = min(A_t_equil_wolf)
         wolf_max = max(A_t_equil_wolf)
 
-        print(ref_min)
-        print(ref_max)
+        print("ref_min",ref_min)
+        print("ref_max",ref_max)
 
-        print(wolf_min)
-        print(wolf_max)
+        print("wolf_min",wolf_min)
+        print("wolf_max",wolf_max)
+        if ("VLUGT" in col and "DSP" in col):
+            xmin = min(float(ref_min), float(wolf_min))
+            xmax = max(float(ref_max), float(wolf_max))
 
-        xmin = min(ref_min, wolf_min)
-        xmax = min(ref_max, wolf_max)
+            binWidthE =  (ref_max - ref_min)/float(numBins)
+            binListE = np.arange(ref_min, ref_max+binWidthE, binWidthE)
+            # estimate the line with probability density function (PDF)
+            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binListE)
 
-        binWidth =  (xmax - xmin)/float(numBins)
-        binList = np.arange(xmin, xmax+binWidth, binWidth)
-        # estimate the line with probability density function (PDF)
-        kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
+            #Plot Ewald
+            plt.plot(binListE, kde1, color="black", linewidth=2, label="Ewald")
 
-        #Plot Ewald
-        plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald")
+            binWidthW =  (wolf_max - wolf_min)/float(numBins)
+            binListW = np.arange(wolf_min, wolf_max+binWidthW, binWidthW)
 
-        kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
-        #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-        plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
-        plt.xlim(xmin, xmax)
-        plt.ylabel('Probability')
-        plt.xlabel('Total Energy (K)')
-        #plt.legend()
-        plt.rcParams.update({'font.size': 22})
-        axs[counter // 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
-        axs[counter // 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binListW)
+            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+            plt.plot(binListW, kde2, color="red", linewidth=2, label=Col_Dict[col])
+            plt.xlim(xmin, xmax)
+            plt.ylabel('Probability', fontsize=22)
+            plt.xlabel('Total Energy (K)', fontsize=22)
+            plt.legend()
+            plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
+            plt.figure().clear()
+        else:
+            xmin = min(float(ref_min), float(wolf_min))
+            xmax = max(float(ref_max), float(wolf_max))
 
-        plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
-        plt.figure().clear()
-        counter = counter + 1
+            binWidth =  (xmax - xmin)/float(numBins)
+            binList = np.arange(xmin, xmax+binWidth, binWidth)
+            # estimate the line with probability density function (PDF)
+            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
+
+            #Plot Ewald
+            plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald")
+
+            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
+            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+            plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+            plt.xlim(xmin, xmax)
+            plt.ylabel('Probability', fontsize=22)
+            plt.xlabel('Total Energy (K)', fontsize=22)
+            plt.legend()
+            plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
+            plt.figure().clear()            
+    from matplotlib.figure import figaspect
+    w, h = figaspect(9/16)
+    figSP, axs = plt.subplots(2, 3, figsize=(w,h))
+    counter = 0
+    
+    for col, col_i in zip(colList, range(0, len(colList))):
+        print(colList)
+        wolf = df1[col]
+        """
+        t0, g, Neff_max = timeseries.detectEquilibration(wolf, nskip=nskip) # compute indices of uncorrelated timeseries
+        A_t_equil_wolf = wolf[t0:].dropna()
+        A_t_equil_steps_wolf = wolf[t0:].dropna()
+        """
+        A_t_equil_wolf = wolf.dropna()
+        print(A_t_equil_wolf)
+
+        ref_min = min(A_t_equil_ewald)
+        ref_max = max(A_t_equil_ewald)
+
+        wolf_min = min(A_t_equil_wolf)
+        wolf_max = max(A_t_equil_wolf)
+
+        print("ref_min",ref_min)
+        print("ref_max",ref_max)
+
+        print("wolf_min",wolf_min)
+        print("wolf_max",wolf_max)
+        if ("VLUGT" in col and "DSP" in col):
+            xmin = min(float(ref_min), float(wolf_min))
+            xmax = max(float(ref_max), float(wolf_max))
+
+            binWidthE =  (ref_max - ref_min)/float(numBins)
+            binListE = np.arange(ref_min, ref_max+binWidthE, binWidthE)
+            # estimate the line with probability density function (PDF)
+            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binListE)
+
+            #Plot Ewald
+            plt.plot(binListE, kde1, color="black", linewidth=2, label="Ewald")
+
+            binWidthW =  (wolf_max - wolf_min)/float(numBins)
+            binListW = np.arange(wolf_min, wolf_max+binWidthW, binWidthW)
+
+            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binListW)
+            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+            axs[counter // 3, counter % 3].plot(binListE, kde1, color="black", linewidth=2, label="Ewald")
+            axs[counter // 3, counter % 3].plot(binListW, kde2, color="red", linewidth=2, label=Col_Dict[col])
+            axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
+            axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
+            axs[counter // 3, counter % 3].set_ylabel('Probability')
+            counter = counter + 1
+        else:
+            xmin = min(float(ref_min), float(wolf_min))
+            xmax = max(float(ref_max), float(wolf_max))
+
+            binWidth =  (xmax - xmin)/float(numBins)
+            binList = np.arange(xmin, xmax+binWidth, binWidth)
+            # estimate the line with probability density function (PDF)
+            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
+            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
+            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+            axs[counter // 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
+            axs[counter // 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+            axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
+            axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
+            axs[counter // 3, counter % 3].set_ylabel('Probability')
+            counter = counter + 1
+
+    #figSP.legend()
+    #figSP.ylabel('Probability', fontsize=22)
+    #figSP.xlabel('Total Energy (K)', fontsize=22)
+    import matplotlib.patches as mpatches
+    red_patch = mpatches.Patch(color='red', label='Wolf')
+    black_patch = mpatches.Patch(color='black', label='Ewald')
+    figSP.legend(handles=[red_patch, black_patch], ncol=2, loc='upper center', bbox_to_anchor=(0.5, 1.05),)
+    figSP.tight_layout(pad=1.5)
     figSP.savefig("PotentialEnergyDistribution_Ewald_vs_All", dpi=300, bbox_inches='tight')
   
 
