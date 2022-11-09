@@ -3300,8 +3300,8 @@ def part_4b_create_wolf_sanity_histograms(job):
         plt.xlabel('Total Energy (K)')
         #plt.legend()
         plt.rcParams.update({'font.size': 22})
-        axs[counter / 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
-        axs[counter / 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+        axs[counter // 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
+        axs[counter // 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
 
         plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
         plt.figure().clear()
