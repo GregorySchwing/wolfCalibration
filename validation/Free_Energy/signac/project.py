@@ -3305,6 +3305,7 @@ def part_4b_create_wolf_sanity_histograms(job):
 
         plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
         plt.figure().clear()
+        counter = counter + 1
     figSP.savefig("PotentialEnergyDistribution_Ewald_vs_All", dpi=300, bbox_inches='tight')
   
 
