@@ -3249,8 +3249,8 @@ def part_4b_create_wolf_sanity_histograms(job):
 
     from pymbar import timeseries
     t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald, nskip=nskip) # compute indices of uncorrelated timeseries
-    A_t_equil_ewald = ref_ewald[t0:]
-    A_t_equil_steps_ewald = ref_ewald[t0:]
+    A_t_equil_ewald = ref_ewald[t0:].dropna()
+    A_t_equil_steps_ewald = ref_ewald[t0:].dropna()
 
     Col_Dict = {"GROSS_DSF": "Waibel2018a", "VLUGT_DSF": 'Rahbari', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b',
     "GROSS_DSP": 'Waibel2018a', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
@@ -3265,8 +3265,8 @@ def part_4b_create_wolf_sanity_histograms(job):
 
         wolf = df1[col]
         t0, g, Neff_max = timeseries.detectEquilibration(wolf, nskip=nskip) # compute indices of uncorrelated timeseries
-        A_t_equil_wolf = wolf[t0:]
-        A_t_equil_steps_wolf = wolf[t0:]
+        A_t_equil_wolf = wolf[t0:].dropna()
+        A_t_equil_steps_wolf = wolf[t0:].dropna()
 
 
         ref_min = min(A_t_equil_ewald)
