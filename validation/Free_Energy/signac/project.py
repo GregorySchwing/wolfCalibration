@@ -3237,8 +3237,17 @@ def part_4b_create_wolf_sanity_histograms(job):
     except:
         return False
 
-    print(df1)
+    try:
+        for ewald_job in jobs:
+            if (ewald_job.isfile("wolf_statistics_equilibrated.csv")):
+                df2 = pd.read_csv (ewald_job.fn('wolf_statistics_equilibrated.csv'), sep=' ', header=0, na_values='NaN', index_col=0)
+            else:
+                return False
+    except:
+        return False
 
+    print(df1)
+    print(df2)
     import numpy as np
     import matplotlib.pyplot as plt
     import scipy.stats as st
@@ -3380,6 +3389,9 @@ def part_4b_create_wolf_sanity_histograms(job):
             axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
             axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
             axs[counter // 3, counter % 3].set_ylabel('Probability')
+            from matplotlib.offsetbox import AnchoredText
+            anchored_text = AnchoredText("{}%".format(round((df2[col].iloc[2])*100,3)), loc="upper center")
+            axs[counter // 3, counter % 3].add_artist(anchored_text)
             counter = counter + 1
         else:
             xmin = min(float(ref_min), float(wolf_min))
@@ -3396,6 +3408,9 @@ def part_4b_create_wolf_sanity_histograms(job):
             axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
             axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
             axs[counter // 3, counter % 3].set_ylabel('Probability')
+            from matplotlib.offsetbox import AnchoredText
+            anchored_text = AnchoredText("{}%".format(round((df2[col].iloc[2])*100,3)), loc=2)
+            axs[counter // 3, counter % 3].add_artist(anchored_text)
             counter = counter + 1
 
     #figSP.legend()
@@ -3404,7 +3419,8 @@ def part_4b_create_wolf_sanity_histograms(job):
     import matplotlib.patches as mpatches
     red_patch = mpatches.Patch(color='red', label='Wolf')
     black_patch = mpatches.Patch(color='black', label='Ewald')
-    figSP.legend(handles=[red_patch, black_patch], ncol=2, loc='upper center', bbox_to_anchor=(0.5, 1.05),)
+    error = mpatches.Rectangle((1,1), 1,1, color='black', label='Relative Error of Mean', fill = False)
+    figSP.legend(handles=[red_patch, black_patch, error], ncol=3, loc='upper center', bbox_to_anchor=(0.5, 1.05),)
     figSP.tight_layout(pad=1.5)
     figSP.savefig("PotentialEnergyDistribution_Ewald_vs_All", dpi=300, bbox_inches='tight')
   
