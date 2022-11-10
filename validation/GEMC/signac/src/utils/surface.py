@@ -942,8 +942,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #x_opts, y_opts = zip(X[i])
     
 
-    print(x_opts)
-    print(y_opts)
+    #print(x_opts)
+    #print(y_opts)
     from pymoo.mcdm.pseudo_weights import PseudoWeights
 
     i = PseudoWeights(weights).do(nF)
