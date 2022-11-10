@@ -950,9 +950,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     i = PseudoWeights(weights).do(nF)
 
     print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
-    res = [*set(X)]
-    print(res)
-    x_popts, y_popts = zip(res)
+    if (len(X) > 1):
+        x_popts, y_popts = zip(X[i])
+    else:
+        x_popts, y_popts = zip(X)
     #x_popts, y_popts = zip(X)
     print(x_popts)
     print(y_popts)
