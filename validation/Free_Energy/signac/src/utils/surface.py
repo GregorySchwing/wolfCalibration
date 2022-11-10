@@ -462,6 +462,9 @@ class MyDumProblem(ElementwiseProblem):
         self.pd_RCut_varies_alpha_varies = [1,1]
         self.pd_RCut_varies_alpha_varies_DD = [2,2]
         
+        self.derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies[0],self.pd_RCut_varies_alpha_varies[1])
+        self.derivs_wrt_alpha_and_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies_DD[0],self.pd_RCut_varies_alpha_varies_DD[1])
+
         self.tck_wrt_alpha_and_rcut = [self.derivs_wrt_alpha_and_rcut.tck[0], self.derivs_wrt_alpha_and_rcut.tck[1],self.derivs_wrt_alpha_and_rcut.tck[2],self.derivs_wrt_alpha_and_rcut.degrees[0],self.derivs_wrt_alpha_and_rcut.degrees[1]]
         self.tck_wrt_alpha_and_rcut_DD = [self.derivs_wrt_alpha_and_rcut_DD.tck[0], self.derivs_wrt_alpha_and_rcut_DD.tck[1],self.derivs_wrt_alpha_and_rcut_DD.tck[2],self.derivs_wrt_alpha_and_rcut_DD.degrees[0],self.derivs_wrt_alpha_and_rcut_DD.degrees[1]]
 
