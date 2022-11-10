@@ -78,14 +78,11 @@ namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 #namd_binary_path = "/home/brad/Programs/NAMD/NAMD_2.14_RTX_3080_build_Source_CUDA"
 
 # number of simulation steps
-#gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 10 * 10**6 #  set value for paper = 60 * 10**6
+gomc_steps_production = 100 * 10**6 # set value for paper = 60 * 10**6
+gomc_console_output_data_every_X_steps = 50 * 10**3# set value for paper = 100 * 10**3
 
-gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
-#gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
-gomc_steps_equilb_design_ensemble = 5 * 10**6 # set value for paper = 10 * 10**6
+gomc_output_data_every_X_steps = 50 * 10**3 # # set value for paper = 50 * 10**3
 
 """
 During the
@@ -102,7 +99,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 5 * 10**7
+Wolf_Sanity_MC_steps = 100 * 10**6 # set value for paper = 60 * 10**6
 
 
 # Free energy calcs: set free energy data in doc
@@ -2557,7 +2554,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "RegrowthFreq": RegrowthFreq[-1],
             "OutputName": wolf_sanity_control_file_name,
             "EqSteps": EqSteps,
-            "PressureCalc": output_false_list_input,
+            "PressureCalc": output_true_list_input,
             "RestartFreq": output_true_list_input,
             "CheckpointFreq": output_true_list_input,
             "ConsoleFreq": console_output_true_list_input,
