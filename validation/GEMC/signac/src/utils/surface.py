@@ -941,7 +941,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     """
     #x_opts, y_opts = zip(X)
     #x_opts, y_opts = zip(X[i])
-    
+    if (np.isscalar(X[i])):
+        x_opts, y_opts = zip(X)
+    else:
+        x_opts, y_opts = zip(X[i])    
 
     #print(x_opts)
     #print(y_opts)
@@ -1020,7 +1023,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
-        """
         iteractivefig.add_trace(
             go.Scatter3d(x=x_opts,
                         y=y_opts,
@@ -1030,7 +1032,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
-        """
         """
         iteractivefig.add_trace(
             go.Scatter3d(x=[14],
