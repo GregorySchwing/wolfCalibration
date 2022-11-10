@@ -2432,7 +2432,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (0.00,)
-            IntraSwapFreq = (0.20,)
+            IntraSwapFreq = (0.10,)
             CrankShaftFreq = (0.1,)
             SwapFreq = (0.20,)
             DisFreq = (0.29,)
@@ -2612,7 +2612,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (0.00,)
-                IntraSwapFreq = (0.20,)
+                IntraSwapFreq = (0.10,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
                 DisFreq = (0.29,)
@@ -2653,7 +2653,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (0.00,)
-                IntraSwapFreq = (0.20,)
+                IntraSwapFreq = (0.10,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
                 DisFreq = (0.29,)
@@ -2799,7 +2799,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (0.00,)
-                IntraSwapFreq = (0.20,)
+                IntraSwapFreq = (0.10,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
                 DisFreq = (0.29,)
@@ -2840,7 +2840,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (0.00,)
-                IntraSwapFreq = (0.20,)
+                IntraSwapFreq = (0.10,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
                 DisFreq = (0.29,)
