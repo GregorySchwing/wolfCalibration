@@ -78,6 +78,9 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
+gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
+
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
 #namd_binary_path = "/home/brad/Programs/NAMD/NAMD_2.14_RTX_3080_build_Source_CUDA"
@@ -105,9 +108,9 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 1000000
+Calibration_MC_steps = 100000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 5 * 10**7
+Wolf_Sanity_MC_steps = 5 * 10**5
 number_of_lambda_spacing_including_zero_int = 1
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
