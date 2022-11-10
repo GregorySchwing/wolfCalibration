@@ -85,12 +85,6 @@ namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
 #namd_binary_path = "/home/brad/Programs/NAMD/NAMD_2.14_RTX_3080_build_Source_CUDA"
 
-# number of simulation steps
-gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
-gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
-gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
-
 gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
 gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
@@ -104,7 +98,7 @@ and the derivative of potential with respect to lambda
 for post-simulation analysis every 5 × 10 3 MCS.
 """
 gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 10 * 10**3
-
+"""
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
@@ -112,7 +106,7 @@ Calibration_MC_steps = 100000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 5 * 10**5
 number_of_lambda_spacing_including_zero_int = 1
-
+"""
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 100
 Calibration_MC_steps = 1000
