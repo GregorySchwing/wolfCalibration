@@ -720,14 +720,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     from pymoo.termination import get_termination
     # Create problem to get the unnormalized Pareto Front
     # Since I only use gradient, it's a single objective, no need to scale.
-    #problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+    problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
 
     tolPower = 0
     for tolPow in range(8, -1, -1):
         print("Tolerance = ", pow(10, -tolPow))
         tolPower = tolPow
-        problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
+        #problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
         
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.operators.crossover.sbx import SBX
