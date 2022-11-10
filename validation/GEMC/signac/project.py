@@ -2394,7 +2394,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     # output all data and calc frequecy
     restart_true_list_input = [
         True,
-        int(gomc_output_data_every_X_steps//2),
+        int(gomc_steps_equilb_design_ensemble//2),
     ]
     output_true_list_input = [
         True,
@@ -2450,7 +2450,11 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("#**********************")
     print("Started: equilb NPT NAMD -> NPT GOMC control file writing")
     print("#**********************")
-
+    # output all data and calc frequecy
+    restart_true_list_input = [
+        True,
+        int(MC_steps//2),
+    ]
     gomc_control.write_gomc_control_file(
         gomc_charmm_object_with_files,
         Single_state_gomc_eq_control_file_name,
@@ -2514,7 +2518,11 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("Started: equilb NPT NAMD -> NPT GOMC control file writing")
     print("#**********************")
 
-
+    # output all data and calc frequecy
+    restart_true_list_input = [
+        True,
+        int(Wolf_Sanity_MC_steps//2),
+    ]
     print("#**********************")
     print("Started:  Wolf Sanity GOMC control file writing")
     print("#**********************")
@@ -2709,7 +2717,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "OutputName": output_name_control_file_calibration_name,
                 "EqSteps": Calibration_MC_Eq_Steps,
                 "PressureCalc": output_false_list_input,
-                "RestartFreq": restart_true_list_input,
+                "RestartFreq": output_false_list_input,
                 "CheckpointFreq": output_true_list_input,
                 "ConsoleFreq": console_output_true_list_input,
                 "BlockAverageFreq": output_true_list_input,
