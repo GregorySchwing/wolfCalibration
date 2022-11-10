@@ -3295,8 +3295,8 @@ def run_sseq_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
-        "ngpu": lambda job: job.doc.gomc_ngpu,
+        "np": lambda job: job.doc.gomc_ncpu if job.sp.electrostatic_method == "Ewald" else 8,
+        "ngpu": lambda job: job.doc.gomc_ngpu if (job.sp.electrostatic_method == "Ewald" or job.sp.production_temperature_K == 300) else 0,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
     }
