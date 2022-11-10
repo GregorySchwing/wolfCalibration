@@ -2230,7 +2230,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "Potential": cutoff_style,
                 "LRC": True,
                 "RcutLow": 1.0,
-                "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20) if job.sp.electrostatic_method == "Ewald" else None,
+                "RcutCoulomb_box_0" : min((math.floor(job.doc.liq_box_lengths_ang/2.0)-1), 20) if job.sp.electrostatic_method == "Ewald" else None,
                 "CBMC_First": CBMC_First[-1],
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
