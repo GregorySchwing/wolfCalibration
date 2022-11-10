@@ -918,7 +918,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(convFigPath)
     """
     # if you use MO 1.0
-    weights = np.array([0.5,0.5])
+    weights = np.array([1.0])
+    #weights = np.array([0.5,0.5])
     #weights = np.array([0.333, 0.333, 0.333])
     #weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
@@ -950,8 +951,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     print("Best regarding Pseudo Weights: Point \ni = %s\nF = %s" % (i, F[i]))
     print(X[i])
-    x_popts, y_popts = zip(X[i])
-    #x_popts, y_popts = zip(X)
+    #x_popts, y_popts = zip(X[i])
+    x_popts, y_popts = zip(X)
     print(x_popts)
     print(y_popts)
 
