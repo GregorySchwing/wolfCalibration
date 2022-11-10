@@ -21,12 +21,6 @@ import scipy
 from scipy.optimize import OptimizeResult, least_squares
 from  scipy.interpolate import UnivariateSpline
 import math
-
-import flow
-import unyt as u
-from flow import FlowProject, aggregator
-from flow.environment import DefaultSlurmEnvironment
-
 def pareto_frontier_multi(myArray):
     # Sort on first dimension
     myArray = myArray[myArray[:,0].argsort()]
@@ -733,7 +727,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     for tolPow in range(8, -1, -1):
         print("Tolerance = ", pow(10, -tolPow))
         tolPower = tolPow
-        #problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
+        problem = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, tolPower)
         
         from pymoo.algorithms.moo.nsga2 import NSGA2
         from pymoo.operators.crossover.sbx import SBX
@@ -752,8 +746,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         from pymoo.optimize import minimize
-        #prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTRcut_DD_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
-        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 0, 0, 0, 0, 0, 0, 0, tolPower)
+        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTRcut_DD_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
 
         res = minimize(prob,
                     algorithm,
@@ -842,7 +835,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(HyperVolumeFigPath)
     """
 
-    xl, xu = prob.bounds()
+    xl, xu = problem.bounds()
 
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
@@ -1019,7 +1012,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                     yaxis_title='Alpha',
                     zaxis_title='Relative Error'),
                     width=700,
-                    margin=dict(r=20, b=10, l=10, t=10))
+                    margin=dict(r=20, b=10, l=10, t=10),
+                    font=dict(size=18))
         iteractivefig.update_traces(contours_z=dict(show=True, usecolormap=True,
                                   highlightcolor="limegreen", project_z=True))
 
@@ -1059,6 +1053,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
+        """
         iteractivefig.add_trace(
             go.Scatter3d(x=[14],
                         y=[0.12],
@@ -1077,6 +1072,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
                         #hovertext=["REF"] if len(xvals) == 1 else [str(x) for x in scales],
                         showlegend=True)
         )
+        """
         pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
 
     # Using any of the single point BF/GD methods is obviously a bad idea.
