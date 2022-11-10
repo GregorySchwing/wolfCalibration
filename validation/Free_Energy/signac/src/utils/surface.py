@@ -435,7 +435,7 @@ class MyProblem(ElementwiseProblem):
 
 class MyDumProblem(ElementwiseProblem):
 
-    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTRcut_DD_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRTAlpha_DD_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power):
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, tolerance_power):
         super().__init__(n_var=2,
                          n_obj=1,
                          n_ieq_constr=1,
@@ -450,13 +450,6 @@ class MyDumProblem(ElementwiseProblem):
         self.F1Min = 0
         self.F2Min = 0
         self.F3Min = 0
-        self.FMax = FMax
-        self.DEProblemDerivWRTRcut_max = DEProblemDerivWRTRcut_max
-        self.DEProblemDerivWRTRcut_DD_max = DEProblemDerivWRTRcut_DD_max
-        self.DEProblemDerivWRTAlpha_max = DEProblemDerivWRTAlpha_max
-        self.DEProblemDerivWRTAlpha_DD_max = DEProblemDerivWRTAlpha_DD_max
-        self.DEProblemDerivWRT_RCut_and_Alpha_max = DEProblemDerivWRT_RCut_and_Alpha_max
-        self.DEProblemDerivWRT_RCut_and_Alpha_DD_max = DEProblemDerivWRT_RCut_and_Alpha_DD_max
         self.tolerance = pow(10, -tolerance_power)
         #self.tolerance = pow(10, -2)
 
@@ -469,36 +462,12 @@ class MyDumProblem(ElementwiseProblem):
         self.pd_RCut_varies_alpha_varies = [1,1]
         self.pd_RCut_varies_alpha_varies_DD = [2,2]
         
-        self.derivs_wrt_alpha = rect_B_spline.partial_derivative(self.pd_RCut_constant_alpha_varies[0],self.pd_RCut_constant_alpha_varies[1])
-        self.derivs_wrt_alpha_DD = rect_B_spline.partial_derivative(self.pd_RCut_constant_alpha_varies_DD[0],self.pd_RCut_constant_alpha_varies_DD[1])
-        self.derivs_wrt_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_constant[0],self.pd_RCut_varies_alpha_constant[1])
-        self.derivs_wrt_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_constant_DD[0],self.pd_RCut_varies_alpha_constant_DD[1])
-        self.derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies[0],self.pd_RCut_varies_alpha_varies[1])
-        self.derivs_wrt_alpha_and_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies_DD[0],self.pd_RCut_varies_alpha_varies_DD[1])
-
-        self.tck_wrt_alpha = [self.derivs_wrt_alpha.tck[0], self.derivs_wrt_alpha.tck[1],self.derivs_wrt_alpha.tck[2],self.derivs_wrt_alpha.degrees[0],self.derivs_wrt_alpha.degrees[1]]
-        self.tck_wrt_alpha_DD = [self.derivs_wrt_alpha_DD.tck[0], self.derivs_wrt_alpha_DD.tck[1],self.derivs_wrt_alpha_DD.tck[2],self.derivs_wrt_alpha_DD.degrees[0],self.derivs_wrt_alpha_DD.degrees[1]]
-        self.tck_wrt_rcut = [self.derivs_wrt_rcut.tck[0], self.derivs_wrt_rcut.tck[1],self.derivs_wrt_rcut.tck[2],self.derivs_wrt_rcut.degrees[0],self.derivs_wrt_rcut.degrees[1]]
-        self.tck_wrt_rcut_DD = [self.derivs_wrt_rcut_DD.tck[0], self.derivs_wrt_rcut_DD.tck[1],self.derivs_wrt_rcut_DD.tck[2],self.derivs_wrt_rcut_DD.degrees[0],self.derivs_wrt_rcut_DD.degrees[1]]
         self.tck_wrt_alpha_and_rcut = [self.derivs_wrt_alpha_and_rcut.tck[0], self.derivs_wrt_alpha_and_rcut.tck[1],self.derivs_wrt_alpha_and_rcut.tck[2],self.derivs_wrt_alpha_and_rcut.degrees[0],self.derivs_wrt_alpha_and_rcut.degrees[1]]
         self.tck_wrt_alpha_and_rcut_DD = [self.derivs_wrt_alpha_and_rcut_DD.tck[0], self.derivs_wrt_alpha_and_rcut_DD.tck[1],self.derivs_wrt_alpha_and_rcut_DD.tck[2],self.derivs_wrt_alpha_and_rcut_DD.degrees[0],self.derivs_wrt_alpha_and_rcut_DD.degrees[1]]
 
     def _evaluate(self, x, out, *args, **kwargs):
-        #f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
-        #f1 = -(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut)/self.DEProblemDerivWRTRcut_max))
-        f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
-        f0 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
-        f2 = 1.0/(np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max)
-        f3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut_DD))/self.DEProblemDerivWRTRcut_DD_max)
-        #f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
         f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut)))
-        f5 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max * np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_DD))/self.DEProblemDerivWRTAlpha_DD_max
-        f6 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max)
-        f7 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max)
-        f5 = (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
-        g1 = (x[1])/(self.AlphaMax) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
         g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
-
         out["F"] = [f4]
         #out["F"] = [f1, f2]
         out["G"] = [g2]
@@ -720,7 +689,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     from pymoo.termination import get_termination
     # Create problem to get the unnormalized Pareto Front
     # Since I only use gradient, it's a single objective, no need to scale.
-    problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+    #problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
 
     tolPower = 0
@@ -746,7 +715,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         from pymoo.optimize import minimize
-        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTRcut_DD_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRTAlpha_DD_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
 
         res = minimize(prob,
                     algorithm,
