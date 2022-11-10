@@ -14,6 +14,8 @@
 #SBATCH --mail-type=ALL
 {%- endif %}
 
+#SBATCH -e slurm-%j.err
+#SBATCH -o slurm-%j.out
 
 echo  "Running on host" $HOSTNAME
 echo  "Time is" date
