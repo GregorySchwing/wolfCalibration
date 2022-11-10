@@ -918,7 +918,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(convFigPath)
     """
     # if you use MO 1.0
-    weights = np.array([0.5,0.5])
+    weights = np.array([1.0])
+    #weights = np.array([0.5,0.5])
     #weights = np.array([0.333, 0.333, 0.333])
     #weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
