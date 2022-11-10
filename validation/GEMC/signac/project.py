@@ -100,9 +100,9 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 500000
+Calibration_MC_steps = 1000000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 1 * 10**7
+Wolf_Sanity_MC_steps = 5 * 10**7
 
 
 # Free energy calcs: set free energy data in doc
@@ -2431,11 +2431,11 @@ def build_psf_pdb_ff_gomc_conf(job):
             
         elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
             VolFreq = (0.01,)
-            MultiParticleFreq = (0.02,)
+            MultiParticleFreq = (0.00,)
             IntraSwapFreq = (0.20,)
             CrankShaftFreq = (0.1,)
             SwapFreq = (0.20,)
-            DisFreq = (0.17,)
+            DisFreq = (0.29,)
             RotFreq = (0.20,)
             RegrowthFreq = (0.20,)
             CrankShaftFreq = (0.0,)
@@ -2611,11 +2611,11 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RegrowthFreq = (0.3,)
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
-                MultiParticleFreq = (0.02,)
+                MultiParticleFreq = (0.00,)
                 IntraSwapFreq = (0.20,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
-                DisFreq = (0.17,)
+                DisFreq = (0.29,)
                 RotFreq = (0.20,)
                 RegrowthFreq = (0.20,)
                 CrankShaftFreq = (0.0,)
@@ -2652,11 +2652,11 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RegrowthFreq = (0.20,)
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
-                MultiParticleFreq = (0.02,)
+                MultiParticleFreq = (0.00,)
                 IntraSwapFreq = (0.20,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
-                DisFreq = (0.17,)
+                DisFreq = (0.29,)
                 RotFreq = (0.20,)
                 RegrowthFreq = (0.20,)
                 CrankShaftFreq = (0.0,)
@@ -2798,11 +2798,11 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RegrowthFreq = (0.3,)
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
-                MultiParticleFreq = (0.02,)
+                MultiParticleFreq = (0.00,)
                 IntraSwapFreq = (0.20,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
-                DisFreq = (0.17,)
+                DisFreq = (0.29,)
                 RotFreq = (0.20,)
                 RegrowthFreq = (0.20,)
                 CrankShaftFreq = (0.0,)
@@ -2839,11 +2839,11 @@ def build_psf_pdb_ff_gomc_conf(job):
                 RegrowthFreq = (0.20,)
             elif job.doc.equilibration_ensemble in ["GEMC_NVT"]:
                 VolFreq = (0.01,)
-                MultiParticleFreq = (0.02,)
+                MultiParticleFreq = (0.00,)
                 IntraSwapFreq = (0.20,)
                 CrankShaftFreq = (0.1,)
                 SwapFreq = (0.20,)
-                DisFreq = (0.17,)
+                DisFreq = (0.29,)
                 RotFreq = (0.20,)
                 RegrowthFreq = (0.20,)
                 CrankShaftFreq = (0.0,)
