@@ -2492,7 +2492,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "PressureCalc": output_false_list_input,
             "RestartFreq": output_true_list_input,
             "CheckpointFreq": output_true_list_input,
-            "ConsoleFreq": console_output_true_list_input,
+            "ConsoleFreq": output_true_list_input,
             "BlockAverageFreq": output_true_list_input,
             "HistogramFreq": output_false_list_input,
             "CoordinatesFreq": output_false_list_input,
