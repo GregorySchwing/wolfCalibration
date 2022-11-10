@@ -12,7 +12,7 @@
 {%- else %}
 #SBATCH -N 1
 #SBATCH --mail-type=ALL
-#SBATCH --exclude=res-lab32-ai8111,res-lab33-ai8111,res-lab34-ai8111
+#SBATCH --exclude=reslab32ai8111,reslab33ai8111,reslab34ai8111
 {%- endif %}
 
 #SBATCH -e slurm-%j.err
