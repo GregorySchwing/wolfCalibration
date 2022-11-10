@@ -158,7 +158,7 @@ walltime_namd_hr = 24
 walltime_gomc_equilbrium_hr = 144
 walltime_gomc_production_hr = 144
 walltime_gomc_analysis_hr = 4
-memory_needed = 4
+memory_needed = 6
 
 
 
