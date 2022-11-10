@@ -10,7 +10,7 @@ import mbuild.formats.gomc_conf_writer as gomc_control
 #import mosdef_gomc.formats.gmso_charmm_writer as mf_charmm
 #import mosdef_gomc.formats.gmso_gomc_conf_writer as gomc_control
 import numpy as np
-
+import math
 from alchemlyb.parsing.gomc import  extract_dHdl,  extract_u_nk
 from alchemlyb.estimators import MBAR, BAR, TI
 import alchemlyb.preprocessing.subsampling as ss
@@ -1414,9 +1414,9 @@ def build_charmm(job, write_files=True):
         print('Running: filling resevoir box')
         box_1 = mb.fill_box(compound=[solute, solvent],
                             n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
-                            box=[u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("nm"),
+                            box=[u.unyt_quantity(30, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(30, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(30, 'angstrom').to_value("nm"),
                                 ],
                             seed=mbuild_box_seed_no
                             )
@@ -2101,6 +2101,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "Potential": cutoff_style,
                 "LRC": True,
                 "RcutLow": 1.0,
+                "RcutCoulomb_box_0" : min((math.floor(job.doc.liq_box_lengths_ang/2.0)-1), 20),
                 "CBMC_First": CBMC_First[-1],
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
@@ -2160,6 +2161,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "Potential": cutoff_style,
                 "LRC": True,
                 "RcutLow": 1.0,
+                "RcutCoulomb_box_0" : min((math.floor(job.doc.liq_box_lengths_ang/2.0)-1), 20),
                 "CBMC_First": CBMC_First[-1],
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
@@ -2228,6 +2230,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "Potential": cutoff_style,
                 "LRC": True,
                 "RcutLow": 1.0,
+                "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20) if job.sp.electrostatic_method == "Ewald" else None,
                 "CBMC_First": CBMC_First[-1],
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
