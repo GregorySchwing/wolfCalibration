@@ -1329,7 +1329,7 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             guess = np.zeros((nx, ny), float)
             fR = lambda x: rect_B_spline.ev(x[0], x[1])
             print("about to call root")
-            sol = optimize.root(fR, guess, method='krylov')
+            sol = optimize.root(fR, (10,0.0), method='krylov')
             print(sol.x)
 
             import matplotlib.pyplot as plt
