@@ -458,7 +458,7 @@ def initial_parameters(job):
     job.doc.solvent = job.sp.solvent
     job.doc.solute = job.sp.solute
 
-    job.doc.namd_node_ncpu = 8
+    job.doc.namd_node_ncpu = 4
     #job.doc.namd_node_ngpu = 1
     job.doc.namd_node_ngpu = 1
 
