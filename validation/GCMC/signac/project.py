@@ -789,12 +789,10 @@ def part_3b_output_gomc_calibration_started(job):
             ):
                 return True
             else:
-                print(job.fn(""))
                 return False
 
 
     except:
-        print("eception",job.fn(""))
         return False
 
 # check if equilb_with design ensemble GOMC run is started
@@ -950,10 +948,8 @@ def namd_sim_completed_properly(job, control_filename_str):
                         ):
                             job_run_properly_bool = True
         else:
-            print(job.fn(""))
             job_run_properly_bool = False
     except:
-        print(job.fn(""))
         job_run_properly_bool = False
     return job_run_properly_bool
 
