@@ -263,8 +263,8 @@ def append_wolf_calibration_parameters(job):
         WolfCutoffBoxList = [0,1]
 
         WolfCutoffCoulombLowerBoundList = [10,10]
-        WolfCutoffCoulombUpperBoundList = [math.floor(job.doc.liq_box_lengths_ang/2.0),math.floor(30/2.0)]
-        WolfCutoffCoulombIntervalList = [(math.floor(job.doc.liq_box_lengths_ang/2.0) - 10)/50,(math.floor(30/2.0) - 10)/50]
+        WolfCutoffCoulombUpperBoundList = [math.floor(job.doc.liq_box_lengths_ang/2.0),math.floor(job.doc.res_box_lengths_ang/2.0)]
+        WolfCutoffCoulombIntervalList = [(math.floor(job.doc.liq_box_lengths_ang/2.0) - 10)/50,(math.floor(job.doc.res_box_lengths_ang/2.0) - 10)/50]
 
         WolfAlphaLowerBoundList = [0.0, 0.0]
         WolfAlphabUpperBoundList = [0.5, 0.5]
@@ -418,6 +418,8 @@ def initial_parameters(job):
         job.doc.liq_box_lengths_ang = 30 * u.angstrom
     else:
         job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
+
+    job.doc.res_box_lengths_ang = 30 * u.angstrom
 
     job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
     job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
@@ -1543,9 +1545,9 @@ def build_charmm(job, write_files=True):
         print('Running: filling resevoir box')
         box_1 = mb.fill_box(compound=[solute, solvent],
                             n_compounds=[job.doc.N_liquid_solute, job.doc.N_liquid_solvent],
-                            box=[u.unyt_quantity(30, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(30, 'angstrom').to_value("nm"),
-                                u.unyt_quantity(30, 'angstrom').to_value("nm"),
+                            box=[u.unyt_quantity(job.doc.res_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.res_box_lengths_ang, 'angstrom').to_value("nm"),
+                                u.unyt_quantity(job.doc.res_box_lengths_ang, 'angstrom').to_value("nm"),
                                 ],
                             seed=mbuild_box_seed_no
                             )
@@ -1747,7 +1749,7 @@ def build_charmm(job, write_files=True):
 
     box_length = job.doc.liq_box_lengths_ang
     # Replace the target string
-    filedata = filedata.replace("R_ARG", str(box_length))
+    filedata = filedata.replace("R_ARG", str(job.doc.res_box_lengths_ang))
     filedata = filedata.replace("OUTPUT", job.fn(mosdef_structure_box_1_name_str))
 
     # Write the file out again
@@ -2038,9 +2040,9 @@ def build_psf_pdb_ff_gomc_conf(job):
                        u.unyt_quantity(job.doc.liq_box_lengths_ang, 'angstrom').to_value("angstrom"),
                        ]
 
-    box_lengths_res_ang = [u.unyt_quantity(30, 'angstrom').to_value("angstrom"),
-                       u.unyt_quantity(30, 'angstrom').to_value("angstrom"),
-                       u.unyt_quantity(30, 'angstrom').to_value("angstrom"),
+    box_lengths_res_ang = [u.unyt_quantity(job.doc.res_box_lengths_ang, 'angstrom').to_value("angstrom"),
+                       u.unyt_quantity(job.doc.res_box_lengths_ang, 'angstrom').to_value("angstrom"),
+                       u.unyt_quantity(job.doc.res_box_lengths_ang, 'angstrom').to_value("angstrom"),
                        ]
 
     seed_no = job.doc.replica_number_int
