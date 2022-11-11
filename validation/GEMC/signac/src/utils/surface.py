@@ -1386,8 +1386,8 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
                             highlightcolor="limegreen", project_z=True))
     """                        
     pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
-    plt.colorbar()
-    plt.savefig(plotPath)
+    #plt.colorbar()
+    #plt.savefig(plotPath)
     # Using any of the single point BF/GD methods is obviously a bad idea.
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
     # The question is which of the above optimizations to use.  For now, I am going with "REF" AUC as the metric.
