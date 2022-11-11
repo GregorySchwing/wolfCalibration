@@ -502,6 +502,48 @@ class MyDumProblem(ElementwiseProblem):
         out["G"] = [g2]
 
 
+class MyDumProblemUnconstrained(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, tolerance_power):
+        super().__init__(n_var=2,
+                         n_obj=1,
+                         n_ieq_constr=0,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck_pd = tck_pd
+        self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
+        self.F1Min = 0
+        self.F2Min = 0
+        self.F3Min = 0
+        self.tolerance = pow(10, -tolerance_power)
+        #self.tolerance = pow(10, -2)
+
+
+        self.pd_RCut_constant_alpha_constant = [0,0]
+        self.pd_RCut_varies_alpha_constant = [1,0]
+        self.pd_RCut_varies_alpha_constant_DD = [2,0]
+        self.pd_RCut_constant_alpha_varies = [0,1]
+        self.pd_RCut_constant_alpha_varies_DD = [0,2]
+        self.pd_RCut_varies_alpha_varies = [1,1]
+        self.pd_RCut_varies_alpha_varies_DD = [2,2]
+        
+        self.derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies[0],self.pd_RCut_varies_alpha_varies[1])
+        self.derivs_wrt_alpha_and_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies_DD[0],self.pd_RCut_varies_alpha_varies_DD[1])
+
+        self.tck_wrt_alpha_and_rcut = [self.derivs_wrt_alpha_and_rcut.tck[0], self.derivs_wrt_alpha_and_rcut.tck[1],self.derivs_wrt_alpha_and_rcut.tck[2],self.derivs_wrt_alpha_and_rcut.degrees[0],self.derivs_wrt_alpha_and_rcut.degrees[1]]
+        self.tck_wrt_alpha_and_rcut_DD = [self.derivs_wrt_alpha_and_rcut_DD.tck[0], self.derivs_wrt_alpha_and_rcut_DD.tck[1],self.derivs_wrt_alpha_and_rcut_DD.tck[2],self.derivs_wrt_alpha_and_rcut_DD.degrees[0],self.derivs_wrt_alpha_and_rcut_DD.degrees[1]]
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut)))
+        #g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
+        out["F"] = [f4]
+        #out["F"] = [f1, f2]
+        #out["G"] = [g2]
+
 
 class MyProblemNorm(ElementwiseProblem):
 
@@ -724,7 +766,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
     tck_wrt_alpha_and_rcut = [derivs_wrt_alpha_and_rcut.tck[0], derivs_wrt_alpha_and_rcut.tck[1],derivs_wrt_alpha_and_rcut.tck[2],derivs_wrt_alpha_and_rcut.degrees[0],derivs_wrt_alpha_and_rcut.degrees[1]]
 
-
+    foundSoln = False
     tolPower = 0
     for tolPow in range(8, -1, -1):
         print("Tolerance = ", pow(10, -tolPow))
@@ -735,29 +777,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         from pymoo.operators.crossover.sbx import SBX
         from pymoo.operators.mutation.pm import PM
         from pymoo.operators.sampling.rnd import FloatRandomSampling
+        from pymoo.optimize import minimize
 
 
         termination = get_termination("n_gen", 400)
-
-        DEProblemDerivWRT_RCut_and_Alpha = DEProblemDerivDum(rect_B_spline, tck_wrt_alpha_and_rcut, x.min(), x.max(), y.min(), y.max())
-        
-        algorithm = DE(
-            pop_size=100,
-            sampling=LHS(),
-            variant="DE/rand/1/bin",
-            CR=0.3,
-            dither="vector",
-            jitter=False
-        )
-        from pymoo.optimize import minimize
-
-        res = minimize(DEProblemDerivWRT_RCut_and_Alpha,
-                    algorithm,
-                    seed=1,
-                    verbose=True)
-
-        print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
-        
 
         prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
         algorithm = NSGA2(
@@ -818,12 +841,71 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         try:
             k = np.where(np.array(vals) <= 0.0)[0].min()
             print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
+            foundSoln = True
             break
         except:
             print(f"Whole population not feasible after {n_evals[k]} evaluations.")
             print(f"Increase tolerance.")
             continue
 
+    if (not foundSoln):
+        termination = get_termination("n_gen", 400)
+
+        prob = MyDumProblemUnconstrained(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
+        algorithm = NSGA2(
+            pop_size=400,
+            n_offsprings=100,
+            sampling=FloatRandomSampling(),
+            crossover=SBX(prob=0.9, eta=15),
+            mutation=PM(eta=20),
+            eliminate_duplicates=True
+        )
+        res = minimize(prob,
+                    algorithm,
+                    termination,
+                    seed=1,
+                    save_history=True,
+                    verbose=True)
+
+        X = res.X
+        F = res.F
+        hist = res.history
+        print(X)
+        print(F)
+
+        n_evals = []             # corresponding number of function evaluations\
+        hist_F = []              # the objective space values in each generation
+        hist_cv = []             # constraint violation in each generation
+        hist_cv_avg = []         # average constraint violation in the whole population
+
+        for algo in hist:
+
+            # store the number of function evaluations
+            n_evals.append(algo.evaluator.n_eval)
+
+            # retrieve the optimum from the algorithm
+            opt = algo.opt
+
+            # store the least contraint violation and the average in each population
+            hist_cv.append(opt.get("CV").min())
+            hist_cv_avg.append(algo.pop.get("CV").mean())
+
+            # filter out only the feasible and append and objective space values
+            feas = np.where(opt.get("feasible"))[0]
+            hist_F.append(opt.get("F")[feas])
+
+        k = 0
+        try:
+            k = np.where(np.array(hist_cv) <= 0.0)[0].min()
+        except:
+            print(f"No feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+            print(plotPath)
+            quit()            
+        print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+
+
+        # replace this line by `hist_cv` if you like to analyze the least feasible optimal solution and not the population
+        vals = hist_cv_avg
 
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
