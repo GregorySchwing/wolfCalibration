@@ -1323,12 +1323,12 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             #zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
             zs = np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel()))
             Z = zs.reshape(X_forplotting.shape)
-
+            """
             ZeroSlice = np.where(((Z < 0.0001) or (Z > 0.0001)), Z)
 
             plt.scatter(ZeroSlice)
             plt.savefig("test")
-            quit()
+            """
             iteractivefig.add_surface(autocolorscale=True, x=X_forplotting, y=Y_forplotting, z=Z)
 
 
