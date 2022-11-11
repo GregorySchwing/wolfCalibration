@@ -756,6 +756,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
             dither="vector",
             jitter=False
         )
+        from pymoo.optimize import minimize
 
         res = minimize(DEProblemDerivWRT_RCut_and_Alpha,
                     algorithm,
@@ -765,7 +766,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
         
 
-        from pymoo.optimize import minimize
         prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
 
         res = minimize(prob,
