@@ -12,6 +12,7 @@
 #SBATCH --exclusive
 {%- else %}
 #SBATCH -N 1
+#SBATCH --exclude=reslab32ai8111,res-lab33-ai8111,@res-lab34-ai8111
 #SBATCH --mail-type=ALL
 {%- endif %}
 
