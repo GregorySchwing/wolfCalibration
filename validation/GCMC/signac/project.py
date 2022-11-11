@@ -75,11 +75,11 @@ class Grid(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 #namd_binary_path = "/home/greg/Documents/wolfCalibration/validation/Free_Energy/signac/bin"
 
 #WSL local bin paths
-gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GCMC/signac/bin"
 
-gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
-namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
+gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
+namd_binary_path = "/home6/go2432/wolfCalibration/validation/GCMC/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -443,12 +443,12 @@ def initial_parameters(job):
     job.doc.solute = job.sp.solute
 
     job.doc.namd_node_ncpu = 8
+    #job.doc.namd_node_ngpu = 1
     job.doc.namd_node_ngpu = 0
-    #job.doc.namd_node_ngpu = 0
 
     job.doc.gomc_ncpu = 8  # 1 is optimal but I want data quick.  run time is set for 1 cpu
+    #job.doc.gomc_ngpu = 1
     job.doc.gomc_ngpu = 0
-    #job.doc.gomc_ngpu = 0
 
     # set rcut, ewalds
 
