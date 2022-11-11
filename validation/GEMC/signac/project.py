@@ -3420,7 +3420,6 @@ def part_4b_job_gomc_calibration_find_minimum(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
-@Project.post(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_all_surface_plot_created)
 
 @Project.operation.with_directives(
