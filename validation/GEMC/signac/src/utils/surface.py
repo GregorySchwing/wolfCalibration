@@ -8,7 +8,7 @@ import re
 import os
 import glob
 from matplotlib import cm
-from scipy.optimize import minimize, brute, shgo, dual_annealing, differential_evolution
+from scipy.optimize import minimize, brute, shgo, dual_annealing, differential_evolution, root
 from scipy import interpolate, optimize
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from matplotlib.patches import Circle, Ellipse
@@ -1324,7 +1324,6 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             zs = np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel()))
             Z = zs.reshape(X_forplotting.shape)
 
-            from scipy import optimize
             nx, ny = 100, 100
             guess = np.zeros((nx, ny), float)
             fR = lambda x: rect_B_spline.ev(x[0], x[1])
