@@ -3306,7 +3306,7 @@ def run_sseq_run_gomc_command(job):
 @Project.operation.with_directives(
     {
         "np": lambda job: job.doc.gomc_ncpu if job.sp.electrostatic_method == "Ewald" else 8,
-        "ngpu": lambda job: job.doc.gomc_ngpu if (job.sp.electrostatic_method == "Ewald" or job.sp.production_temperature_K == 300) else 0,
+        "ngpu": lambda job: job.doc.gomc_ngpu if (job.sp.electrostatic_method == "Ewald" or job.sp.production_temperature_K == 500) else 0,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
     }
@@ -3320,7 +3320,7 @@ def run_wolf_sanity_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
+        "GOMC_GPU_GEMC" if (job.sp.electrostatic_method == "Ewald" or job.sp.production_temperature_K == 500) else "GOMC_CPU_GEMC",
         str(job.doc.gomc_ncpu),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
