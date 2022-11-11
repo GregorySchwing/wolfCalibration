@@ -736,14 +736,7 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         from pymoo.operators.mutation.pm import PM
         from pymoo.operators.sampling.rnd import FloatRandomSampling
 
-        algorithm = NSGA2(
-            pop_size=400,
-            n_offsprings=100,
-            sampling=FloatRandomSampling(),
-            crossover=SBX(prob=0.9, eta=15),
-            mutation=PM(eta=20),
-            eliminate_duplicates=True
-        )
+
         termination = get_termination("n_gen", 400)
 
         DEProblemDerivWRT_RCut_and_Alpha = DEProblemDerivDum(rect_B_spline, tck_wrt_alpha_and_rcut, x.min(), x.max(), y.min(), y.max())
@@ -767,7 +760,14 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         
 
         prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
-
+        algorithm = NSGA2(
+            pop_size=400,
+            n_offsprings=100,
+            sampling=FloatRandomSampling(),
+            crossover=SBX(prob=0.9, eta=15),
+            mutation=PM(eta=20),
+            eliminate_duplicates=True
+        )
         res = minimize(prob,
                     algorithm,
                     termination,
