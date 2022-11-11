@@ -198,6 +198,32 @@ class DEProblemDeriv(ElementwiseProblem):
         out["F"] = [f1]
         out["G"] = [g1]
 
+
+class DEProblemDerivDum(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax):
+        super().__init__(n_var=2,
+                         n_obj=1,
+                         n_ieq_constr=1,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck = tck_pd
+        self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
+        self.tolerance = 0.01
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        # Minimize Gradient
+        f1 = np.abs(interpolate.bisplev(x[0], x[1], self.tck))
+        g1 = np.abs(self.rect_B_spline.ev(x[0], x[1])) - self.tolerance
+
+        out["F"] = [f1]
+        out["G"] = [g1]
+
+
 class MyProblem(ElementwiseProblem):
 
 
@@ -476,6 +502,7 @@ class MyDumProblem(ElementwiseProblem):
         out["G"] = [g2]
 
 
+
 class MyProblemNorm(ElementwiseProblem):
 
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRT_RCut_and_Alpha_max, tolerance_power = 4):
@@ -694,6 +721,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # Since I only use gradient, it's a single objective, no need to scale.
     #problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
+    derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
+    tck_wrt_alpha_and_rcut = [derivs_wrt_alpha_and_rcut.tck[0], derivs_wrt_alpha_and_rcut.tck[1],derivs_wrt_alpha_and_rcut.tck[2],derivs_wrt_alpha_and_rcut.degrees[0],derivs_wrt_alpha_and_rcut.degrees[1]]
+
 
     tolPower = 0
     for tolPow in range(8, -1, -1):
@@ -716,6 +746,24 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         )
         termination = get_termination("n_gen", 400)
 
+        DEProblemDerivWRT_RCut_and_Alpha = DEProblemDerivDum(rect_B_spline, tck_wrt_alpha_and_rcut, x.min(), x.max(), y.min(), y.max())
+        
+        algorithm = DE(
+            pop_size=100,
+            sampling=LHS(),
+            variant="DE/rand/1/bin",
+            CR=0.3,
+            dither="vector",
+            jitter=False
+        )
+
+        res = minimize(DEProblemDerivWRT_RCut_and_Alpha,
+                    algorithm,
+                    seed=1,
+                    verbose=True)
+
+        print("Best solution found: \nX = %s\nF = %s" % (res.X, res.F))
+        
 
         from pymoo.optimize import minimize
         prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
