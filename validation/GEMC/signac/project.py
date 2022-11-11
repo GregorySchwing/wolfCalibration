@@ -3322,7 +3322,7 @@ def run_wolf_sanity_run_gomc_command(job):
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         "GOMC_GPU_GEMC" if (job.sp.electrostatic_method == "Ewald") else "GOMC_CPU_GEMC",
-        str(job.doc.gomc_ncpu) if (job.sp.electrostatic_method == "Ewald") else str(8),
+        str(8),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
     )
