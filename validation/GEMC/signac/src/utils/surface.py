@@ -1328,8 +1328,10 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             nx, ny = 100, 100
             guess = np.zeros((nx, ny), float)
             fR = lambda x: rect_B_spline.ev(x[0], x[1])
+            print("about to call root")
             sol = optimize.root(fR, guess, method='krylov')
             print(sol.x)
+
             import matplotlib.pyplot as plt
             plt.pcolormesh(xx_forplotting, yy_forplotting, sol.x, shading='gouraud')
             plt.colorbar()
