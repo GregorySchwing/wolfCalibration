@@ -40,8 +40,11 @@ print("os.getcwd() = " +str(os.getcwd()))
 pr_root = os.path.join(os.getcwd(), "src")
 pr = signac.get_project(pr_root)
 
-wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
-wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
+#wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
+#wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
+
+wolfPotential = ["DSF"] # ["Ne", "Rn"]
+wolfModel = ["VLUGT"] # ["Ne", "Rn"]
 
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
 # filter the list of dictionaries
