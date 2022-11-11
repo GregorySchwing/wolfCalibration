@@ -1324,6 +1324,16 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             zs = np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel()))
             Z = zs.reshape(X_forplotting.shape)
 
+            from scipy import optimize
+            nx, ny = 100, 100
+            guess = np.zeros((nx, ny), float)
+            fR = lambda x: rect_B_spline.ev(x[0], x[1])
+            sol = optimize.root(fR, guess, method='krylov')
+            print(sol.x)
+            import matplotlib.pyplot as plt
+            plt.pcolormesh(xx_forplotting, yy_forplotting, sol.x, shading='gouraud')
+            plt.colorbar()
+            plt.savefig(plotPath)
             iteractivefig.add_surface(autocolorscale=True, x=X_forplotting, y=Y_forplotting, z=Z)
 
 
