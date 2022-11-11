@@ -99,7 +99,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 500000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 100 * 10**6 # set value for paper = 60 * 10**6
+Wolf_Sanity_MC_steps = 50 * 10**6 # set value for paper = 60 * 10**6
 
 
 # Free energy calcs: set free energy data in doc
