@@ -464,7 +464,7 @@ class MyDumProblem(ElementwiseProblem):
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, tolerance_power):
         super().__init__(n_var=2,
                          n_obj=1,
-                         n_ieq_constr=1,
+                         n_ieq_constr=2,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
@@ -497,9 +497,10 @@ class MyDumProblem(ElementwiseProblem):
     def _evaluate(self, x, out, *args, **kwargs):
         f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut)))
         g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
+        g3 = x[0] - (self.RCutMax-2)
         out["F"] = [f4]
         #out["F"] = [f1, f2]
-        out["G"] = [g2]
+        out["G"] = [g2, g3]
 
 
 class MyDumProblemUnconstrained(ElementwiseProblem):
@@ -507,7 +508,7 @@ class MyDumProblemUnconstrained(ElementwiseProblem):
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, tolerance_power):
         super().__init__(n_var=2,
                          n_obj=1,
-                         n_ieq_constr=0,
+                         n_ieq_constr=1,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
@@ -539,8 +540,11 @@ class MyDumProblemUnconstrained(ElementwiseProblem):
 
     def _evaluate(self, x, out, *args, **kwargs):
         f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut)))
-        #g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
+        g3 = x[0] - (self.RCutMax-2)
         out["F"] = [f4]
+        out["G"] = [g3]
+
+        
         #out["F"] = [f1, f2]
         #out["G"] = [g2]
 
