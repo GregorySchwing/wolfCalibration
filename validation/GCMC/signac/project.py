@@ -1113,6 +1113,9 @@ def part_4b_job_gomc_sseq_completed_properly(job):
 def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
+
+    wolf_sanity_control_file_name = "wolf_sanity"
+    """
     wolf_sanity_control_file_name = "wolf_sanity"
     wolf_sp = job.statepoint()
     wolf_sp['replica_number_int']=0
@@ -1126,6 +1129,14 @@ def part_4b_job_gomc_wolf_sanity_completed_properly(job):
             return False
         else:
             return True
+    """
+    if gomc_sim_completed_properly(
+        job,
+        wolf_sanity_control_file_name,
+    ) is False:
+        return False
+    else:
+        return True
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
