@@ -107,7 +107,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 500000
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 10 * 10**3 # set value for paper = 60 * 10**6
+Wolf_Sanity_MC_steps = 10 * 10**5 # set value for paper = 60 * 10**6
 
 
 number_of_lambda_spacing_including_zero_int = 1
