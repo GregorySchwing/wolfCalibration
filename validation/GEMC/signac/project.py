@@ -3821,7 +3821,8 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-
+#when you add replicates, uncomment this out
+"""
 @aggregator.groupby(key=statepoint_without_replica, sort_by="production_temperature_K", sort_ascending=False)
 @Project.operation.with_directives(
      {
@@ -3831,7 +3832,6 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-
 @Project.pre(lambda *jobs: all(part_5a_analysis_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
 @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
@@ -4045,7 +4045,7 @@ def part_5b_analysis_replica_averages(*jobs):
     # ************************************
     # write the analysis data files for the liquid and vapor boxes (end)
     # ************************************
-
+"""
 
 # ******************************************************
 # ******************************************************
