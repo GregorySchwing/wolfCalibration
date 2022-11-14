@@ -579,6 +579,23 @@ def gomc_control_file_written(job, control_filename_str):
 
     return file_written_bool
 
+
+@Project.label
+@flow.with_job
+def part_2a_wolf_sanity_control_file_written(job):
+    """General check that the namd_equilb_NVT_control_file
+    (high temperature to set temp NAMD control file) is written."""
+    if (job.sp.wolf_model == "Calibrator" or job.sp.electrostatic_method == "Ewald"):
+        return True
+    output_name_control_file_name = "wolf_sanity"
+    try:
+        return gomc_control_file_written(
+            job,
+            output_name_control_file_name,
+        )
+    except:
+        return False
+
 # function for checking if the NAMD control file is written
 def namd_control_file_written(job, control_filename_str):
     """General check that the NAMD control files are written."""
