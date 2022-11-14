@@ -990,11 +990,11 @@ def part_4a_job_namd_equilb_NVT_box_1_completed_properly(job):
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.solute in ["solvent_box"]):
+        if (job.sp.shell_radius in ["solvent_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
-            ewald_sp['wolf_model']="Ewald"
-            ewald_sp['wolf_potential']="Ewald"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
                 return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_1_name_str)
