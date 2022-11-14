@@ -1827,6 +1827,8 @@ def part_4c_job_production_run_completed_properly(job):
 @flow.with_job
 def part_5a_analysis_individual_simulation_averages_completed(job):
     """Check that the individual simulation averages files are written ."""
+    if (job.sp.wolf_model == "Calibrator"):
+        return True
     file_written_bool = False
     if (
         job.isfile(
