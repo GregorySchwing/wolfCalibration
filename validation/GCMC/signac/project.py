@@ -2825,6 +2825,7 @@ def run_namd_equilb_NVT_box_1_gomc_command(job):
 @Project.pre(part_4a_job_namd_equilb_NVT_box_0_completed_properly)
 @Project.pre(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
 @Project.pre(mosdef_input_written)
+@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.post(part_2a_namd_equilb_NVT_box_0_control_file_written)
 @Project.post(part_2a_namd_equilb_NVT_box_1_control_file_written)
 @Project.post(part_3b_output_gomc_sseq_started)
