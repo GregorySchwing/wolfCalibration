@@ -1271,6 +1271,11 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 return False
 
     import re
+    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
+        box_list = ["0", "1"]
+    else:
+        box_list = ["0"]
+
     regex = re.compile("wolf_sanity.conf")
     if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
         box_list = ["0", "1"]

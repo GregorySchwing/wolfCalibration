@@ -1674,37 +1674,12 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         box_list = ["0", "1"]
     else:
         box_list = ["0"]
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                with open(file, "a") as myfile:
-                    if (testEachWolf):
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                        myfile.write(defKindLine)
-                        for box in box_list:
-                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_alpha"])
-                            myfile.write(defAlphaLine)
-                            defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_rcut"])
-                            myfile.write(defRCutLine)
-                    else:
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
-                        myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
-                        myfile.write(defRCutLine)
-
 
     regex = re.compile("wolf_sanity.conf")
-    box = "0"
+    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
+        box_list = ["0", "1"]
+    else:
+        box_list = ["0"]
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
