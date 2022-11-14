@@ -134,21 +134,26 @@ gomc_equilb_design_ensemble_control_file_name_str = "gomc_equilb_design_ensemble
 # Note: do not add extensions
 gomc_production_control_file_name_str = "gomc_production_run"
 
-
-preliminary_output_replicate_txt_file_name_box_0 = "preliminary_analysis_avg_data_box_0.txt"
-preliminary_uncorrelated_output_replicate_txt_file_name_box_0 = "preliminary_analysis_uncorrelated_data_avg_data_box_0.txt"
-output_uncorrelated_replicate_txt_file_name_box_0 = "analysis_uncorrelated_avg_data_box_0.txt"
-## Analysis (each replicates averages):
+# Analysis (each replicates averages):
 # Output text (txt) file names for each replicates averages
 # directly put in each replicate folder (.txt, .dat, etc)
-output_replicate_txt_file_name_box_0 = "analysis_avg_data_box_0.txt"
+output_replicate_txt_file_name_liq = "analysis_avg_data_box_liq.txt"
+output_replicate_txt_file_name_vap = "analysis_avg_data_box_vap.txt"
 
-# Analysis (averages and std. devs. of  # all the replcates):
-# Output text (txt) file names for the averages and std. devs. of all the replcates,
+# Analysis (averages and std. devs. of  # all the replcates): 
+# Output text (txt) file names for the averages and std. devs. of all the replcates, 
 # including the extention (.txt, .dat, etc)
-output_avg_std_of_replicates_txt_file_name_box_0 = "analysis_avg_std_of_replicates_box_0.txt"
+output_avg_std_of_replicates_txt_file_name_liq = "analysis_avg_std_of_replicates_box_liq.txt"
+output_avg_std_of_replicates_txt_file_name_vap = "analysis_avg_std_of_replicates_box_vap.txt"
 
-preliminary_output_avg_std_of_replicates_txt_file_name_box_0 = "preliminary_analysis_avg_std_of_replicates_box_0.txt"
+# Analysis (Critical and boiling point values):
+# Output text (txt) file name for the Critical and Boiling point values of the system using the averages
+# and std. devs. all the replcates, including the extention (.txt, .dat, etc)
+output_critical_data_replicate_txt_file_name = "analysis_critical_points_all_replicates.txt"
+output_critical_data_avg_std_of_replicates_txt_file_name = "analysis_critical_points_avg_std_of_replicates.txt"
+
+output_boiling_data_replicate_txt_file_name = "analysis__boiling_point_all_replicates.txt"
+output_boiling_data_avg_std_of_replicates_txt_file_name = "analysis_boiling_point_avg_std_of_replicates.txt"
 
 
 walltime_mosdef_hr = 24
@@ -1814,11 +1819,121 @@ def part_4c_job_production_run_completed_properly(job):
     except:
         return False
 
+
+# check if analysis is done for the individual replicates wrote the gomc files
+@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.label
+@flow.with_job
+def part_5a_analysis_individual_simulation_averages_completed(job):
+    """Check that the individual simulation averages files are written ."""
+    file_written_bool = False
+    if (
+        job.isfile(
+            f"{output_replicate_txt_file_name_liq}"
+        )
+        and job.isfile(
+            f"{output_replicate_txt_file_name_vap}"
+        )
+    ):
+        file_written_bool = True
+
+    return file_written_bool
+
+
+# check if analysis for averages of all the replicates is completed
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.label
+def part_5b_analysis_replica_averages_completed(*jobs):
+    """Check that the individual simulation averages files are written ."""
+    file_written_bool_list = []
+    all_file_written_bool_pass = False
+    for job in jobs:
+        file_written_bool = False
+
+        if (
+            job.isfile(
+                f"../../analysis/{output_avg_std_of_replicates_txt_file_name_liq}"
+            )
+            and job.isfile(
+                f"../../analysis/{output_avg_std_of_replicates_txt_file_name_vap}"
+            )
+        ):
+            file_written_bool = True
+
+        file_written_bool_list.append(file_written_bool)
+
+    if False not in file_written_bool_list:
+        all_file_written_bool_pass = True
+
+    return all_file_written_bool_pass
+
+# check if analysis for critical points is completed
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.pre(part_5b_analysis_replica_averages_completed)
+@Project.label
+def part_5c_analysis_critical_and_boiling_points_replicate_data_completed(*jobs):
+    """Check that the critical and boiling point replicate file is written ."""
+    file_written_bool_list = []
+    all_file_written_bool_pass = False
+    for job in jobs:
+        file_written_bool = False
+
+        if (
+            job.isfile(
+                f"../../analysis/{output_critical_data_replicate_txt_file_name}"
+            ) \
+                and
+            job.isfile(
+                f"../../analysis/{output_boiling_data_replicate_txt_file_name}"
+            )
+        ):
+            file_written_bool = True
+
+        file_written_bool_list.append(file_written_bool)
+
+    if False not in file_written_bool_list:
+        all_file_written_bool_pass = True
+
+    return file_written_bool
+
+# check if analysis for critical points is completed
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.pre(part_5b_analysis_replica_averages_completed)
+@Project.label
+def part_5d_analysis_critical_and_boiling_points_avg_std_data_completed(*jobs):
+    """Check that the avg and std dev critical and boiling point data file is written ."""
+    file_written_bool_list = []
+    all_file_written_bool_pass = False
+    for job in jobs:
+        file_written_bool = False
+
+        if (
+            job.isfile(
+                f"../../analysis/{output_critical_data_avg_std_of_replicates_txt_file_name}"
+            ) \
+                and
+                job.isfile(
+                    f"../../analysis/{output_boiling_data_avg_std_of_replicates_txt_file_name}"
+                )
+        ):
+            file_written_bool = True
+
+        file_written_bool_list.append(file_written_bool)
+
+    if False not in file_written_bool_list:
+        all_file_written_bool_pass = True
+
+    return file_written_bool
+
+
 # ******************************************************
 # ******************************************************
-# check if GOMC and NAMD simulation are completed properly (end)
+# check if GOMC simulation are completed properly (end)
 # ******************************************************
 # ******************************************************
+
 
 # ******************************************************
 # ******************************************************
@@ -3660,160 +3775,12 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 # ******************************************************
 # ******************************************************
 
-@Project.operation.with_directives(
-     {
-         "np": 1,
-         "ngpu": 0,
-         "memory": memory_needed,
-         "walltime": walltime_gomc_analysis_hr,
-     }
-)
-@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-@Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-@flow.with_job
-def part_5a_preliminary_analysis_individual_simulation_averages(job):
-    # remove the total averaged replicate data and all analysis data after this,
-    # as it is no longer valid when adding more simulations
-    if os.path.isfile(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'):
-        os.remove(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}')
-
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
-
-
-    files = []
-    blk_files = []
-    k_b = 1.9872036E-3  # kcal/mol/K
-    temperature = job.sp.production_temperature_K
-    k_b_T = temperature * k_b
-    dict_of_states = {}
-    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
-        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
-                                        f'initial_state_{initial_state_iter}.dat'
-        files.append(reading_filename_box_0_iter)
-        blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
-                    f'initial_state_{initial_state_iter}_BOX_0.dat'
-        energies = []
-        with open(blk_file, 'r', encoding='utf8') as f:
-            for line in f:
-                #print('\n'.join(line.split()[1] for line in f))
-                try:
-                    energies.append(float(line.split()[1]))
-                except:
-                    print("An exception occurred") 
-        energies_np = np.array(energies)
-        print(energies_np.mean())
-        dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
-    df = pd.DataFrame.from_dict(dict_of_states)
-    df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
-
-    # Read the data for TI estimator and BAR or MBAR estimators.
-    list_data_TI = []
-    list_data_BAR = []
-    for f in files:
-        dHdl = extract_dHdl(f, T=temperature)
-        u_nkr = extract_u_nk(f, T=temperature)
-        #Detect uncorrelated samples using VDW+Coulomb term in derivative 
-        # of energy time series (calculated for TI)
-        srs = dHdl['VDW'] + dHdl['Coulomb'] 
-        list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
-        list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
-
-    # Correlated samples
-    #for TI estimator
-    print("Working on TI method ...")
-    dHdl = pd.concat([ld for ld in list_data_TI])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    #for MBAR estimator
-    print("Working on MBAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    #for BAR estimator
-    print("Working on BAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(preliminary_uncorrelated_output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
-
-    #All samples
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
 # ******************************************************
 # ******************************************************
-# data analysis - get the average data from each individual simulation (start)
+# data analysis - get the average data from each replicate (start)
 # ******************************************************
 # ******************************************************
+
 
 @Project.operation.with_directives(
      {
@@ -3823,391 +3790,394 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-@Project.pre(part_4c_job_production_run_completed_properly)
+@FlowProject.pre(
+     lambda * jobs: all(
+         part_4b_job_production_run_completed_properly(job, gomc_production_control_file_name_str)
+         for job in jobs
+     )
+)
+@Project.pre(part_4b_job_production_run_completed_properly)
 @Project.post(part_5a_analysis_individual_simulation_averages_completed)
 @flow.with_job
-def part_5a_analysis_individual_simulation_averages(job):
-    # remove the total averaged replicate data and all analysis data after this,
+def part_5a_analysis_individual_simulation_averages(*jobs):
+    # remove the total averged replicate data and all analysis data after this,
     # as it is no longer valid when adding more simulations
-    if os.path.isfile(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'):
-        os.remove(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}')
+    if os.path.isfile(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_liq}'):
+        os.remove(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_liq}')
+    if os.path.isfile(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_vap}'):
+        os.remove(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_vap}')
+    if os.path.isfile(f'../../analysis/{output_critical_data_replicate_txt_file_name}'):
+        os.remove(f'../../analysis/{output_critical_data_replicate_txt_file_name}')
+    if os.path.isfile(f'../../analysis/{output_critical_data_avg_std_of_replicates_txt_file_name}'):
+        os.remove(f'../../analysis/{output_critical_data_avg_std_of_replicates_txt_file_name}')
+    if os.path.isfile(f'../../analysis/{output_boiling_data_replicate_txt_file_name}'):
+        os.remove(f'../../analysis/{output_boiling_data_replicate_txt_file_name}')
+    if os.path.isfile(f'../../analysis/{output_boiling_data_avg_std_of_replicates_txt_file_name}'):
+        os.remove(f'../../analysis/{output_boiling_data_avg_std_of_replicates_txt_file_name}')
 
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
 
+    # this is set to basically use all values.  However, allows the ability to set if needed
+    step_start = 0 * 10 ** 6
+    step_finish = 1 * 10 ** 12
 
     # get the averages from each individual simulation and write the csv's.
-
-    files = []
-    k_b = 1.9872036E-3  # kcal/mol/K
-    temperature = job.sp.production_temperature_K
-    k_b_T = temperature * k_b
-
-    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
-        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_production_control_file_name_str}_' \
-                                        f'initial_state_{initial_state_iter}.dat'
-        files.append(reading_filename_box_0_iter)
-
-
-
-    # Read the data for TI estimator and BAR or MBAR estimators.
-    list_data_TI = []
-    list_data_BAR = []
-    for f in files:
-        dHdl = extract_dHdl(f, T=temperature)
-        u_nkr = extract_u_nk(f, T=temperature)
-        #Detect uncorrelated samples using VDW+Coulomb term in derivative 
-        # of energy time series (calculated for TI)
-        srs = dHdl['VDW'] + dHdl['Coulomb'] 
-        list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
-        list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
-
-    # Correlated samples
-    #for TI estimator
-    print("Working on TI method ...")
-    dHdl = pd.concat([ld for ld in list_data_TI])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    #for MBAR estimator
-    print("Working on MBAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    #for BAR estimator
-    print("Working on BAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(output_uncorrelated_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
-
-    #All samples
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
-###
-
-    """
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
-    """
-
-# ******************************************************
-# ******************************************************
-# data analysis - get the average data from each individual simulation (end)
-# ******************************************************
-# ******************************************************
-
-
-# ******************************************************
-# ******************************************************
-# data analysis - get the average and std. dev. from/across all the replicates (start)
-# ******************************************************
-# ******************************************************
-
-#@aggregator.groupby(key=statepoint_without_replica,
-#                    sort_by="production_temperature_K",
-#                    sort_ascending=True
-#)
-#@Project.operation.with_directives(
-#     {
-#         "np": 1,
-#         "ngpu": 0,
-#         "memory": memory_needed,
-#         "walltime": walltime_gomc_analysis_hr,
-#     }
-#)
-
-@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-@Project.post(part_5b_analysis_replica_averages_completed)
-def part_5b_preliminary_analysis_replica_averages(*jobs):
-    # ***************************************************
-    #  create the required lists and file labels for the replicates (start)
-    # ***************************************************
-    # output and labels
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
-
-    # get the list used in this function
-    temp_repilcate_list = []
-    solute_repilcate_list = []
-
-    delta_MBAR_repilcate_box_0_list = []
-    delta_TI_repilcate_box_0_list = []
-    delta_BAR_repilcate_box_0_list = []
-
-
-    output_txt_file_header = f"{output_column_temp_title: <30} " \
-                             f"{output_column_temp_std_title: <30} " \
-                             f"{output_column_solute_title: <30} "\
-                             f"{output_column_dFE_MBAR_title: <30} "\
-                             f"{output_column_dFE_MBAR_std_title: <30} "\
-                             f"{output_column_dFE_TI_title: <3    0} "\
-                             f"{output_column_dFE_TI_std_title: <30} "\
-                             f"{output_column_dFE_BAR_title: <30} "\
-                             f"{output_column_dFE_BAR_std_title: <30} "\
-                             f"\n"
-
-
-    write_file_path_and_name_box_0 = f'analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'
-    if os.path.isfile(write_file_path_and_name_box_0):
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
-    else:
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "w")
-        box_box_0_data_txt_file.write(output_txt_file_header)
-
-
-    # ***************************************************
-    #  create the required lists and file labels for the replicates (end)
-    # ***************************************************
-
     for job in jobs:
 
+        reading_file_box_0 = job.fn(f'Blk_{gomc_production_control_file_name_str}_BOX_0.dat')
+        reading_file_box_1 = job.fn(f'Blk_{gomc_production_control_file_name_str}_BOX_1.dat')
+
+        output_column_temp_title = 'temp_K'  # column title title for temp
+        output_column_no_step_title = 'Step'  # column title title for iter value
+        output_column_no_pressure_title = 'P_bar'  # column title title for PRESSURE
+        output_column_total_molecules_title = "No_mol"  # column title title for TOT_MOL
+        output_column_Rho_title = 'Rho_kg_per_m_cubed'  # column title title for TOT_DENS
+        output_column_box_volume_title = 'V_ang_cubed'  # column title title for VOLUME
+        output_column_box_length_if_cubed_title = 'L_m_if_cubed'  # column title title for VOLUME
+        output_column_box_Hv_title = 'Hv_kJ_per_mol'  # column title title for HEAT_VAP
+
+        blk_file_reading_column_no_step_title = '#STEP'  # column title title for iter value
+        blk_file_reading_column_no_pressure_title = 'PRESSURE'  # column title title for PRESSURE
+        blk_file_reading_column_total_molecules_title = "TOT_MOL"  # column title title for TOT_MOL
+        blk_file_reading_column_Rho_title = 'TOT_DENS'  # column title title for TOT_DENS
+        blk_file_reading_column_box_volume_title = 'VOLUME'  # column title title for VOLUME
+        blk_file_reading_column_box_Hv_title = 'HEAT_VAP'  # column title title for HEAT_VAP
+
+        # Programmed data
+        step_start_string = str(int(step_start))
+        step_finish_string = str(int(step_finish))
+
         # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (start)
+        # drawing in data from single file and extracting specific rows for the liquid box (start)
         # *************************
-        reading_file_box_box_0 = job.fn(preliminary_output_replicate_txt_file_name_box_0)
+        data_box_0 = pd.read_csv(reading_file_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
 
-        data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
-        data_box_box_0 = pd.DataFrame(data_box_box_0)
+        data_box_0 = pd.DataFrame(data_box_0)
+        step_no_title_mod = blk_file_reading_column_no_step_title[1:]
+        header_list = list(data_box_0.columns)
+        header_list[0] = step_no_title_mod
+        data_box_0.columns = header_list
 
-        temp_repilcate_list.append(data_box_box_0.loc[:, output_column_temp_title][0])
-        solute_repilcate_list.append(data_box_box_0.loc[:, output_column_solute_title][0])
+        data_box_0 = data_box_0.query(step_start_string + ' <= ' + step_no_title_mod + ' <= ' + step_finish_string)
 
-        delta_MBAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_MBAR_title][0])
-        delta_TI_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_TI_title][0])
-        delta_BAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_BAR_title][0])
+        iter_no_box_0 = data_box_0.loc[:, step_no_title_mod]
+        iter_no_box_0 = list(iter_no_box_0)
+        iter_no_box_0 = np.transpose(iter_no_box_0)
+
+        pressure_box_0 = data_box_0.loc[:, blk_file_reading_column_no_pressure_title]
+        pressure_box_0 = list(pressure_box_0)
+        pressure_box_0 = np.transpose(pressure_box_0)
+        pressure_box_0_mean = np.nanmean(pressure_box_0)
+
+        total_molecules_box_0 = data_box_0.loc[:, blk_file_reading_column_total_molecules_title]
+        total_molecules_box_0 = list(total_molecules_box_0)
+        total_molecules_box_0 = np.transpose(total_molecules_box_0)
+        total_molecules_box_0_mean = np.nanmean(total_molecules_box_0)
+
+        Rho_box_0 = data_box_0.loc[:, blk_file_reading_column_Rho_title]
+        Rho_box_0 = list(Rho_box_0)
+        Rho_box_0 = np.transpose(Rho_box_0)
+        Rho_box_0_mean = np.nanmean(Rho_box_0)
+
+        volume_box_0 = data_box_0.loc[:, blk_file_reading_column_box_volume_title]
+        volume_box_0 = list(volume_box_0)
+        volume_box_0 = np.transpose(volume_box_0)
+        volume_box_0_mean = np.nanmean(volume_box_0)
+        length_if_cube_box_0_mean = (volume_box_0_mean) ** (1 / 3)
+
+        Hv_box_0 = data_box_0.loc[:, blk_file_reading_column_box_Hv_title]
+        Hv_box_0 = list(Hv_box_0)
+        Hv_box_0 = np.transpose(Hv_box_0)
+        Hv_box_0_mean = np.nanmean(Hv_box_0)
 
         # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (end)
+        # drawing in data from single file and extracting specific rows for the liquid box (end)
         # *************************
 
+        # *************************
+        # drawing in data from single file and extracting specific rows for the vapor box (start)
+        # *************************
+        data_box_1 = pd.read_csv(reading_file_box_1, sep='\s+', header=0, na_values='NaN', index_col=False)
+        data_box_1 = pd.DataFrame(data_box_1)
 
-    # *************************
-    # get the replica means and std.devs (start)
-    # *************************
-    temp_mean = np.mean(temp_repilcate_list)
-    temp_std = np.std(temp_repilcate_list, ddof=1)
+        step_no_title_mod = blk_file_reading_column_no_step_title[1:]
+        header_list = list(data_box_1.columns)
+        header_list[0] = step_no_title_mod
+        data_box_1.columns = header_list
 
-    solute_iter = solute_repilcate_list[0]
+        data_box_1 = data_box_1.query(step_start_string + ' <= ' + step_no_title_mod + ' <= ' + step_finish_string)
 
-    delta_MBAR_mean_box_box_0 = np.mean(delta_MBAR_repilcate_box_0_list)
-    delta_TI_mean_box_box_0 = np.mean(delta_TI_repilcate_box_0_list)
-    delta_BAR_mean_box_box_0 = np.mean(delta_BAR_repilcate_box_0_list)
+        iter_no_box_1 = data_box_1.loc[:, step_no_title_mod]
+        iter_no_box_1 = list(iter_no_box_1)
+        iter_no_box_1 = np.nanmean(iter_no_box_1)
 
-    delta_std_MBAR_mean_box_box_0 = np.std(delta_MBAR_repilcate_box_0_list, ddof=1)
-    delta_std_TI_mean_box_box_0 = np.std(delta_TI_repilcate_box_0_list, ddof=1)
-    delta_std_BAR_mean_box_box_0 = np.std(delta_BAR_repilcate_box_0_list, ddof=1)
+        pressure_box_1 = data_box_1.loc[:, blk_file_reading_column_no_pressure_title]
+        pressure_box_1 = list(pressure_box_1)
+        pressure_box_1 = np.transpose(pressure_box_1)
+        pressure_box_1_mean = np.nanmean(pressure_box_1)
 
-    # *************************
-    # get the replica means and std.devs (end)
-    # *************************
+        total_molecules_box_1 = data_box_1.loc[:, blk_file_reading_column_total_molecules_title]
+        total_molecules_box_1 = list(total_molecules_box_1)
+        total_molecules_box_1 = np.transpose(total_molecules_box_1)
+        total_molecules_box_1_mean = np.nanmean(total_molecules_box_1)
 
-    # ************************************
-    # write the analysis data files for the liquid and vapor boxes (start)
-    # ************************************
+        Rho_box_1 = data_box_1.loc[:, blk_file_reading_column_Rho_title]
+        Rho_box_1 = list(Rho_box_1)
+        Rho_box_1 = np.transpose(Rho_box_1)
+        Rho_box_1_mean = np.nanmean(Rho_box_1)
 
-    box_box_0_data_txt_file.write(
-        f"{temp_mean: <30} "
-        f"{temp_std: <30} "
-        f"{solute_iter: <30} "
-        f"{delta_MBAR_mean_box_box_0: <30} "
-        f"{delta_std_MBAR_mean_box_box_0: <30} "
-        f"{delta_TI_mean_box_box_0: <30} "
-        f"{delta_std_TI_mean_box_box_0: <30} "
-        f"{delta_BAR_mean_box_box_0: <30} "
-        f"{delta_std_BAR_mean_box_box_0: <30} "
-        f" \n"
-    )
+        volume_box_1 = data_box_1.loc[:, blk_file_reading_column_box_volume_title]
+        volume_box_1 = list(volume_box_1)
+        volume_box_1 = np.transpose(volume_box_1)
+        volume_box_1_mean = np.nanmean(volume_box_1)
+        length_if_cube_box_1_mean = (volume_box_1_mean) ** (1 / 3)
 
-    # ************************************
-    # write the analysis data files for the liquid and vapor boxes (end)
-    # ************************************
+        Hv_box_1 = data_box_1.loc[:, blk_file_reading_column_box_Hv_title]
+        Hv_box_1 = list(Hv_box_1)
+        Hv_box_1 = np.transpose(Hv_box_1)
+        Hv_box_1_mean = np.nanmean(Hv_box_1)
+
+        # sort boxes based on density to liquid or vapor
+        if (Rho_box_0_mean > Rho_box_1_mean) or (Rho_box_0_mean == Rho_box_1_mean):
+            pressure_box_liq_mean = pressure_box_0_mean
+            total_molecules_box_liq_mean = total_molecules_box_0_mean
+            Rho_box_liq_mean = Rho_box_0_mean
+            volume_box_liq_mean = volume_box_0_mean
+            length_if_cube_box_liq_mean = length_if_cube_box_0_mean
+            Hv_box_liq_mean = Hv_box_0_mean
+
+            pressure_box_vap_mean = pressure_box_1_mean
+            total_molecules_box_vap_mean = total_molecules_box_1_mean
+            Rho_box_vap_mean = Rho_box_1_mean
+            volume_box_vap_mean = volume_box_1_mean
+            length_if_cube_box_vap_mean = length_if_cube_box_1_mean
+            Hv_box_vap_mean = Hv_box_1_mean
+
+        elif Rho_box_0_mean < Rho_box_1_mean:
+            pressure_box_liq_mean = pressure_box_1_mean
+            total_molecules_box_liq_mean = total_molecules_box_1_mean
+            Rho_box_liq_mean = Rho_box_1_mean
+            volume_box_liq_mean = volume_box_1_mean
+            length_if_cube_box_liq_mean = length_if_cube_box_1_mean
+            Hv_box_liq_mean = Hv_box_1_mean
+
+            pressure_box_vap_mean = pressure_box_0_mean
+            total_molecules_box_vap_mean = total_molecules_box_0_mean
+            Rho_box_vap_mean = Rho_box_0_mean
+            volume_box_vap_mean = volume_box_0_mean
+            length_if_cube_box_vap_mean = length_if_cube_box_0_mean
+            Hv_box_vap_mean = Hv_box_0_mean
+
+        # *************************
+        # drawing in data from single file and extracting specific rows for the vapor box (end)
+        # *************************
+
+        box_liq_replicate_data_txt_file = open(output_replicate_txt_file_name_liq, "w")
+        box_liq_replicate_data_txt_file.write(
+            f"{output_column_temp_title: <30} "
+            f"{output_column_no_pressure_title: <30} "
+            f"{output_column_total_molecules_title: <30} "
+            f"{output_column_Rho_title: <30} "
+            f"{output_column_box_volume_title: <30} "
+            f"{output_column_box_length_if_cubed_title: <30} "
+            f"{output_column_box_Hv_title: <30} "
+            f" \n"
+        )
+        box_liq_replicate_data_txt_file.write(
+            f"{job.sp.production_temperature_K: <30} "
+            f"{pressure_box_liq_mean: <30} "
+            f"{total_molecules_box_liq_mean: <30} "
+            f"{Rho_box_liq_mean: <30} "
+            f"{volume_box_liq_mean: <30} "
+            f"{length_if_cube_box_liq_mean: <30} "
+            f"{Hv_box_liq_mean: <30} "
+            f" \n"
+        )
+
+        box_vap_replicate_data_txt_file = open(output_replicate_txt_file_name_vap, "w")
+        box_vap_replicate_data_txt_file.write(
+            f"{output_column_temp_title: <30} "
+            f"{output_column_no_pressure_title: <30} "
+            f"{output_column_total_molecules_title: <30} "
+            f"{output_column_Rho_title: <30} "
+            f"{output_column_box_volume_title: <30} "
+            f"{output_column_box_length_if_cubed_title: <30} "
+            f"{output_column_box_Hv_title: <30} "
+            f" \n"
+        )
+        box_vap_replicate_data_txt_file.write(
+            f"{job.sp.production_temperature_K: <30} "
+            f"{pressure_box_vap_mean: <30} "
+            f"{total_molecules_box_vap_mean: <30} "
+            f"{Rho_box_vap_mean: <30} "
+            f"{volume_box_vap_mean: <30} "
+            f"{length_if_cube_box_vap_mean: <30} "
+            f"{Hv_box_vap_mean: <30} "
+            f" \n"
+        )
+
+        box_liq_replicate_data_txt_file.close()
+        box_vap_replicate_data_txt_file.close()
 
 
-@Project.pre(part_4c_job_production_run_completed_properly)
+        # ***********************
+        # calc the avg data from the liq and vap boxes (end)
+        # ***********************
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the average data from each replicate (end)
+# ******************************************************
+# ******************************************************
+
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the average and std. dev. from/across all the replicate (start)
+# ******************************************************
+# ******************************************************
+
+@aggregator.groupby(key=statepoint_without_replica, sort_by="production_temperature_K", sort_ascending=False)
+@Project.operation.with_directives(
+     {
+         "np": 1,
+         "ngpu": 0,
+         "memory": memory_needed,
+         "walltime": walltime_gomc_analysis_hr,
+     }
+)
+
+@Project.pre(lambda *jobs: all(part_5a_analysis_individual_simulation_averages_completed(j)
+                               for j in jobs[0]._project))
+@Project.pre(part_4b_job_production_run_completed_properly)
 @Project.pre(part_5a_analysis_individual_simulation_averages_completed)
 @Project.post(part_5b_analysis_replica_averages_completed)
 def part_5b_analysis_replica_averages(*jobs):
     # ***************************************************
-    #  create the required lists and file labels for the replicates (start)
+    #  create the required lists and file labels total averages across the replicates (start)
     # ***************************************************
-    # output and labels
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
-
     # get the list used in this function
     temp_repilcate_list = []
-    solute_repilcate_list = []
 
-    delta_MBAR_repilcate_box_0_list = []
-    delta_TI_repilcate_box_0_list = []
-    delta_BAR_repilcate_box_0_list = []
+    pressure_repilcate_box_liq_list = []
+    total_molecules_repilcate_box_liq_list = []
+    Rho_repilcate_box_liq_list = []
+    volume_repilcate_box_liq_list = []
+    length_if_cube_repilcate_box_liq_list = []
+    Hv_repilcate_box_liq_list = []
 
+    pressure_repilcate_box_vap_list = []
+    total_molecules_repilcate_box_vap_list = []
+    Rho_repilcate_box_vap_list = []
+    volume_repilcate_box_vap_list = []
+    length_if_cube_repilcate_box_vap_list = []
+    Hv_repilcate_box_vap_list = []
 
-    output_txt_file_header = f"{output_column_temp_title: <30} " \
-                             f"{output_column_temp_std_title: <30} " \
-                             f"{output_column_solute_title: <30} "\
-                             f"{output_column_dFE_MBAR_title: <30} "\
-                             f"{output_column_dFE_MBAR_std_title: <30} "\
-                             f"{output_column_dFE_TI_title: <3    0} "\
-                             f"{output_column_dFE_TI_std_title: <30} "\
-                             f"{output_column_dFE_BAR_title: <30} "\
-                             f"{output_column_dFE_BAR_std_title: <30} "\
+    output_column_temp_title = 'temp_K'  # column title title for temp
+    output_column_no_pressure_title = 'P_bar'  # column title title for PRESSURE
+    output_column_total_molecules_title = "No_mol"  # column title title for TOT_MOL
+    output_column_Rho_title = 'Rho_kg_per_m_cubed'  # column title title for TOT_DENS
+    output_column_box_volume_title = 'V_ang_cubed'  # column title title for VOLUME
+    output_column_box_length_if_cubed_title = 'L_m_if_cubed'  # column title title for VOLUME
+    output_column_box_Hv_title = 'Hv_kJ_per_mol'  # column title title for HEAT_VAP
+
+    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
+    output_column_no_pressure_std_title = 'P_std_bar'  # column title title for PRESSURE
+    output_column_total_molecules_std_title = "No_mol_std"  # column title title for TOT_MOL
+    output_column_Rho_std_title = 'Rho_std_kg_per_m_cubed'  # column title title for TOT_DENS
+    output_column_box_volume_std_title = 'V_std_ang_cubed'  # column title title for VOLUME
+    output_column_box_length_if_cubed_std_title = 'L_std_m_if_cubed'  # column title title for VOLUME
+    output_column_box_Hv_std_title = 'Hv_std_kJ_per_mol'  # column title title for HEAT_VAP
+
+    output_txt_file_header = f"{output_column_temp_title: <30} "\
+                             f"{output_column_temp_std_title: <30} "\
+                             f"{output_column_no_pressure_title: <30} "\
+                             f"{output_column_no_pressure_std_title: <30} "\
+                             f"{output_column_total_molecules_title: <30} "\
+                             f"{output_column_total_molecules_std_title: <30} "\
+                             f"{output_column_Rho_title: <30} "\
+                             f"{output_column_Rho_std_title: <30} "\
+                             f"{output_column_box_volume_title: <30} "\
+                             f"{output_column_box_volume_std_title: <30} "\
+                             f"{output_column_box_length_if_cubed_title: <30} "\
+                             f"{output_column_box_length_if_cubed_std_title: <30} "\
+                             f"{output_column_box_Hv_title: <30} "\
+                             f"{output_column_box_Hv_std_title: <30} "\
                              f"\n"
 
 
-    write_file_path_and_name_box_0 = f'analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'
-    if os.path.isfile(write_file_path_and_name_box_0):
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
+    write_file_path_and_name_liq = f'analysis/{output_avg_std_of_replicates_txt_file_name_liq}'
+    write_file_path_and_name_vap = f'analysis/{output_avg_std_of_replicates_txt_file_name_vap}'
+    if os.path.isfile(write_file_path_and_name_liq):
+        box_liq_data_txt_file = open(write_file_path_and_name_liq, "a")
     else:
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "w")
-        box_box_0_data_txt_file.write(output_txt_file_header)
+        box_liq_data_txt_file = open(write_file_path_and_name_liq, "w")
+        box_liq_data_txt_file.write(output_txt_file_header)
 
+    if os.path.isfile(write_file_path_and_name_vap):
+        box_vap_data_txt_file = open(write_file_path_and_name_vap, "a")
+    else:
+        box_vap_data_txt_file = open(write_file_path_and_name_vap, "w")
+        box_vap_data_txt_file.write(output_txt_file_header)
 
     # ***************************************************
-    #  create the required lists and file labels for the replicates (end)
+    # create the required lists and file labels total averages across the replicates (end)
     # ***************************************************
 
     for job in jobs:
 
         # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (start)
+        # drawing in data from single simulation file and extracting specific
         # *************************
-        reading_file_box_box_0 = job.fn(output_replicate_txt_file_name_box_0)
+        reading_file_box_liq = job.fn(output_replicate_txt_file_name_liq)
+        reading_file_box_vap = job.fn(output_replicate_txt_file_name_vap)
 
-        data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
-        data_box_box_0 = pd.DataFrame(data_box_box_0)
+        data_box_liq = pd.read_csv(reading_file_box_liq, sep='\s+', header=0, na_values='NaN', index_col=False)
+        data_box_liq = pd.DataFrame(data_box_liq)
 
-        temp_repilcate_list.append(data_box_box_0.loc[:, output_column_temp_title][0])
-        solute_repilcate_list.append(data_box_box_0.loc[:, output_column_solute_title][0])
-
-        delta_MBAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_MBAR_title][0])
-        delta_TI_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_TI_title][0])
-        delta_BAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_BAR_title][0])
+        pressure_repilcate_box_liq = data_box_liq.loc[:, output_column_no_pressure_title][0]
+        total_molecules_repilcate_box_liq = data_box_liq.loc[:, output_column_total_molecules_title][0]
+        Rho_repilcate_box_liq = data_box_liq.loc[:, output_column_Rho_title][0]
+        volume_repilcate_box_liq = data_box_liq.loc[:, output_column_box_volume_title][0]
+        length_if_cube_repilcate_box_liq = (volume_repilcate_box_liq) ** (1 / 3)
+        Hv_repilcate_box_liq = data_box_liq.loc[:, output_column_box_Hv_title][0]
 
         # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (end)
+        # drawing in data from single file and extracting specific rows for the liquid box (end)
         # *************************
 
+        # *************************
+        # drawing in data from single file and extracting specific rows for the vapor box (start)
+        # *************************
+        data_box_vap = pd.read_csv(reading_file_box_vap, sep='\s+', header=0, na_values='NaN', index_col=False)
+        data_box_vap = pd.DataFrame(data_box_vap)
+
+        pressure_repilcate_box_vap = data_box_vap.loc[:, output_column_no_pressure_title][0]
+        total_molecules_repilcate_box_vap = data_box_vap.loc[:, output_column_total_molecules_title][0]
+        Rho_repilcate_box_vap = data_box_vap.loc[:, output_column_Rho_title][0]
+        volume_repilcate_box_vap = data_box_vap.loc[:, output_column_box_volume_title][0]
+        length_if_cube_repilcate_box_vap = (volume_repilcate_box_vap) ** (1 / 3)
+        Hv_repilcate_box_vap = data_box_vap.loc[:, output_column_box_Hv_title][0]
+
+
+        temp_repilcate_list.append(job.sp.production_temperature_K)
+
+        pressure_repilcate_box_liq_list.append(pressure_repilcate_box_liq)
+        total_molecules_repilcate_box_liq_list.append(total_molecules_repilcate_box_liq)
+        Rho_repilcate_box_liq_list.append(Rho_repilcate_box_liq)
+        volume_repilcate_box_liq_list.append(volume_repilcate_box_liq)
+        length_if_cube_repilcate_box_liq_list.append(length_if_cube_repilcate_box_liq)
+        Hv_repilcate_box_liq_list.append(Hv_repilcate_box_liq)
+
+        pressure_repilcate_box_vap_list.append(pressure_repilcate_box_vap)
+        total_molecules_repilcate_box_vap_list.append(total_molecules_repilcate_box_vap)
+        Rho_repilcate_box_vap_list.append(Rho_repilcate_box_vap)
+        volume_repilcate_box_vap_list.append(volume_repilcate_box_vap)
+        length_if_cube_repilcate_box_vap_list.append(length_if_cube_repilcate_box_vap)
+        Hv_repilcate_box_vap_list.append(Hv_repilcate_box_vap)
+
+        # *************************
+        # drawing in data from single file and extracting specific rows for the vapor box (end)
+        # *************************
 
     # *************************
     # get the replica means and std.devs (start)
@@ -4215,15 +4185,33 @@ def part_5b_analysis_replica_averages(*jobs):
     temp_mean = np.mean(temp_repilcate_list)
     temp_std = np.std(temp_repilcate_list, ddof=1)
 
-    solute_iter = solute_repilcate_list[0]
+    pressure_mean_box_liq = np.mean(pressure_repilcate_box_liq_list)
+    total_molecules_mean_box_liq = np.mean(total_molecules_repilcate_box_liq_list)
+    Rho_mean_box_liq = np.mean(Rho_repilcate_box_liq_list)
+    volume_mean_box_liq = np.mean(volume_repilcate_box_liq_list)
+    length_if_cube_mean_box_liq = np.mean(length_if_cube_repilcate_box_liq_list)
+    Hv_mean_box_liq = np.mean(Hv_repilcate_box_liq_list)
 
-    delta_MBAR_mean_box_box_0 = np.mean(delta_MBAR_repilcate_box_0_list)
-    delta_TI_mean_box_box_0 = np.mean(delta_TI_repilcate_box_0_list)
-    delta_BAR_mean_box_box_0 = np.mean(delta_BAR_repilcate_box_0_list)
+    pressure_std_box_liq = np.std(pressure_repilcate_box_liq_list, ddof=1)
+    total_molecules_std_box_liq = np.std(total_molecules_repilcate_box_liq_list, ddof=1)
+    Rho_std_box_liq= np.std(Rho_repilcate_box_liq_list, ddof=1)
+    volume_std_box_liq = np.std(volume_repilcate_box_liq_list, ddof=1)
+    length_if_cube_std_box_liq = np.std(length_if_cube_repilcate_box_liq_list, ddof=1)
+    Hv_std_box_liq = np.std(Hv_repilcate_box_liq_list, ddof=1)
 
-    delta_std_MBAR_mean_box_box_0 = np.std(delta_MBAR_repilcate_box_0_list, ddof=1)
-    delta_std_TI_mean_box_box_0 = np.std(delta_TI_repilcate_box_0_list, ddof=1)
-    delta_std_BAR_mean_box_box_0 = np.std(delta_BAR_repilcate_box_0_list, ddof=1)
+    pressure_mean_box_vap = np.mean(pressure_repilcate_box_vap_list)
+    total_molecules_mean_box_vap = np.mean(total_molecules_repilcate_box_vap_list)
+    Rho_mean_box_vap = np.mean(Rho_repilcate_box_vap_list)
+    volume_mean_box_vap = np.mean(volume_repilcate_box_vap_list)
+    length_if_cube_mean_box_vap = np.mean(length_if_cube_repilcate_box_vap_list)
+    Hv_mean_box_vap = np.mean(Hv_repilcate_box_vap_list)
+
+    pressure_std_box_vap = np.std(pressure_repilcate_box_vap_list, ddof=1)
+    total_molecules_std_box_vap = np.std(total_molecules_repilcate_box_vap_list, ddof=1)
+    Rho_std_box_vap = np.std(Rho_repilcate_box_vap_list, ddof=1)
+    volume_std_box_vap = np.std(volume_repilcate_box_vap_list, ddof=1)
+    length_if_cube_std_box_vap = np.std(length_if_cube_repilcate_box_vap_list, ddof=1)
+    Hv_std_box_vap = np.std(Hv_repilcate_box_vap_list, ddof=1)
 
     # *************************
     # get the replica means and std.devs (end)
@@ -4233,28 +4221,727 @@ def part_5b_analysis_replica_averages(*jobs):
     # write the analysis data files for the liquid and vapor boxes (start)
     # ************************************
 
-    box_box_0_data_txt_file.write(
+    box_liq_data_txt_file.write(
         f"{temp_mean: <30} "
         f"{temp_std: <30} "
-        f"{solute_iter: <30} "
-        f"{delta_MBAR_mean_box_box_0: <30} "
-        f"{delta_std_MBAR_mean_box_box_0: <30} "
-        f"{delta_TI_mean_box_box_0: <30} "
-        f"{delta_std_TI_mean_box_box_0: <30} "
-        f"{delta_BAR_mean_box_box_0: <30} "
-        f"{delta_std_BAR_mean_box_box_0: <30} "
+        f"{pressure_mean_box_liq: <30} "
+        f"{pressure_std_box_liq: <30} "
+        f"{total_molecules_mean_box_liq: <30} "
+        f"{total_molecules_std_box_liq: <30} "
+        f"{Rho_mean_box_liq: <30} "
+        f"{Rho_std_box_liq: <30} "
+        f"{volume_mean_box_liq: <30} "
+        f"{volume_std_box_liq: <30} "
+        f"{length_if_cube_mean_box_liq: <30} "
+        f"{length_if_cube_std_box_liq: <30} "
+        f"{Hv_mean_box_liq: <30} "
+        f"{Hv_std_box_liq: <30} "
         f" \n"
     )
 
+    box_vap_data_txt_file.write(
+        f"{temp_mean: <30} "
+        f"{temp_std: <30} "
+        f"{pressure_mean_box_vap: <30} "
+        f"{pressure_std_box_vap: <30} "
+        f"{total_molecules_mean_box_vap: <30} "
+        f"{total_molecules_std_box_vap: <30} "
+        f"{Rho_mean_box_vap: <30} "
+        f"{Rho_std_box_vap: <30} "
+        f"{volume_mean_box_vap: <30} "
+        f"{volume_std_box_vap: <30} "
+        f"{length_if_cube_mean_box_vap: <30} "
+        f"{length_if_cube_std_box_vap: <30} "
+        f"{Hv_mean_box_vap: <30} "
+        f"{Hv_std_box_vap: <30} "
+        f" \n"
+    )
     # ************************************
     # write the analysis data files for the liquid and vapor boxes (end)
     # ************************************
 
+
 # ******************************************************
 # ******************************************************
-# data analysis - get the average and std. dev. from/across all the replicates (end)
+# data analysis - get the average and std. dev. from/across all the replicate (end)
 # ******************************************************
 # ******************************************************
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the critical and boiling point data for each set of replicates (start)
+# ******************************************************
+# ******************************************************
+
+@aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", sort_ascending=True)
+@Project.operation.with_directives(
+     {
+         "np": 1,
+         "ngpu": 0,
+         "memory": memory_needed,
+         "walltime": walltime_gomc_analysis_hr,
+     }
+)
+@FlowProject.pre(
+     lambda * jobs: all(
+         gomc_sim_completed_properly(job, gomc_production_control_file_name_str)
+         for job in jobs
+     )
+)
+@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.pre(part_5b_analysis_replica_averages_completed)
+@Project.post(part_5c_analysis_critical_and_boiling_points_replicate_data_completed)
+def part_5c_analysis_critical_and_boiling__points_replicate_data(*jobs):
+    # ***************************************************
+    #  user changable variables (start)
+    # ***************************************************
+    lowest_Tr_for_critical_calcs = 0.8
+
+    Beta_for_critical_points = 0.326
+
+    # ***************************************************
+    #  user changable variables (end)
+    # ***************************************************
+
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (start)
+    # ***************************************************
+    input_column_temp_title = 'temp_K'  # column title title for temp
+    input_column_no_pressure_title = 'P_bar'  # column title title for PRESSURE
+    input_column_Rho_title = 'Rho_kg_per_m_cubed'  # column title title for TOT_DENS
+    input_column_box_Hv_kJ_per_mol_title = 'Hv_kJ_per_mol'  # column title title for HEAT_VAP
+
+    output_column_Tc_K_title = 'Tc_K'
+    output_column_Rho_c_kg_per_m_cubed_title = 'Rho_c_kg_per_m_cubed'
+    output_column_Pc_bar_title = 'Pc_bar'
+    output_column_Hv_kJ_per_mol_298_15K_title = 'Hv_kJ_per_mol_298_15K'
+    output_column_lowest_T_K_for_Tc = "lowest_T_K_for_Tc"
+    output_column_highest_T_K_for_Tc = "highest_T_K_for_Tc"
+    output_column_lowest_Tr_K_for_Tc = "lowest_Tr_K_for_Tc"
+    output_column_highest_Tr_K_for_Tc = "lowest_Tr_K_for_Tc"
+    output_column_No_T_K_for_Tc = "No_T_K_for_Tc"
+
+    # write the critical data file
+    output_critical_data_replicate_txt_file_header = f"{output_column_Tc_K_title: <30} " \
+                                                     f"{output_column_Rho_c_kg_per_m_cubed_title: <30} " \
+                                                     f"{output_column_Pc_bar_title: <30} " \
+                                                     f"{output_column_Hv_kJ_per_mol_298_15K_title: <30} " \
+                                                     f"{output_column_lowest_T_K_for_Tc: <30} " \
+                                                     f"{output_column_highest_T_K_for_Tc: <30} " \
+                                                     f"{output_column_lowest_Tr_K_for_Tc: <30} " \
+                                                     f"{output_column_highest_Tr_K_for_Tc: <30} " \
+                                                     f"{output_column_No_T_K_for_Tc: <30} " \
+                                                     f"\n"
+
+
+    write_critial_file_path_and_name = f'analysis/{output_critical_data_replicate_txt_file_name}'
+    if os.path.isfile(write_critial_file_path_and_name):
+        critial_data_replicate_txt_file = open(write_critial_file_path_and_name, "a")
+    else:
+        critial_data_replicate_txt_file = open(write_critial_file_path_and_name, "w")
+        critial_data_replicate_txt_file.write(output_critical_data_replicate_txt_file_header)
+
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (end)
+    # ***************************************************
+
+    # *************************
+    # drawing in data from the avg and std dev data file (start)
+    # *************************
+    temp_avg_box_liq_list = []
+    Rho_avg_box_liq_list = []
+
+    temp_K_avg_box_vap_list = []
+    pressure_bar_avg_box_vap_list = []
+    Rho_avg_box_vap_list = []
+    Hv_kJ_per_mol_avg_box_vap_list = []
+    for job in jobs:
+
+
+        reading_file_avg_std_liq = job.fn(f'{output_replicate_txt_file_name_liq}')
+        data_avg_std_liq = pd.read_csv(reading_file_avg_std_liq, sep='\s+', header=0, na_values='NaN', index_col=False)
+
+        temp_avg_box_liq_list.append(data_avg_std_liq.loc[:, input_column_temp_title][0])
+        Rho_avg_box_liq_list.append( data_avg_std_liq.loc[:, input_column_Rho_title][0])
+
+
+        reading_file_avg_std_vap = job.fn(f'{output_replicate_txt_file_name_vap}')
+        data_avg_std_vap = pd.read_csv(reading_file_avg_std_vap, sep='\s+', header=0, na_values='NaN', index_col=False)
+
+        temp_K_avg_box_vap_list.append(data_avg_std_vap.loc[:, input_column_temp_title][0])
+        pressure_bar_avg_box_vap_list.append(data_avg_std_vap.loc[:, input_column_no_pressure_title][0])
+        Rho_avg_box_vap_list.append(data_avg_std_vap.loc[:, input_column_Rho_title][0])
+        Hv_kJ_per_mol_avg_box_vap_list.append(data_avg_std_vap.loc[:, input_column_box_Hv_kJ_per_mol_title][0])
+
+
+    # *************************
+    # drawing in data from the avg and std dev data file (end)
+    # *************************
+
+    Tc_K_replicate_list = []
+    Rho_c_kg_per_m_cubed_replicate_list = []
+    Pc_bar_replicate_list = []
+    Hv_kJ_per_mol_298_15K_replicate_list = []
+
+    lowest_T_K_for_Tc_replicate_list  = []
+    highest_T_K_for_Tc_replicate_list  = []
+    No_T_K_for_Tc_replicate_list  = []
+    lowest_Tr_K_for_Tc_replicate_list  = []
+    highest_Tr_K_for_Tc_replicate_list = []
+
+    # check and make sure the liq and vap temps are in order for comparison
+    for t_i in range(0, len(temp_avg_box_liq_list)):
+        if temp_avg_box_liq_list[t_i] != temp_K_avg_box_vap_list[t_i]:
+            raise ValueError("ERROR: the temperatures in the vapor and liquid average "
+                             "and std. dev. data do not match in order.")
+
+    # get the full list of temps for the critical point calcs
+    starting_temps_K_for_critical_point_list = temp_avg_box_liq_list
+
+
+    Rho_avg_box_liq_and_1_list = []
+    for Rho_i in range(0, len(Rho_avg_box_liq_list)):
+        Rho_avg_box_liq_and_1_list.append(
+            (Rho_avg_box_liq_list[Rho_i] + Rho_avg_box_vap_list[Rho_i]) / 2
+        )
+
+
+
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (end)
+    # ***************************************************
+
+    # ***********************
+    # calc the Critical points (start)
+    # ***********************
+    # loop thru to find lowers temps to use for critical calcs
+    # set use_last_no_temps_for_critical_calcs to 1 as adding 1 on first for loop
+    use_last_no_temps_for_critical_calcs = 1
+    for temp_i in range(0, len(starting_temps_K_for_critical_point_list)):
+        use_last_no_temps_for_critical_calcs += 1
+
+        if len(starting_temps_K_for_critical_point_list) >= use_last_no_temps_for_critical_calcs:
+
+            # (Rho_box_liq + Rho_box_liq)/2 = (Rho_critical) + A *(T -Tc)
+            # (Rho_box_liq - Rho_box_liq) = B * |T -Tc |^(beta)
+            # eq1 : Yr = ar + br * Xr = (Rho_box_liq + Rho_box_liq)/2 = (Rho_critical - A Tc) + A * T
+            # eq2 : Ys =  as +bs *Xs = (Rho_box_liq - Rho_box_liq) = B^(1/beta) * Tc + (-B^(1/beta)) * T
+            # Yr = (Rho_box_liq + Rho_box_liq)/2
+            # Xr = T
+            # ar = Rho_critical - A * Tc
+            # br = A
+            # Ys = (Rho_box_liq - Rho_box_liq) = B^(1/beta)
+            # Xs = T
+            # as = B^(1/beta)
+            # bs = -B^(1/beta)
+
+            temp_for_critical_list = []
+            Rho_0_minus_Rho_1_for_critical_list = []
+            Rho_0_plus_Rho_1_for_critical_list = []
+            Rho_0_plus_Rho_1_div2_for_critical_list = []
+            Rho_0_minus_Rho_1_power_1_div_Beta_for_critical_list = []
+
+            ln_P_per_bar_for_critical_list = []
+            T_power_neg1_for_critical_list = []
+            Hv_kJ_per_mol_box_vap_for_critical_list = []
+
+            # eq3: ln(P1/bar) = -deltaHv/(R*T1) + F
+            # eq3: Hv_kJ/mol = W + Q * T
+
+            R_kJ_per_mol_K = 0.008134
+            T_298_15K = 298.15
+
+
+            if use_last_no_temps_for_critical_calcs > len(starting_temps_K_for_critical_point_list):
+                print('Error: Larger number of temperatures for the critical '
+                      'point calculations than are available.'
+                      )
+
+            elif use_last_no_temps_for_critical_calcs <= 0:
+                print('Error: The number of temperatures for the critical point '
+                      'calculations negative or zero.'
+                      )
+
+            else:
+                for k in range(len(starting_temps_K_for_critical_point_list) - use_last_no_temps_for_critical_calcs,
+                               len(starting_temps_K_for_critical_point_list)
+                               ):
+                    # concentration 1 files and inputs
+                    temp_value_iter = starting_temps_K_for_critical_point_list[k]
+                    Rho_avg_box_liq_list_iter = Rho_avg_box_liq_list[k]
+                    Rho_avg_box_vap_list_iter = Rho_avg_box_vap_list[k]
+                    Rho_0_minus_Rho_1_iter = Rho_avg_box_liq_list_iter - Rho_avg_box_vap_list_iter
+                    Rho_0_plus_Rho_1_iter = Rho_avg_box_liq_list_iter + Rho_avg_box_vap_list_iter
+                    Rho_0_plus_Rho_1_div2_iter = \
+                        (Rho_avg_box_liq_list_iter + Rho_avg_box_vap_list_iter) / 2
+
+                    temp_for_critical_list.append(temp_value_iter)
+                    Rho_0_minus_Rho_1_for_critical_list.append(Rho_0_minus_Rho_1_iter)
+                    Rho_0_minus_Rho_1_power_1_div_Beta_for_critical_list.append(
+                        Rho_0_minus_Rho_1_iter ** (1 / Beta_for_critical_points))
+                    Rho_0_plus_Rho_1_for_critical_list.append(Rho_0_plus_Rho_1_iter)
+                    Rho_0_plus_Rho_1_div2_for_critical_list.append(Rho_0_plus_Rho_1_div2_iter)
+
+                    Hv_kJ_per_mol_box_vap_critical_iter = Hv_kJ_per_mol_avg_box_vap_list[k]
+                    Hv_kJ_per_mol_box_vap_for_critical_list.append(Hv_kJ_per_mol_box_vap_critical_iter)
+
+                    pressure_box_vap_iter = pressure_bar_avg_box_vap_list[k]
+                    ln_P_per_bar_for_critical_list.append(np.log(pressure_box_vap_iter))
+                    T_power_neg1_for_critical_list.append(1 / (starting_temps_K_for_critical_point_list[k]))
+
+                    Rho_avg_box_liq_and_1_iter = \
+                        (Rho_avg_box_liq_list_iter + Rho_avg_box_vap_list_iter) / 2
+                    Rho_avg_box_liq_and_1_list.append(Rho_avg_box_liq_and_1_iter)
+
+                eq1_slope, eq1_intercept, eq1_r_value, eq1_p_value, eq1_std_err = \
+                    stats.linregress(temp_for_critical_list, Rho_0_plus_Rho_1_div2_for_critical_list)
+                eq2_slope, eq2_intercept, eq2_r_value, eq2_p_value, eq2_std_err = \
+                    stats.linregress(temp_for_critical_list, Rho_0_minus_Rho_1_power_1_div_Beta_for_critical_list)
+
+                eq3_slope, eq3_intercept, eq3_r_value, eq3_p_value, eq3_std_err = \
+                    stats.linregress(T_power_neg1_for_critical_list, ln_P_per_bar_for_critical_list)
+                eq4_slope, eq4_intercept, eq4_r_value, eq4_p_value, eq4_std_err = \
+                    stats.linregress(temp_for_critical_list, Hv_kJ_per_mol_box_vap_for_critical_list)
+
+                Tc_K_eval = -eq2_intercept / eq2_slope
+                if np.isnan(Tc_K_eval) == True:
+                    Tc_K = 'NA'
+                else:
+                    Tc_K = Tc_K_eval
+
+                Rho_c_kg_per_m_cubed_eval = eq1_intercept + eq1_slope * Tc_K
+                if np.isnan(Rho_c_kg_per_m_cubed_eval) == True:
+                    Rho_c_kg_per_m_cubed = 'NA'
+                else:
+                    Rho_c_kg_per_m_cubed = Rho_c_kg_per_m_cubed_eval
+
+                Pc_bar_eval = np.exp(eq3_intercept + eq3_slope * (1 / Tc_K))
+                if np.isnan(Pc_bar_eval) == True:
+                    Pc_bar = 'NA'
+                else:
+                    Pc_bar = Pc_bar_eval
+
+                Delta_Hv_kJ_per_mol_at_298_15K_eval = eq4_slope * T_298_15K + eq4_intercept
+                if np.isnan(Delta_Hv_kJ_per_mol_at_298_15K_eval) == True:
+                    Delta_Hv_kJ_per_mol_at_298_15K = 'NA'
+                else:
+                    Delta_Hv_kJ_per_mol_at_298_15K = Delta_Hv_kJ_per_mol_at_298_15K_eval
+
+
+                # check if passes the lowest_Tr_for_critical_calcs before writing
+                lowest_T_K_for_Tc_iter = temp_for_critical_list[0]
+                highest_T_K_for_Tc_iter = temp_for_critical_list[-1]
+                No_T_K_for_Tc_iter = len(temp_for_critical_list)
+                lowest_Tr_K_for_Tc_iter = float(lowest_T_K_for_Tc_iter / Tc_K)
+                highest_Tr_K_for_Tc_iter = float(highest_T_K_for_Tc_iter / Tc_K)
+
+
+                if lowest_Tr_K_for_Tc_iter >= lowest_Tr_for_critical_calcs:
+                    print('utilized temperatures used for critical calcs = ' + str(temp_for_critical_list))
+                    Tc_K_replicate_list.append(Tc_K)
+                    Rho_c_kg_per_m_cubed_replicate_list.append(Rho_c_kg_per_m_cubed)
+                    Pc_bar_replicate_list.append(Pc_bar)
+                    Hv_kJ_per_mol_298_15K_replicate_list.append(Delta_Hv_kJ_per_mol_at_298_15K)
+
+                    lowest_T_K_for_Tc_replicate_list.append(lowest_T_K_for_Tc_iter)
+                    highest_T_K_for_Tc_replicate_list.append(highest_T_K_for_Tc_iter)
+                    No_T_K_for_Tc_replicate_list.append(No_T_K_for_Tc_iter)
+                    lowest_Tr_K_for_Tc_replicate_list.append(lowest_Tr_K_for_Tc_iter)
+                    highest_Tr_K_for_Tc_replicate_list.append(highest_Tr_K_for_Tc_iter)
+
+    # write the critical data
+    critial_data_replicate_txt_file.write(
+        f"{Tc_K_replicate_list[-1]: <30} "
+        f"{Rho_c_kg_per_m_cubed_replicate_list[-1]: <30} "
+        f"{Pc_bar_replicate_list[-1]: <30} "
+        f"{Hv_kJ_per_mol_298_15K_replicate_list[-1]: <30} "
+        f"{lowest_T_K_for_Tc_replicate_list[-1]: <30} "
+        f"{highest_T_K_for_Tc_replicate_list[-1]: <30} "
+        f"{lowest_Tr_K_for_Tc_replicate_list[-1]: <30} "
+        f"{highest_Tr_K_for_Tc_replicate_list[-1]: <30} "
+        f"{No_T_K_for_Tc_replicate_list[-1]: <30} "
+        f" \n"
+    )
+    # ***********************
+    # calc the Critical points (end)
+    # ***********************
+
+    # ***********************
+    # calc the Boiling points (end)
+    # ***********************
+
+    # set the standard pressure for the boiling point (bp) via the standard temperature and pressure (STP)
+    Pbp_STP_bar = 1.01325
+    ln_Pbp_STP_bar = np.log(Pbp_STP_bar)
+
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (start)
+    # ***************************************************
+    output_column_Tbp_K_title = 'Tbp_K'
+    output_column_Pbp_bar_title = 'Pbp_bar' # this is atom pressure (1.01325 bar)
+    output_column_lowest_T_K_for_Tbp = "lowest_T_K_for_Tbp"
+    output_column_highest_T_K_for_Tbp = "highest_T_K_for_Tbp"
+    output_column_lowest_Tr_K_for_Tbp = "lowest_Tr_K_for_Tbp"
+    output_column_highest_Tr_K_for_Tbp = "lowest_Tr_K_for_Tbp"
+    output_column_No_T_K_for_Tbp = "No_T_K_for_Tbp"
+
+    # write the boiling data file
+    output_boiling_data_replicate_txt_file_header = f"{output_column_Tbp_K_title: <30} " \
+                                                     f"{output_column_Pbp_bar_title: <30} " \
+                                                     f"{output_column_lowest_T_K_for_Tbp: <30} " \
+                                                     f"{output_column_highest_T_K_for_Tbp: <30} " \
+                                                     f"{output_column_lowest_Tr_K_for_Tbp: <30} " \
+                                                     f"{output_column_highest_Tr_K_for_Tbp: <30} " \
+                                                     f"{output_column_No_T_K_for_Tbp: <30} " \
+                                                     f"\n"
+
+    write_boiling_file_path_and_name = f'analysis/{output_boiling_data_replicate_txt_file_name}'
+    if os.path.isfile(write_boiling_file_path_and_name):
+        boiling_data_replicate_txt_file = open(write_boiling_file_path_and_name, "a")
+    else:
+        boiling_data_replicate_txt_file = open(write_boiling_file_path_and_name, "w")
+        boiling_data_replicate_txt_file.write(output_boiling_data_replicate_txt_file_header)
+    # ***************************************************
+    #  create the required lists and file labels for the replicates (end)
+    # ***************************************************
+    # get the full list of temps, pressure, and ln(pressure) for the critical point calcs
+    temps_K_for_boiling_point_list = temp_K_avg_box_vap_list
+    inverse_temps_K_for_boiling_point_list = [1/ temp_bp_i for temp_bp_i in temps_K_for_boiling_point_list]
+    pressures_bar_for_boiling_point_list = pressure_bar_avg_box_vap_list
+    ln_pressures_bar_for_boiling_point_list = [np.log(press_bp_i) for press_bp_i in pressure_bar_avg_box_vap_list]
+    print('utilized temperatures used for boiling point calcs = ' + str(temps_K_for_boiling_point_list))
+
+    lowest_T_K_for_Tbp_replicate = temps_K_for_boiling_point_list[0]
+    highest_T_K_for_Tbp_replicate = temps_K_for_boiling_point_list[-1]
+    No_T_K_for_Tbp_replicate = len(temps_K_for_boiling_point_list)
+    lowest_Tr_K_for_Tbp_replicate = float(temps_K_for_boiling_point_list[0] / Tc_K_replicate_list[-1])
+    highest_Tr_K_for_Tbp_replicate = float(temps_K_for_boiling_point_list[-1] / Tc_K_replicate_list[-1])
+
+
+    eq_bp_slope, eq_bp_intercept, eq_bp_r_value, eq_bp_p_value, eq_bp_std_err = \
+        stats.linregress(ln_pressures_bar_for_boiling_point_list, inverse_temps_K_for_boiling_point_list)
+
+    Tbp_iter = (eq_bp_slope * ln_Pbp_STP_bar + eq_bp_intercept)**(-1)
+
+    # write the critical data
+    boiling_data_replicate_txt_file.write(
+        f"{Tbp_iter: <30} "
+        f"{Pbp_STP_bar: <30} "
+        f"{lowest_T_K_for_Tbp_replicate: <30} "
+        f"{highest_T_K_for_Tbp_replicate: <30} "
+        f"{lowest_Tr_K_for_Tbp_replicate: <30} "
+        f"{highest_Tr_K_for_Tbp_replicate: <30} "
+        f"{No_T_K_for_Tbp_replicate: <30} "
+        f" \n"
+    )
+
+    # ***********************
+    # calc the Boiling points (end)
+    # ***********************
+
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the critical and boilin point data for each set of replicates (end)
+# ******************************************************
+# ******************************************************
+
+
+# ******************************************************
+# ******************************************************
+# data analysis - get the critical and boilin point data avg and std. dev across the replicates (start)
+# ******************************************************
+# ******************************************************
+@aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", sort_ascending=True)
+@Project.operation.with_directives(
+     {
+         "np": 1,
+         "ngpu": 0,
+         "memory": memory_needed,
+         "walltime": walltime_gomc_analysis_hr,
+     }
+)
+@FlowProject.pre(
+     lambda * jobs: all(
+         gomc_sim_completed_properly(job, gomc_production_control_file_name_str)
+         for job in jobs
+     )
+)
+@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
+@Project.pre(part_5b_analysis_replica_averages_completed)
+@Project.pre(part_5c_analysis_critical_and_boiling_points_replicate_data_completed)
+@Project.post(part_5d_analysis_critical_and_boiling_points_avg_std_data_completed)
+def part_5d_analysis_critical_and_boiling_points_avg_std_data(*jobs):
+    # ***********************
+    # calc the Critical points (start)
+    # ***********************
+
+    output_column_Tc_K_title = 'Tc_K'
+    output_column_Rho_c_kg_per_m_cubed_title = 'Rho_c_kg_per_m_cubed'
+    output_column_Pc_bar_title = 'Pc_bar'
+    output_column_Hv_kJ_per_mol_298_15K_title = 'Hv_kJ_per_mol_298_15K'
+    output_column_lowest_T_K_for_Tc = "lowest_T_K_for_Tc"
+    output_column_highest_T_K_for_Tc = "highest_T_K_for_Tc"
+    output_column_lowest_Tr_K_for_Tc = "lowest_Tr_K_for_Tc"
+    output_column_highest_Tr_K_for_Tc = "lowest_Tr_K_for_Tc"
+    output_column_No_T_K_for_Tc = "No_T_K_for_Tc"
+
+    output_column_Tc_K_std_title = 'Tc_std_K'
+    output_column_Rho_c_kg_per_m_cubed_std_title = 'Rho_c_std_kg_per_m_cubed'
+    output_column_Pc_bar_std_title = 'Pc_std_bar'
+    output_column_Hv_kJ_per_mol_298_15K_std_title = 'Hv_std_kJ_per_mol_298_15K'
+
+    output_critical_data_avg_std_txt_file_header = f"{output_column_Tc_K_title: <30} " \
+                                                   f"{output_column_Tc_K_std_title: <30} " \
+                                                   f"{output_column_Rho_c_kg_per_m_cubed_title: <30} " \
+                                                   f"{output_column_Rho_c_kg_per_m_cubed_std_title: <30} " \
+                                                   f"{output_column_Pc_bar_title: <30} " \
+                                                   f"{output_column_Pc_bar_std_title: <30} " \
+                                                   f"{output_column_Hv_kJ_per_mol_298_15K_title: <30} " \
+                                                   f"{output_column_Hv_kJ_per_mol_298_15K_std_title: <30} " \
+                                                   f"{output_column_lowest_T_K_for_Tc: <30} " \
+                                                   f"{output_column_highest_T_K_for_Tc: <30} " \
+                                                   f"{output_column_lowest_Tr_K_for_Tc: <30} " \
+                                                   f"{output_column_highest_Tr_K_for_Tc: <30} " \
+                                                   f"{output_column_No_T_K_for_Tc: <30} " \
+                                                   f"\n"
+
+    for job in jobs:
+        if job.isfile(f'../../analysis/{output_critical_data_replicate_txt_file_name}'):
+                reading_file_final_critical_replicate_data = job.fn(
+                    f'../../analysis/{output_critical_data_replicate_txt_file_name}')
+                data_final_critical_replicate = pd.read_csv(reading_file_final_critical_replicate_data,
+                                                            sep='\s+',
+                                                            header=0,
+                                                            na_values='NaN',
+                                                            index_col=False
+                                                            )
+
+                Tc_K_final_replicate_data_list = \
+                    data_final_critical_replicate.loc[:, output_column_Tc_K_title]
+                Rho_avg_box_vap_final_replicate_list = \
+                    data_final_critical_replicate.loc[:, output_column_Rho_c_kg_per_m_cubed_title]
+                Pc_bar_final_replicate_data_list = \
+                    data_final_critical_replicate.loc[:, output_column_Pc_bar_title]
+                Hv_kJ_per_mol_298_15K_final_replicate_list = \
+                    data_final_critical_replicate.loc[:, output_column_Hv_kJ_per_mol_298_15K_title]
+
+                lowest_T_K_for_Tc_final_replicate_data_list = \
+                    data_final_critical_replicate.loc[:, output_column_lowest_T_K_for_Tc]
+                highest_T_K_for_Tc_final_replicate_data_list = \
+                    data_final_critical_replicate.loc[:, output_column_highest_T_K_for_Tc]
+                lowest_Tr_K_for_Tc_final_replicate_list = \
+                    data_final_critical_replicate.loc[:, output_column_lowest_Tr_K_for_Tc]
+                highest_Tr_K_for_Tc_final_replicate_list = \
+                    data_final_critical_replicate.loc[:, output_column_highest_Tr_K_for_Tc]
+                No_T_K_for_Tc_final_replicate_list = \
+                    data_final_critical_replicate.loc[:, output_column_No_T_K_for_Tc]
+
+                # check that all replicates have same Temps used for the analysis:
+                for temp_iter_k in range(0, len(lowest_T_K_for_Tc_final_replicate_data_list)):
+                    if len(lowest_T_K_for_Tc_final_replicate_data_list) >= 1 \
+                            and len(highest_T_K_for_Tc_final_replicate_data_list) >= 1 \
+                            and len(lowest_Tr_K_for_Tc_final_replicate_list) >= 1 \
+                            and len(highest_Tr_K_for_Tc_final_replicate_list) >= 1 \
+                            and len(No_T_K_for_Tc_final_replicate_list) >= 1:
+
+                        if not math.isclose(lowest_T_K_for_Tc_final_replicate_data_list[0],
+                                            lowest_T_K_for_Tc_final_replicate_data_list[temp_iter_k],
+                                            rel_tol=0, abs_tol=1e-9
+                                            ) \
+                                and not math.isclose(highest_T_K_for_Tc_final_replicate_data_list[0],
+                                                     highest_T_K_for_Tc_final_replicate_data_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ) \
+                                and not math.isclose(lowest_Tr_K_for_Tc_final_replicate_list[0],
+                                                     lowest_Tr_K_for_Tc_final_replicate_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ) \
+                                and not math.isclose(highest_Tr_K_for_Tc_final_replicate_list[0],
+                                                     highest_Tr_K_for_Tc_final_replicate_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ) \
+                                and not math.isclose(No_T_K_for_Tc_final_replicate_list[0],
+                                                     No_T_K_for_Tc_final_replicate_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ):
+                            raise ValueError("ERROR: In the critical point data, "
+                                             "the replicate data temperatures or number of points used is "
+                                             "different for the replicates, and they need to be the same.  ")
+
+                    else:
+                        raise ValueError("ERROR: There is not 1 or any replicate data for the critical point analysis.")
+
+                critial_data_avg_std_txt_file = open(
+                    f'analysis/{output_critical_data_avg_std_of_replicates_txt_file_name}', "w"
+                )
+                critial_data_avg_std_txt_file.write(output_critical_data_avg_std_txt_file_header)
+
+                Tc_K_mean = np.mean(Tc_K_final_replicate_data_list)
+                Rho_c_kg_per_m_cubed_mean = np.mean(Rho_avg_box_vap_final_replicate_list)
+                Pc_bar_mean = np.mean(Pc_bar_final_replicate_data_list)
+                Hv_kJ_per_mol_298_15K_mean = np.mean(Hv_kJ_per_mol_298_15K_final_replicate_list)
+
+                Tc_K_std = np.std(Tc_K_final_replicate_data_list, ddof=1)
+                Rho_c_kg_per_m_cubed_std = np.std(Rho_avg_box_vap_final_replicate_list, ddof=1)
+                Pc_bar_std = np.std(Pc_bar_final_replicate_data_list, ddof=1)
+                Hv_kJ_per_mol_298_15K_std = np.std(Hv_kJ_per_mol_298_15K_final_replicate_list, ddof=1)
+
+                lowest_T_K_for_Tc = lowest_T_K_for_Tc_final_replicate_data_list[0]
+                highest_T_K_for_Tc = highest_T_K_for_Tc_final_replicate_data_list[0]
+                No_T_K_for_Tc = lowest_Tr_K_for_Tc_final_replicate_list[0]
+                lowest_Tr_K_for_Tc = highest_Tr_K_for_Tc_final_replicate_list[0]
+                highest_Tr_K_for_Tc = No_T_K_for_Tc_final_replicate_list[0]
+
+                critial_data_avg_std_txt_file.write(
+                    f"{Tc_K_mean: <30} "
+                    f"{Tc_K_std: <30} "
+                    f"{Rho_c_kg_per_m_cubed_mean: <30} "
+                    f"{Rho_c_kg_per_m_cubed_std: <30} "
+                    f"{Pc_bar_mean: <30} "
+                    f"{Pc_bar_std: <30} "
+                    f"{Hv_kJ_per_mol_298_15K_mean: <30} "
+                    f"{Hv_kJ_per_mol_298_15K_std: <30} "
+                    f"{lowest_T_K_for_Tc: <30} "
+                    f"{highest_T_K_for_Tc: <30} "
+                    f"{lowest_Tr_K_for_Tc: <30} "
+                    f"{highest_Tr_K_for_Tc: <30} "
+                    f"{No_T_K_for_Tc: <30} "
+                    f" \n"
+                )
+    # ***********************
+    # calc the Critical points (end)
+    # ***********************
+
+    # ***********************
+    # calc the Boiling points (start)
+    # ***********************
+    output_column_Tbp_K_title = 'Tbp_K'
+    output_column_Tbp_K_std_title = 'Tbp_std_K'
+    output_column_Pbp_bar_title = 'Pbp_bar'  # this is atom pressure (1.01325 bar)
+    output_column_lowest_T_K_for_Tbp = "lowest_T_K_for_Tbp"
+    output_column_highest_T_K_for_Tbp = "highest_T_K_for_Tbp"
+    output_column_lowest_Tr_K_for_Tbp = "lowest_Tr_K_for_Tbp"
+    output_column_highest_Tr_K_for_Tbp = "lowest_Tr_K_for_Tbp"
+    output_column_No_T_K_for_Tbp = "No_T_K_for_Tbp"
+
+    # write the boiling data file
+    output_boiling_data_avg_std_txt_file_header = f"{output_column_Tbp_K_title: <30} " \
+                                                  f"{output_column_Tbp_K_std_title : <30} " \
+                                                  f"{output_column_Pbp_bar_title: <30} " \
+                                                  f"{output_column_lowest_T_K_for_Tbp: <30} " \
+                                                  f"{output_column_highest_T_K_for_Tbp: <30} " \
+                                                  f"{output_column_lowest_Tr_K_for_Tbp: <30} " \
+                                                  f"{output_column_highest_Tr_K_for_Tbp: <30} " \
+                                                  f"{output_column_No_T_K_for_Tbp: <30} " \
+                                                  f"\n"
+
+    for job in jobs:
+        if job.isfile(f'../../analysis/{output_boiling_data_replicate_txt_file_name}'):
+                reading_file_final_boiling_replicate_data = job.fn(
+                    f'../../analysis/{output_boiling_data_replicate_txt_file_name}')
+                data_final_boiling_replicate = pd.read_csv(reading_file_final_boiling_replicate_data,
+                                                            sep='\s+',
+                                                            header=0,
+                                                            na_values='NaN',
+                                                            index_col=False
+                                                            )
+
+                Tbp_K_final_replicate_data_list = \
+                    data_final_boiling_replicate.loc[:, output_column_Tbp_K_title]
+                Pbp_bar_final_replicate_data_list = \
+                    data_final_boiling_replicate.loc[:, output_column_Pbp_bar_title]
+
+                lowest_T_K_for_Tbp_final_replicate_data_list = \
+                    data_final_boiling_replicate.loc[:, output_column_lowest_T_K_for_Tbp]
+                highest_T_K_for_Tbp_final_replicate_data_list = \
+                    data_final_boiling_replicate.loc[:, output_column_highest_T_K_for_Tbp]
+                lowest_Tr_K_for_Tbp_final_replicate_list = \
+                    data_final_boiling_replicate.loc[:, output_column_lowest_Tr_K_for_Tbp]
+                highest_Tr_K_for_Tbp_final_replicate_list = \
+                    data_final_boiling_replicate.loc[:, output_column_highest_Tr_K_for_Tbp]
+                No_T_K_for_Tbp_final_replicate_list = \
+                    data_final_boiling_replicate.loc[:, output_column_No_T_K_for_Tbp]
+
+                # check that all replicates have same Temps used for the analysis:
+                for temp_iter_k in range(0, len(lowest_T_K_for_Tbp_final_replicate_data_list)):
+                    if len(lowest_T_K_for_Tbp_final_replicate_data_list) >= 1 \
+                            and len(highest_T_K_for_Tbp_final_replicate_data_list) >= 1 \
+                            and len(lowest_Tr_K_for_Tbp_final_replicate_list) >= 1 \
+                            and len(highest_Tr_K_for_Tbp_final_replicate_list) >= 1 \
+                            and len(No_T_K_for_Tbp_final_replicate_list) >= 1:
+
+                        if not math.isclose(lowest_T_K_for_Tbp_final_replicate_data_list[0],
+                                            lowest_T_K_for_Tbp_final_replicate_data_list[temp_iter_k],
+                                            rel_tol=0, abs_tol=1e-9
+                                            ) \
+                                and not math.isclose(Pbp_bar_final_replicate_data_list[0],
+                                                     Pbp_bar_final_replicate_data_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ) \
+                                and not math.isclose(highest_T_K_for_Tbp_final_replicate_data_list[0],
+                                                     highest_T_K_for_Tc_final_replicate_data_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ) \
+                                and not math.isclose(lowest_Tr_K_for_Tbp_final_replicate_list[0],
+                                                     lowest_Tr_K_for_Tc_final_replicate_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ) \
+                                and not math.isclose(highest_Tr_K_for_Tbp_final_replicate_list[0],
+                                                     highest_Tr_K_for_Tc_final_replicate_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ) \
+                                and not math.isclose(No_T_K_for_Tbp_final_replicate_list[0],
+                                                     No_T_K_for_Tc_final_replicate_list[temp_iter_k],
+                                                     rel_tol=0, abs_tol=1e-9
+                                                     ):
+                            raise ValueError("ERROR: In the boiling point data, "
+                                             "the replicate data temperatures or number of points used is "
+                                             "different for the replicates, and they need to be the same.  ")
+
+                    else:
+                        raise ValueError("ERROR: There is not 1 or any replicate data for the boiling point analysis.")
+
+                boiling_data_avg_std_txt_file = open(
+                    f'analysis/{output_boiling_data_avg_std_of_replicates_txt_file_name}', "w"
+                )
+                boiling_data_avg_std_txt_file.write(output_boiling_data_avg_std_txt_file_header)
+
+                Tbp_K_mean = np.mean(Tbp_K_final_replicate_data_list)
+                Tbp_K_std = np.std(Tbp_K_final_replicate_data_list, ddof=1)
+
+                Pbp_bar = np.mean(Pbp_bar_final_replicate_data_list)
+
+                lowest_T_K_for_Tbp = lowest_T_K_for_Tbp_final_replicate_data_list[0]
+                highest_T_K_for_Tbp = highest_T_K_for_Tbp_final_replicate_data_list[0]
+                No_T_K_for_Tbp = lowest_Tr_K_for_Tbp_final_replicate_list[0]
+                lowest_Tr_K_for_Tbp = highest_Tr_K_for_Tbp_final_replicate_list[0]
+                highest_Tr_K_for_Tbp = No_T_K_for_Tbp_final_replicate_list[0]
+
+                boiling_data_avg_std_txt_file.write(
+                    f"{Tbp_K_mean: <30} "
+                    f"{Tbp_K_std: <30} "
+                    f"{Pbp_bar: <30} "
+                    f"{lowest_T_K_for_Tbp: <30} "
+                    f"{highest_T_K_for_Tbp: <30} "
+                    f"{lowest_Tr_K_for_Tbp: <30} "
+                    f"{highest_Tr_K_for_Tbp: <30} "
+                    f"{No_T_K_for_Tbp: <30} "
+                    f" \n"
+                )
+    # ***********************
+    # calc the Boiling points (end)
+    # ***********************
+# ******************************************************
+# ******************************************************
+# data analysis - get the critical and boiling point data avg and std. dev across the replicates (end)
+# ******************************************************
+# ******************************************************
+
+
+
 
 
 # ******************************************************
