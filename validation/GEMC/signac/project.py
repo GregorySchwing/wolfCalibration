@@ -1367,44 +1367,8 @@ def part_4b_wolf_sanity_analysis_completed(job):
     except:
         return False
 
-@Project.label
-@flow.with_job
-def part_4b_wolf_sanity_histograms_created(job):
-    df1 = pd.DataFrame()
-    ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
-    ewald_sp['wolf_model']="Calibrator"        
-    ewald_sp['wolf_potential']="Calibrator"   
-    ewald_sp['shell_radius']="solvent_box"  
-    ewald_sp['solute']="Ne"    
-    ewald_sp['replica_number_int']=0
-    jobs = list(pr.find_jobs(ewald_sp))
-    try:
-        for ewald_job in jobs:
-            if (ewald_job.isfile("wolf_sanity_all_energies.csv")):
-                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
-            else:
-                return False
-    except:
-        return False
 
-    colList = df1.columns.tolist()
-    print(colList)
-    colList.remove("Ewald_Ewald")
-    colList.remove("steps")
-    try:
-        for ewald_job in jobs:
-            for col, col_i in zip(colList, range(0, len(colList))):
-                try:
-                    if (ewald_job.isfile("PotentialEnergyDistribution_Ewald_vs_{}.png".format(col))):
-                        continue
-                    else:
-                        return False
-                except:
-                    return False
-        return True
-    except:
-        return False
+
 @Project.label
 @flow.with_job
 def part_4b_is_winning_wolf_model_or_ewald(job):
@@ -3460,111 +3424,6 @@ def part_4b_job_gomc_plot_surfaces(job):
 # ******************************************************
 # ******************************************************
 
-
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
-@Project.pre(lambda j: j.sp.solute == "Ne")
-@Project.pre(lambda j: j.sp.shell_radius == "solvent_box")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(part_4b_wolf_sanity_analysis_completed)
-@Project.post(part_4b_wolf_sanity_histograms_created)
-@Project.operation.with_directives(
-    {
-        "np": 1,
-        "ngpu": 0,
-        "memory": memory_needed,
-        "walltime": walltime_mosdef_hr,
-    }
-)
-@flow.with_job
-def part_4b_create_wolf_sanity_histograms(job):
-    df1 = pd.DataFrame()
-    ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
-    ewald_sp['wolf_model']="Calibrator"        
-    ewald_sp['wolf_potential']="Calibrator"   
-    ewald_sp['solute']="solvent_box"   
-    ewald_sp['replica_number_int']=0
-    jobs = list(pr.find_jobs(ewald_sp))
-    try:
-        for ewald_job in jobs:
-            if (ewald_job.isfile("wolf_sanity_all_energies.csv")):
-                df1 = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
-            else:
-                return False
-    except:
-        return False
-
-    print(df1)
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import scipy.stats as st
-
-    numBins = 100
-    nskip = 100
-    ref_ewald = df1["Ewald_Ewald"]
-
-    from pymbar import timeseries
-    t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald, nskip=nskip) # compute indices of uncorrelated timeseries
-    A_t_equil_ewald = ref_ewald[t0:]
-    A_t_equil_steps_ewald = ref_ewald[t0:]
-
-    Col_Dict = {"GROSS_DSF": "Waibel2018a", "VLUGT_DSF": 'Rahbari', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b',
-    "GROSS_DSP": 'Waibel2018a', "VLUGT_DSP": 'Rahbari', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b'}
-
-    colList = df1.columns.tolist()
-    colList.remove("Ewald_Ewald")
-    colList.remove("steps")
-
-    figSP, axs = plt.subplots(2, 3)
-    counter = 0
-    for col, col_i in zip(colList, range(0, len(colList))):
-
-        wolf = df1[col]
-        t0, g, Neff_max = timeseries.detectEquilibration(wolf, nskip=nskip) # compute indices of uncorrelated timeseries
-        A_t_equil_wolf = wolf[t0:]
-        A_t_equil_steps_wolf = wolf[t0:]
-
-
-        ref_min = min(A_t_equil_ewald)
-        ref_max = max(A_t_equil_ewald)
-
-        wolf_min = min(A_t_equil_wolf)
-        wolf_max = max(A_t_equil_wolf)
-
-        print(ref_min)
-        print(ref_max)
-
-        print(wolf_min)
-        print(wolf_max)
-
-        xmin = min(ref_min, wolf_min)
-        xmax = min(ref_max, wolf_max)
-
-        binWidth =  (xmax - xmin)/float(numBins)
-        binList = np.arange(xmin, xmax+binWidth, binWidth)
-        # estimate the line with probability density function (PDF)
-        kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
-
-        #Plot Ewald
-        plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald")
-
-        kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
-        #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-        plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
-        plt.xlim(xmin, xmax)
-        plt.ylabel('Probability')
-        plt.xlabel('Total Energy (K)')
-        #plt.legend()
-        plt.rcParams.update({'font.size': 22})
-        axs[counter / 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
-        axs[counter / 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
-
-        plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
-        plt.figure().clear()
-    figSP.savefig("PotentialEnergyDistribution_Ewald_vs_All", dpi=300, bbox_inches='tight')
 
 # ******************************************************
 # ******************************************************
