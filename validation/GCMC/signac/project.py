@@ -1161,6 +1161,8 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     if(not job.isfile("wolf_sanity.conf")):
         return False
     if (job.sp.electrostatic_method == "Ewald"):
+        return True
+        """
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Wolf"
         for root, dirs, files in os.walk(job.fn("")):
@@ -1175,6 +1177,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                         success = success and False
 
         return success and atLeastOneMatchExists
+        """
     else:
         for root, dirs, files in os.walk(job.fn("")):
             for file in files:
