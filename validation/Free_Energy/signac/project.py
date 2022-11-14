@@ -3295,51 +3295,28 @@ def part_4b_create_wolf_sanity_histograms(job):
 
         print("wolf_min",wolf_min)
         print("wolf_max",wolf_max)
-        if ("VLUGT" in col and "DSP" in col):
-            xmin = min(float(ref_min), float(wolf_min))
-            xmax = max(float(ref_max), float(wolf_max))
 
-            binWidthE =  (ref_max - ref_min)/float(numBins)
-            binListE = np.arange(ref_min, ref_max+binWidthE, binWidthE)
-            # estimate the line with probability density function (PDF)
-            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binListE)
+        xmin = min(float(ref_min), float(wolf_min))
+        xmax = max(float(ref_max), float(wolf_max))
 
-            #Plot Ewald
-            plt.plot(binListE, kde1, color="black", linewidth=2, label="Ewald")
+        binWidth =  (xmax - xmin)/float(numBins)
+        binList = np.arange(xmin, xmax+binWidth, binWidth)
+        # estimate the line with probability density function (PDF)
+        kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
 
-            binWidthW =  (wolf_max - wolf_min)/float(numBins)
-            binListW = np.arange(wolf_min, wolf_max+binWidthW, binWidthW)
+        #Plot Ewald
+        plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald")
 
-            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binListW)
-            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-            plt.plot(binListW, kde2, color="red", linewidth=2, label=Col_Dict[col])
-            plt.xlim(xmin, xmax)
-            plt.ylabel('Probability', fontsize=22)
-            plt.xlabel('Total Energy (K)', fontsize=22)
-            plt.legend()
-            plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
-            plt.figure().clear()
-        else:
-            xmin = min(float(ref_min), float(wolf_min))
-            xmax = max(float(ref_max), float(wolf_max))
+        kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
+        #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+        plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+        plt.xlim(xmin, xmax)
+        plt.ylabel('Probability', fontsize=22)
+        plt.xlabel('Total Energy (K)', fontsize=22)
+        plt.legend()
+        plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
+        plt.figure().clear()   
 
-            binWidth =  (xmax - xmin)/float(numBins)
-            binList = np.arange(xmin, xmax+binWidth, binWidth)
-            # estimate the line with probability density function (PDF)
-            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
-
-            #Plot Ewald
-            plt.plot(binList, kde1, color="black", linewidth=2, label="Ewald")
-
-            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
-            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-            plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
-            plt.xlim(xmin, xmax)
-            plt.ylabel('Probability', fontsize=22)
-            plt.xlabel('Total Energy (K)', fontsize=22)
-            plt.legend()
-            plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
-            plt.figure().clear()            
     from matplotlib.figure import figaspect
     w, h = figaspect(9/16)
     figSP, axs = plt.subplots(2, 3, figsize=(w,h))
@@ -3367,51 +3344,25 @@ def part_4b_create_wolf_sanity_histograms(job):
 
         print("wolf_min",wolf_min)
         print("wolf_max",wolf_max)
-        if ("VLUGT" in col and "DSP" in col):
-            xmin = min(float(ref_min), float(wolf_min))
-            xmax = max(float(ref_max), float(wolf_max))
 
-            binWidthE =  (ref_max - ref_min)/float(numBins)
-            binListE = np.arange(ref_min, ref_max+binWidthE, binWidthE)
-            # estimate the line with probability density function (PDF)
-            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binListE)
+        xmin = min(float(ref_min), float(wolf_min))
+        xmax = max(float(ref_max), float(wolf_max))
 
-            #Plot Ewald
-            plt.plot(binListE, kde1, color="black", linewidth=2, label="Ewald")
-
-            binWidthW =  (wolf_max - wolf_min)/float(numBins)
-            binListW = np.arange(wolf_min, wolf_max+binWidthW, binWidthW)
-
-            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binListW)
-            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-            axs[counter // 3, counter % 3].plot(binListE, kde1, color="black", linewidth=2, label="Ewald")
-            axs[counter // 3, counter % 3].plot(binListW, kde2, color="red", linewidth=2, label=Col_Dict[col])
-            axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
-            axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
-            axs[counter // 3, counter % 3].set_ylabel('Probability')
-            from matplotlib.offsetbox import AnchoredText
-            anchored_text = AnchoredText("{}%".format(round((df2[col].iloc[2])*100,3)), loc="upper center")
-            axs[counter // 3, counter % 3].add_artist(anchored_text)
-            counter = counter + 1
-        else:
-            xmin = min(float(ref_min), float(wolf_min))
-            xmax = max(float(ref_max), float(wolf_max))
-
-            binWidth =  (xmax - xmin)/float(numBins)
-            binList = np.arange(xmin, xmax+binWidth, binWidth)
-            # estimate the line with probability density function (PDF)
-            kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
-            kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
-            #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
-            axs[counter // 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
-            axs[counter // 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
-            axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
-            axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
-            axs[counter // 3, counter % 3].set_ylabel('Probability')
-            from matplotlib.offsetbox import AnchoredText
-            anchored_text = AnchoredText("{}%".format(round((df2[col].iloc[2])*100,3)), loc=2)
-            axs[counter // 3, counter % 3].add_artist(anchored_text)
-            counter = counter + 1
+        binWidth =  (xmax - xmin)/float(numBins)
+        binList = np.arange(xmin, xmax+binWidth, binWidth)
+        # estimate the line with probability density function (PDF)
+        kde1 = st.gaussian_kde(A_t_equil_ewald).pdf(binList)
+        kde2 = st.gaussian_kde(A_t_equil_wolf).pdf(binList)
+        #plt.hist(wolf, density=True, bins=binList, alpha=1, label=col)  # density=False would make counts
+        axs[counter // 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
+        axs[counter // 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
+        axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
+        axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
+        axs[counter // 3, counter % 3].set_ylabel('Probability')
+        from matplotlib.offsetbox import AnchoredText
+        anchored_text = AnchoredText("{}%".format(round((df2[col].iloc[2])*100,3)), loc=2)
+        axs[counter // 3, counter % 3].add_artist(anchored_text)
+        counter = counter + 1
 
     #figSP.legend()
     #figSP.ylabel('Probability', fontsize=22)
