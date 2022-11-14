@@ -1389,6 +1389,7 @@ def part_4b_wolf_sanity_histograms_created(job):
         return False
 
     colList = df1.columns.tolist()
+    print(colList)
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
     try:
