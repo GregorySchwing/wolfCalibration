@@ -962,25 +962,32 @@ def part_4a_job_namd_equilb_NVT_box_0_completed_properly(job):
     """Check to see if the  namd_equilb_NPT_control_file was completed properly
     (high temperature to set temperature NAMD control file)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-
-    #This will cause Ewald sims to wait for Wolf calibration to complete.
-    try:
-        if(job.sp.electrostatic_method == "Wolf"):
+    if(job.sp.electrostatic_method == "Wolf"):
+        if (job.sp.shell_radius in ["solvent_box"]):
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
-            ewald_sp['solute']="Ne"
-            #ewald_sp['shell_radius']="solvent_box"
-            ewald_sp['wolf_model']="Ewald"        
-            ewald_sp['wolf_potential']="Ewald"
-            ewald_sp['replica_number_int']=0
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
             jobs = list(pr.find_jobs(ewald_sp))
             for ewald_job in jobs:
                 return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
         else:
-            return namd_sim_completed_properly(job, namd_equilb_NVT_control_file_box_0_name_str)
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Ewald"
+            ewald_sp['wolf_model']="Ewald"
+            ewald_sp['wolf_potential']="Ewald"
+            jobs = list(pr.find_jobs(ewald_sp))
+            for ewald_job in jobs:
+                return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
+    elif (job.sp.replica_number_int == 0):
+        return namd_sim_completed_properly(job, namd_equilb_NVT_control_file_box_0_name_str)
+    else:
+        ewald_sp = job.statepoint()
+        ewald_sp['replica_number_int']=0
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            return namd_sim_completed_properly(ewald_job, namd_equilb_NVT_control_file_box_0_name_str)
 
-    except:
-        return False
 
 # check if melt equilb NVT GOMC run completed by checking the end of the GOMC consol file
 @Project.label
