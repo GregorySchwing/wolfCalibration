@@ -3824,7 +3824,6 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # ******************************************************
 # ******************************************************
 #when you add replicates, uncomment this out
-"""
 @aggregator.groupby(key=statepoint_without_replica, sort_by="production_temperature_K", sort_ascending=False)
 @Project.operation.with_directives(
      {
@@ -4047,7 +4046,7 @@ def part_5b_analysis_replica_averages(*jobs):
     # ************************************
     # write the analysis data files for the liquid and vapor boxes (end)
     # ************************************
-"""
+
 
 # ******************************************************
 # ******************************************************
