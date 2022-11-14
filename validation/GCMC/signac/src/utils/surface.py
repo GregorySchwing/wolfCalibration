@@ -8,7 +8,7 @@ import re
 import os
 import glob
 from matplotlib import cm
-from scipy.optimize import minimize, brute, shgo, dual_annealing, differential_evolution
+from scipy.optimize import minimize, brute, shgo, dual_annealing, differential_evolution, root
 from scipy import interpolate, optimize
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from matplotlib.patches import Circle, Ellipse
@@ -197,6 +197,32 @@ class DEProblemDeriv(ElementwiseProblem):
 
         out["F"] = [f1]
         out["G"] = [g1]
+
+
+class DEProblemDerivDum(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax):
+        super().__init__(n_var=2,
+                         n_obj=1,
+                         n_ieq_constr=1,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck = tck_pd
+        self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
+        self.tolerance = 0.01
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        # Minimize Gradient
+        f1 = np.abs(interpolate.bisplev(x[0], x[1], self.tck))
+        g1 = np.abs(self.rect_B_spline.ev(x[0], x[1])) - self.tolerance
+
+        out["F"] = [f1]
+        out["G"] = [g1]
+
 
 class MyProblem(ElementwiseProblem):
 
@@ -438,7 +464,7 @@ class MyDumProblem(ElementwiseProblem):
     def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, tolerance_power):
         super().__init__(n_var=2,
                          n_obj=1,
-                         n_ieq_constr=1,
+                         n_ieq_constr=2,
                          xl=np.array([RCutMin,AlphaMin]),
                          xu=np.array([RCutMax,AlphaMax]))
         self.rect_B_spline = rect_B_spline
@@ -471,9 +497,56 @@ class MyDumProblem(ElementwiseProblem):
     def _evaluate(self, x, out, *args, **kwargs):
         f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut)))
         g2 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))) - self.tolerance
+        g3 = x[0] - (self.RCutMax-2)
         out["F"] = [f4]
         #out["F"] = [f1, f2]
-        out["G"] = [g2]
+        out["G"] = [g2, g3]
+
+
+class MyDumProblemUnconstrained(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, tolerance_power):
+        super().__init__(n_var=2,
+                         n_obj=1,
+                         n_ieq_constr=1,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck_pd = tck_pd
+        self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
+        self.F1Min = 0
+        self.F2Min = 0
+        self.F3Min = 0
+        self.tolerance = pow(10, -tolerance_power)
+        #self.tolerance = pow(10, -2)
+
+
+        self.pd_RCut_constant_alpha_constant = [0,0]
+        self.pd_RCut_varies_alpha_constant = [1,0]
+        self.pd_RCut_varies_alpha_constant_DD = [2,0]
+        self.pd_RCut_constant_alpha_varies = [0,1]
+        self.pd_RCut_constant_alpha_varies_DD = [0,2]
+        self.pd_RCut_varies_alpha_varies = [1,1]
+        self.pd_RCut_varies_alpha_varies_DD = [2,2]
+        
+        self.derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies[0],self.pd_RCut_varies_alpha_varies[1])
+        self.derivs_wrt_alpha_and_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies_DD[0],self.pd_RCut_varies_alpha_varies_DD[1])
+
+        self.tck_wrt_alpha_and_rcut = [self.derivs_wrt_alpha_and_rcut.tck[0], self.derivs_wrt_alpha_and_rcut.tck[1],self.derivs_wrt_alpha_and_rcut.tck[2],self.derivs_wrt_alpha_and_rcut.degrees[0],self.derivs_wrt_alpha_and_rcut.degrees[1]]
+        self.tck_wrt_alpha_and_rcut_DD = [self.derivs_wrt_alpha_and_rcut_DD.tck[0], self.derivs_wrt_alpha_and_rcut_DD.tck[1],self.derivs_wrt_alpha_and_rcut_DD.tck[2],self.derivs_wrt_alpha_and_rcut_DD.degrees[0],self.derivs_wrt_alpha_and_rcut_DD.degrees[1]]
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        f4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut)))
+        g3 = x[0] - (self.RCutMax-2)
+        out["F"] = [f4]
+        out["G"] = [g3]
+
+        
+        #out["F"] = [f1, f2]
+        #out["G"] = [g2]
 
 
 class MyProblemNorm(ElementwiseProblem):
@@ -694,7 +767,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     # Since I only use gradient, it's a single objective, no need to scale.
     #problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
+    derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
+    tck_wrt_alpha_and_rcut = [derivs_wrt_alpha_and_rcut.tck[0], derivs_wrt_alpha_and_rcut.tck[1],derivs_wrt_alpha_and_rcut.tck[2],derivs_wrt_alpha_and_rcut.degrees[0],derivs_wrt_alpha_and_rcut.degrees[1]]
 
+    foundSoln = False
     tolPower = 0
     for tolPow in range(8, -1, -1):
         print("Tolerance = ", pow(10, -tolPow))
@@ -705,7 +781,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         from pymoo.operators.crossover.sbx import SBX
         from pymoo.operators.mutation.pm import PM
         from pymoo.operators.sampling.rnd import FloatRandomSampling
+        from pymoo.optimize import minimize
 
+
+        termination = get_termination("n_gen", 400)
+
+        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
         algorithm = NSGA2(
             pop_size=400,
             n_offsprings=100,
@@ -714,12 +795,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
             mutation=PM(eta=20),
             eliminate_duplicates=True
         )
-        termination = get_termination("n_gen", 400)
-
-
-        from pymoo.optimize import minimize
-        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
-
         res = minimize(prob,
                     algorithm,
                     termination,
@@ -770,12 +845,71 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         try:
             k = np.where(np.array(vals) <= 0.0)[0].min()
             print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
+            foundSoln = True
             break
         except:
             print(f"Whole population not feasible after {n_evals[k]} evaluations.")
             print(f"Increase tolerance.")
             continue
 
+    if (not foundSoln):
+        termination = get_termination("n_gen", 400)
+
+        prob = MyDumProblemUnconstrained(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
+        algorithm = NSGA2(
+            pop_size=400,
+            n_offsprings=100,
+            sampling=FloatRandomSampling(),
+            crossover=SBX(prob=0.9, eta=15),
+            mutation=PM(eta=20),
+            eliminate_duplicates=True
+        )
+        res = minimize(prob,
+                    algorithm,
+                    termination,
+                    seed=1,
+                    save_history=True,
+                    verbose=True)
+
+        X = res.X
+        F = res.F
+        hist = res.history
+        print(X)
+        print(F)
+
+        n_evals = []             # corresponding number of function evaluations\
+        hist_F = []              # the objective space values in each generation
+        hist_cv = []             # constraint violation in each generation
+        hist_cv_avg = []         # average constraint violation in the whole population
+
+        for algo in hist:
+
+            # store the number of function evaluations
+            n_evals.append(algo.evaluator.n_eval)
+
+            # retrieve the optimum from the algorithm
+            opt = algo.opt
+
+            # store the least contraint violation and the average in each population
+            hist_cv.append(opt.get("CV").min())
+            hist_cv_avg.append(algo.pop.get("CV").mean())
+
+            # filter out only the feasible and append and objective space values
+            feas = np.where(opt.get("feasible"))[0]
+            hist_F.append(opt.get("F")[feas])
+
+        k = 0
+        try:
+            k = np.where(np.array(hist_cv) <= 0.0)[0].min()
+        except:
+            print(f"No feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+            print(plotPath)
+            quit()            
+        print(f"At least one feasible solution in Generation {k} after {n_evals[k]} evaluations.")
+
+
+        # replace this line by `hist_cv` if you like to analyze the least feasible optimal solution and not the population
+        vals = hist_cv_avg
 
     approx_ideal = F.min(axis=0)
     approx_nadir = F.max(axis=0)
@@ -1320,9 +1454,15 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
             yy_forplotting = np.linspace(y.min(), y.max(), 100)
 
             X_forplotting, Y_forplotting = np.meshgrid(xx_forplotting, yy_forplotting)
-            zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+            #zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+            zs = np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel()))
             Z = zs.reshape(X_forplotting.shape)
+            """
+            ZeroSlice = np.where(((Z < 0.0001) or (Z > 0.0001)), Z)
 
+            plt.scatter(ZeroSlice)
+            plt.savefig("test")
+            """
             iteractivefig.add_surface(autocolorscale=True, x=X_forplotting, y=Y_forplotting, z=Z)
 
 
@@ -1380,7 +1520,8 @@ def plot_all_surfaces(pr, job, file, model, wolfKind, potential, box, plotSuface
                             highlightcolor="limegreen", project_z=True))
     """                        
     pio.write_html(iteractivefig, file=plotPath+".html", auto_open=False)
-
+    #plt.colorbar()
+    #plt.savefig(plotPath)
     # Using any of the single point BF/GD methods is obviously a bad idea.
     #    return (("BF_rcut",bfXY[0]), ("BF_alpha",bfXY[1]), ("BF_relerr",ZBF), ("GD_rcut",gdXY[0]), ("GD_alpha",gdXY[1]), ("GD_relerr",ZGD), ("GD_jac_rcut",gdJacXY[0]), ("GD_jac_alpha",gdJacXY[1]))
     # The question is which of the above optimizations to use.  For now, I am going with "REF" AUC as the metric.
