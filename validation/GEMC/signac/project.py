@@ -132,7 +132,8 @@ gomc_equilb_design_ensemble_control_file_name_str = "gomc_equilb_design_ensemble
 # The production run using the ensemble used for the simulation design, which
 # includes the simulation runs GOMC control file input and simulation outputs
 # Note: do not add extensions
-gomc_production_control_file_name_str = "gomc_production_run"
+#gomc_production_control_file_name_str = "gomc_production_run"
+gomc_production_control_file_name_str = "wolf_sanity"
 
 # Analysis (each replicates averages):
 # Output text (txt) file names for each replicates averages
