@@ -1172,10 +1172,12 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
         return success and atLeastOneMatchExists
 
+
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda *jobs: all(mosdef_input_written(j)
-                               for j in jobs[0]._project))
+@Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
+@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
+@Project.pre(part_2c_gomc_production_control_file_written)
+@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -1189,17 +1191,15 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
     import pickle as pickle
-    import re
-    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
     testEachWolf = True
-    ref_sp = job.statepoint()
-    ref_sp['electrostatic_method']="Wolf"
-    ref_sp['replica_number_int']=0
-    jobs = list(pr.find_jobs(ref_sp))
-    for ref_job in jobs:    
-        with open(ref_job.fn("winningWolfParameters.pickle"), 'rb') as handle:
-            winningWolf = pickle.load(handle)
-    jobs = list(pr.find_jobs(ref_sp))
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"
+    ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['solute']="Ne"
+    ewald_sp['shell_radius']="solvent_box"
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
     winningWolf = {}
     for ewald_job in jobs:
         if (testEachWolf):
@@ -1253,42 +1253,11 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 return False
 
     import re
-    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+    regex = re.compile("wolf_sanity.conf")
     if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
         box_list = ["0", "1"]
     else:
         box_list = ["0"]
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                with open(file, "a") as myfile:
-                    if (testEachWolf):
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                        myfile.write(defKindLine)
-                        for box in box_list:
-                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_alpha"])
-                            myfile.write(defAlphaLine)
-                            defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_rcut"])
-                            myfile.write(defRCutLine)
-                    else:
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
-                        myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
-                        myfile.write(defRCutLine)
-
-
-    regex = re.compile("wolf_sanity.conf")
-    box = "0"
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
