@@ -1139,21 +1139,38 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     import re
     success = True
+    regex = re.compile("wolf_sanity.conf")
+
     if(not job.isfile("wolf_sanity.conf")):
         return False
-    regex = re.compile("wolf_sanity.conf")
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                atLeastOneMatchExists = True
-                with open(file, "r") as openedfile:
-                    last_line = openedfile.readlines()[-1]
-                if ("RcutCoulomb" in last_line):
-                    continue
-                else:
-                    success = success and False
+    if (job.sp.electrostatic_method == "Ewald"):
+        ref_sp = job.statepoint()
+        ref_sp['electrostatic_method']="Wolf"
+        for root, dirs, files in os.walk(job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    atLeastOneMatchExists = True
+                    with open(file, "r") as openedfile:
+                        last_line = openedfile.readlines()[-1]
+                    if ("RcutCoulomb" in last_line):
+                        continue
+                    else:
+                        success = success and False
 
-    return success and atLeastOneMatchExists
+        return success and atLeastOneMatchExists
+    else:
+        for root, dirs, files in os.walk(job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    atLeastOneMatchExists = True
+                    with open(file, "r") as openedfile:
+                        last_line = openedfile.readlines()[-1]
+                    if ("RcutCoulomb" in last_line):
+                        continue
+                    else:
+                        success = success and False
+
+        return success and atLeastOneMatchExists
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
