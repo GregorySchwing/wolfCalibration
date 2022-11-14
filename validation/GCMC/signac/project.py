@@ -2848,7 +2848,7 @@ def run_sseq_run_gomc_command(job):
 
     return run_command
 
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.shell_radius != "solvent_box")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
