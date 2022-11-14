@@ -2940,6 +2940,7 @@ def run_calibration_run_gomc_command(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.shell_radius == "solvent_box")
 @Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
 @Project.operation.with_directives(
