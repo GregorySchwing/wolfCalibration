@@ -1821,7 +1821,7 @@ def part_4c_job_production_run_completed_properly(job):
 
 
 # check if analysis is done for the individual replicates wrote the gomc files
-@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.label
 @flow.with_job
 def part_5a_analysis_individual_simulation_averages_completed(job):
@@ -3792,11 +3792,11 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 )
 @FlowProject.pre(
      lambda * jobs: all(
-         part_4b_job_production_run_completed_properly(job, gomc_production_control_file_name_str)
+         part_4b_job_gomc_wolf_sanity_completed_properly(job, gomc_production_control_file_name_str)
          for job in jobs
      )
 )
-@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.post(part_5a_analysis_individual_simulation_averages_completed)
 @flow.with_job
 def part_5a_analysis_individual_simulation_averages(*jobs):
@@ -4048,7 +4048,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 
 @Project.pre(lambda *jobs: all(part_5a_analysis_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
-@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.pre(part_5a_analysis_individual_simulation_averages_completed)
 @Project.post(part_5b_analysis_replica_averages_completed)
 def part_5b_analysis_replica_averages(*jobs):
@@ -4288,7 +4288,7 @@ def part_5b_analysis_replica_averages(*jobs):
          for job in jobs
      )
 )
-@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.pre(part_5a_analysis_individual_simulation_averages_completed)
 @Project.pre(part_5b_analysis_replica_averages_completed)
 @Project.post(part_5c_analysis_critical_and_boiling_points_replicate_data_completed)
@@ -4668,7 +4668,7 @@ def part_5c_analysis_critical_and_boiling__points_replicate_data(*jobs):
          for job in jobs
      )
 )
-@Project.pre(part_4b_job_production_run_completed_properly)
+@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.pre(part_5a_analysis_individual_simulation_averages_completed)
 @Project.pre(part_5b_analysis_replica_averages_completed)
 @Project.pre(part_5c_analysis_critical_and_boiling_points_replicate_data_completed)
