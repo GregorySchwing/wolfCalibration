@@ -585,8 +585,8 @@ def gomc_control_file_written(job, control_filename_str):
 def part_2a_wolf_sanity_control_file_written(job):
     """General check that the namd_equilb_NVT_control_file
     (high temperature to set temp NAMD control file) is written."""
-    if (job.sp.wolf_model == "Calibrator" or job.sp.electrostatic_method == "Ewald"):
-        return True
+    #if (job.sp.wolf_model == "Calibrator" or job.sp.electrostatic_method == "Ewald"):
+    #    return True
     output_name_control_file_name = "wolf_sanity"
     try:
         return gomc_control_file_written(
