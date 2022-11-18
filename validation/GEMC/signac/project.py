@@ -70,8 +70,8 @@ namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 #namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 
 #WSL local bin paths
-gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
