@@ -715,57 +715,6 @@ def part_2a_namd_equilb_NVT_box_1_control_file_written(job):
     (high temperature to set temp NAMD control file) is written."""
     return namd_control_file_written(job, namd_equilb_NVT_control_file_box_1_name_str)
 
-# checking if the GOMC control file is written for the equilb run with the selected ensemble
-@Project.label
-@flow.with_job
-def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
-    """General check that the gomc_equilb_design_ensemble (run temperature) gomc control file is written."""
-    try:
-        if (job.sp.solute == "solvent_box"):
-            return True
-    except:
-        return False
-    
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                gomc_control_file_written(
-                    job,
-                    job.doc.gomc_equilb_design_ensemble_dict[
-                        str(initial_state_i)
-                    ]["output_name_control_file_name"],
-                )
-            except:
-                return False
-        return True
-    except:
-        return False
-
-# checking if the GOMC control file is written for the production run
-@Project.label
-@flow.with_job
-def part_2c_gomc_production_control_file_written(job):
-    """General check that the gomc_production_control_file (run temperature) is written."""
-    try:
-        if (job.sp.solute == "solvent_box"):
-            return True
-    except:
-        return False
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                return gomc_control_file_written(
-                    job,
-                    job.doc.gomc_production_run_ensemble_dict[
-                        str(initial_state_i)
-                    ]["output_name_control_file_name"],
-                )
-            except:
-                return False
-        return True
-    except:
-        return False
-
 # ******************************************************
 # ******************************************************
 # check if GOMC control file was written (end)
@@ -946,17 +895,6 @@ def part_3b_output_gomc_wolf_sanity_started(job):
     wolf_sanity_eq_control_file_name = "wolf_sanity"
     try:
         #This will cause Ewald sims to wait for Wolf calibration to complete.
-        if(job.sp.electrostatic_method == "Ewald"):
-            wolf_sp = job.statepoint()
-            wolf_sp['electrostatic_method']="Wolf"
-            jobs = list(pr.find_jobs(wolf_sp))
-            for ewald_job in jobs:
-                if ewald_job.isfile(f"out_{wolf_sanity_eq_control_file_name}.dat"):
-                    return True
-                else:
-                    return False
-
-
         if job.isfile(f"out_{wolf_sanity_eq_control_file_name}.dat"):
             return True
         else:
@@ -964,7 +902,7 @@ def part_3b_output_gomc_wolf_sanity_started(job):
     except:
         return False
 
-        return True
+    return True
 
 # check if production GOMC run is started by seeing if the GOMC consol file and the merged psf exist
 @Project.label
@@ -1605,8 +1543,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
-@Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
@@ -2040,8 +1976,7 @@ def build_charmm(job, write_files=True):
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.post(part_2a_namd_equilb_NVT_box_0_control_file_written)
 @Project.post(part_2a_namd_equilb_NVT_box_1_control_file_written)
-@Project.post(part_2b_gomc_equilb_design_ensemble_control_file_written)
-@Project.post(part_2c_gomc_production_control_file_written)
+@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.post(mosdef_input_written)
 @Project.operation.with_directives(
     {
