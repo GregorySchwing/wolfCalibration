@@ -3308,12 +3308,6 @@ def part_4b_job_gomc_plot_surfaces(job):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-@FlowProject.pre(
-     lambda * jobs: all(
-         part_4b_job_gomc_wolf_sanity_completed_properly(job, gomc_production_control_file_name_str)
-         for job in jobs
-     )
-)
 @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.post(part_5a_analysis_individual_simulation_averages_completed)
 @flow.with_job
