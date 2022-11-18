@@ -70,8 +70,8 @@ namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 #namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 
 #WSL local bin paths
-#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
 #gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
@@ -83,6 +83,13 @@ gomc_steps_production = 100 * 10**6 # set value for paper = 60 * 10**6
 gomc_console_output_data_every_X_steps = 50 * 10**3# set value for paper = 100 * 10**3
 
 gomc_output_data_every_X_steps = 50 * 10**3 # # set value for paper = 50 * 10**3
+
+
+gomc_steps_equilb_design_ensemble = 5 * 10**3 #  set value for paper = 60 * 10**6
+gomc_steps_production = 100 * 10**6 # set value for paper = 60 * 10**6
+gomc_console_output_data_every_X_steps = 50 * 10**1# set value for paper = 100 * 10**3
+
+gomc_output_data_every_X_steps = 50 * 10**2 # # set value for paper = 50 * 10**3
 
 """
 During the
@@ -100,6 +107,12 @@ EqSteps = 1000
 Calibration_MC_steps = 500000
 Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 50 * 10**6 # set value for paper = 60 * 10**6
+
+MC_steps = int(1000)
+EqSteps = 1000
+Calibration_MC_steps = 5000
+Calibration_MC_Eq_Steps = 1000
+Wolf_Sanity_MC_steps = 5 * 10**3 # set value for paper = 60 * 10**6
 
 
 # Free energy calcs: set free energy data in doc
@@ -1707,60 +1720,6 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         myfile.write(defAlphaLine)
                         defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
                         myfile.write(defRCutLine)
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.label
-@flow.with_job
-def part_4b_job_gomc_equilb_design_ensemble_completed_properly(job):
-    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                filename_4b_iter = job.doc.gomc_equilb_design_ensemble_dict[
-                    str(initial_state_i)
-                ]["output_name_control_file_name"]
-
-                if gomc_sim_completed_properly(
-                    job,
-                    filename_4b_iter,
-                ) is False:
-                    #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i) + " " + job.fn(""))
-                    return False
-            except:
-                return False
-        return True
-    except:
-        return False
-
-# check if production GOMC run completed by checking the end of the GOMC consol file
-@Project.label
-@flow.with_job
-def part_4c_job_production_run_completed_properly(job):
-    """Check to see if the gomc production run simulation was completed properly (set temperature)."""
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                filename_4c_iter = job.doc.gomc_production_run_ensemble_dict[
-                    str(initial_state_i)
-                ]["output_name_control_file_name"]
-                if gomc_sim_completed_properly(
-                    job,
-                    filename_4c_iter,
-                ) is False:
-                    #print("Isn't finished ",filename_4c_iter)
-                    return False
-
-                # check specifically for the FE files
-                if job.isfile(f'Free_Energy_BOX_0_{filename_4c_iter}.dat') is False:
-                    #print("Isn't finished ",f'Free_Energy_BOX_0_{filename_4c_iter}.dat')
-                    return False
-
-            except:
-                return False
-        return True
-    except:
-        return False
-
 
 # check if analysis is done for the individual replicates wrote the gomc files
 @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
