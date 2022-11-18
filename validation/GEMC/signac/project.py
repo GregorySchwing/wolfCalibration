@@ -3178,7 +3178,6 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
 @Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4a_job_namd_equilb_NVT_box_0_completed_properly)
 @Project.pre(part_4a_job_namd_equilb_NVT_box_1_completed_properly)
