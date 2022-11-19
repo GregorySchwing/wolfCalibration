@@ -3531,7 +3531,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-@aggregator.groupby(key=statepoint_without_replica, sort_by="production_temperature_K", sort_ascending=False)
+@aggregator.groupby(key=statepoint_without_wolf_related_keys_and_replica, sort_by="production_temperature_K", sort_ascending=False)
 @Project.operation.with_directives(
      {
          "np": 1,
@@ -3552,6 +3552,9 @@ def part_5b_analysis_replica_averages(*jobs):
     # ***************************************************
     # get the list used in this function
     temp_repilcate_list = []
+    electrostatic_a_repilcate_list = []
+    electrostatic_b_repilcate_list = []
+    electrostatic_c_repilcate_list = []
 
     pressure_repilcate_box_liq_list = []
     total_molecules_repilcate_box_liq_list = []
@@ -3566,6 +3569,10 @@ def part_5b_analysis_replica_averages(*jobs):
     volume_repilcate_box_vap_list = []
     length_if_cube_repilcate_box_vap_list = []
     Hv_repilcate_box_vap_list = []
+
+    output_column_electrostatic_a_title = 'A'  # column title title for temp
+    output_column_electrostatic_b_title = 'B'  # column title title for temp
+    output_column_electrostatic_c_title = 'C'  # column title title for temp
 
     output_column_temp_title = 'temp_K'  # column title title for temp
     output_column_no_pressure_title = 'P_bar'  # column title title for PRESSURE
@@ -3583,7 +3590,10 @@ def part_5b_analysis_replica_averages(*jobs):
     output_column_box_length_if_cubed_std_title = 'L_std_m_if_cubed'  # column title title for VOLUME
     output_column_box_Hv_std_title = 'Hv_std_kJ_per_mol'  # column title title for HEAT_VAP
 
-    output_txt_file_header = f"{output_column_temp_title: <30} "\
+    output_txt_file_header = f"{output_column_electrostatic_a_title: <30} "\
+                             f"{output_column_electrostatic_b_title: <30} "\
+                             f"{output_column_electrostatic_c_title: <30} "\
+                             f"{output_column_temp_title: <30} "\
                              f"{output_column_temp_std_title: <30} "\
                              f"{output_column_no_pressure_title: <30} "\
                              f"{output_column_no_pressure_std_title: <30} "\
@@ -3623,6 +3633,10 @@ def part_5b_analysis_replica_averages(*jobs):
         # *************************
         # drawing in data from single simulation file and extracting specific
         # *************************
+        electrostatic_a = job.sp.electrostatic_method
+        electrostatic_b = job.sp.wolf_model
+        electrostatic_c = job.sp.wolf_potential
+
         reading_file_box_liq = job.fn(output_replicate_txt_file_name_liq)
         reading_file_box_vap = job.fn(output_replicate_txt_file_name_vap)
 
@@ -3653,6 +3667,9 @@ def part_5b_analysis_replica_averages(*jobs):
         length_if_cube_repilcate_box_vap = (volume_repilcate_box_vap) ** (1 / 3)
         Hv_repilcate_box_vap = data_box_vap.loc[:, output_column_box_Hv_title][0]
 
+        electrostatic_a_repilcate_list.append(electrostatic_a)
+        electrostatic_b_repilcate_list.append(electrostatic_b)
+        electrostatic_c_repilcate_list.append(electrostatic_c)
 
         temp_repilcate_list.append(job.sp.production_temperature_K)
 
@@ -3717,6 +3734,9 @@ def part_5b_analysis_replica_averages(*jobs):
     # ************************************
 
     box_liq_data_txt_file.write(
+        f"{electrostatic_a: <30} "
+        f"{electrostatic_b: <30} "
+        f"{electrostatic_c: <30} "
         f"{temp_mean: <30} "
         f"{temp_std: <30} "
         f"{pressure_mean_box_liq: <30} "
