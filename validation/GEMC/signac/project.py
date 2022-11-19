@@ -2986,7 +2986,6 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
 @Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
@@ -3040,7 +3039,6 @@ def run_namd_equilb_NVT_box_0_gomc_command(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NVT_box_0_control_file_written)
 @Project.pre(part_2a_namd_equilb_NVT_box_1_control_file_written)
