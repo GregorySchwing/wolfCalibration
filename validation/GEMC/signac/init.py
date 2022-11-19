@@ -18,8 +18,8 @@ solvent = ["SPCE"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 
-#replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
-replicas = [0]# [0, 1, 2, 3, 4]
+replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
+#replicas = [0]# [0, 1, 2, 3, 4]
 g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 
 
