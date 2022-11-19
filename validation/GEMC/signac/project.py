@@ -3801,7 +3801,7 @@ def part_5b_analysis_replica_averages(*jobs):
 # ******************************************************
 # ******************************************************
 
-@aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", sort_ascending=True)
+@aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", select=lambda job: job.sp.wolf_model != "Calibrator")
 @Project.operation.with_directives(
      {
          "np": 1,
@@ -3885,7 +3885,6 @@ def part_5c_analysis_critical_and_boiling__points_replicate_data(*jobs):
     Rho_avg_box_vap_list = []
     Hv_kJ_per_mol_avg_box_vap_list = []
     for job in jobs:
-
 
         reading_file_avg_std_liq = job.fn(f'{output_replicate_txt_file_name_liq}')
         data_avg_std_liq = pd.read_csv(reading_file_avg_std_liq, sep='\s+', header=0, na_values='NaN', index_col=False)
