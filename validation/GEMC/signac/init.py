@@ -107,8 +107,6 @@ for replica_i in replicas:
                                     "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                     "electrostatic_method": e_method,
                                 }
-                                if ("VLUGT" in wolfM and wolfP == "DSP"):
-                                    continue
                                 total_statepoints.append(statepoint)
                     else:
                         statepoint = {
