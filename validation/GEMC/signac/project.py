@@ -3691,6 +3691,19 @@ def part_5b_analysis_replica_averages(*jobs):
         # drawing in data from single file and extracting specific rows for the vapor box (end)
         # *************************
 
+    print(pressure_repilcate_box_liq_list)
+    print(total_molecules_repilcate_box_liq_list)
+    print(Rho_repilcate_box_liq_list)
+    print(volume_repilcate_box_liq_list)
+    print(length_if_cube_repilcate_box_liq_list)
+    print(Hv_repilcate_box_liq_list)
+
+    print(pressure_repilcate_box_vap_list)
+    print(total_molecules_repilcate_box_vap_list)
+    print(Rho_repilcate_box_vap_list)
+    print(volume_repilcate_box_vap_list)
+    print(length_if_cube_repilcate_box_vap_list)
+    print(Hv_repilcate_box_vap_list)
     # *************************
     # get the replica means and std.devs (start)
     # *************************
