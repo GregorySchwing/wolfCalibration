@@ -1968,9 +1968,9 @@ def build_charmm(job, write_files=True):
 # ******************************************************
 # ******************************************************
 @Project.pre(part_1a_initial_data_input_to_json)
+@Project.post(part_2a_wolf_sanity_control_file_written)
 @Project.post(part_2a_namd_equilb_NVT_box_0_control_file_written)
 @Project.post(part_2a_namd_equilb_NVT_box_1_control_file_written)
-@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.post(mosdef_input_written)
 @Project.operation.with_directives(
     {
