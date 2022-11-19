@@ -3527,7 +3527,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-@Project.operation(aggregator=aggregator.groupby("wolf_model", sort_by="production_temperature_K", sort_ascending=False))
+@Project.operation(aggregator=aggregator.groupby("production_temperature_K"))
 #@aggregator.groupby(key=statepoint_without_replica, sort_by="production_temperature_K", sort_ascending=False)
 @Project.operation.with_directives(
      {
