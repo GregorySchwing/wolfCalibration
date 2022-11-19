@@ -3690,6 +3690,9 @@ def part_5b_analysis_replica_averages(*jobs):
         # *************************
         # drawing in data from single file and extracting specific rows for the vapor box (end)
         # *************************
+    print(electrostatic_a_repilcate_list)
+    print(electrostatic_b_repilcate_list)
+    print(electrostatic_c_repilcate_list)
 
     print(pressure_repilcate_box_liq_list)
     print(total_molecules_repilcate_box_liq_list)
