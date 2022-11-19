@@ -43,7 +43,6 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 
 #    hostname_pattern = r".*\.grid\.wayne\.edu"
 #    template = "grid.sh"
-
 # ******************************************************
 # users typical variables, but not all (start)
 # ******************************************************
@@ -243,6 +242,9 @@ def statepoint_without_electrostatic_related_keys_and_replica(job):
 def statepoint_without_wolf_related_keys_and_replica(job):
     keys = sorted(tuple(i for i in job.sp.keys() if i not in ["wolf_model", "wolf_potential", "electrostatic_method", "replica_number_int"]))
     return [(key, job.sp[key]) for key in keys]
+
+agg1 = aggregator.groupby(key=statepoint_without_wolf_related_keys_and_replica, sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator")
+
 
 def append_wolf_calibration_parameters(job):
     import math
@@ -3542,7 +3544,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-#@aggregator.groupby(key=statepoint_without_wolf_related_keys_and_replica, sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator")
+@agg1
 @Project.operation.with_directives(
      {
          "np": 1,
