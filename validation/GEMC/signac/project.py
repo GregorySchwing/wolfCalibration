@@ -3296,7 +3296,7 @@ def part_4b_job_gomc_plot_surfaces(job):
 )
 @FlowProject.pre(
      lambda * jobs: all(
-         part_4b_job_gomc_wolf_sanity_completed_properly(job, gomc_production_control_file_name_str)
+         part_4b_job_gomc_wolf_sanity_completed_properly(job)
          for job in jobs
      )
 )
