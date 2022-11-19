@@ -81,14 +81,13 @@ wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
 # filter the list of dictionaries
 total_statepoints = list()
-
-for replica_i in replicas:
-    print(replica_i)
-    for solvent_i in solvent:
-        for solute_i in solute:
-            for e_method in electrostatic_method:
-                for prod_temp_i, liquid_densities_i, vapor_densities_i, liq_box_lengths_ang_i, \
-                    vap_box_lengths_ang_i, N_liquid_solvent_i, N_vapor_solvent_i  in pymcmd_conditions:
+for prod_temp_i, liquid_densities_i, vapor_densities_i, liq_box_lengths_ang_i, \
+    vap_box_lengths_ang_i, N_liquid_solvent_i, N_vapor_solvent_i  in pymcmd_conditions:
+    for replica_i in replicas:
+        print(replica_i)
+        for solvent_i in solvent:
+            for solute_i in solute:
+                for e_method in electrostatic_method:
                     if (e_method == "Wolf"):
                         for wolfM in wolfModel:
                             for wolfP in wolfPotential:
