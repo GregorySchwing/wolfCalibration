@@ -3540,7 +3540,6 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-
 @Project.pre(lambda *jobs: all(part_5a_analysis_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
 @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
@@ -3627,9 +3626,8 @@ def part_5b_analysis_replica_averages(*jobs):
     # ***************************************************
     # create the required lists and file labels total averages across the replicates (end)
     # ***************************************************
-
+    print("num jobs", len(jobs))
     for job in jobs:
-
         # *************************
         # drawing in data from single simulation file and extracting specific
         # *************************
