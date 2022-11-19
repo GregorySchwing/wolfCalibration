@@ -241,7 +241,7 @@ def statepoint_without_electrostatic_related_keys_and_replica(job):
     return [(key, job.sp[key]) for key in keys]
 
 def statepoint_without_wolf_related_keys_and_replica(job):
-    keys = sorted(tuple(i for i in job.sp.keys() if i not in ["wolf_model", "wolf_potential", "electrostatic_method", "N_liquid_solvent", "N_vapor_solvent","replica_number_int"]))
+    keys = sorted(tuple(i for i in job.sp.keys() if i not in ["wolf_model", "wolf_potential", "electrostatic_method", "replica_number_int"]))
     return [(key, job.sp[key]) for key in keys]
 
 def append_wolf_calibration_parameters(job):
@@ -3535,7 +3535,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-@aggregator.groupby(key="replica_number_int", sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator")
+@aggregator.groupby(key=statepoint_without_wolf_related_keys_and_replica, sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator")
 @Project.operation.with_directives(
      {
          "np": 1,
