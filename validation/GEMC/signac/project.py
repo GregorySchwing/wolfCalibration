@@ -236,8 +236,12 @@ def statepoint_without_temperature(job):
     keys = sorted(tuple(i for i in job.sp.keys() if i not in {"production_temperature_K"}))
     return [(key, job.sp[key]) for key in keys]
 
-def statepoint_without_wolf_related_keys_and_replica(job):
+def statepoint_without_electrostatic_related_keys_and_replica(job):
     keys = sorted(tuple(i for i in job.sp.keys() if i not in {"wolf_model", "wolf_potential", "electrostatic_method", "replica_number_int"}))
+    return [(key, job.sp[key]) for key in keys]
+
+def statepoint_without_wolf_related_keys_and_replica(job):
+    keys = sorted(tuple(i for i in job.sp.keys() if i not in {"wolf_model", "wolf_potential", "replica_number_int"}))
     return [(key, job.sp[key]) for key in keys]
 
 def append_wolf_calibration_parameters(job):
