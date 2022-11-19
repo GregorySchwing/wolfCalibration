@@ -3542,7 +3542,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-@aggregator.groupby(key=statepoint_without_wolf_related_keys_and_replica, sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator")
+@Project.operation(aggregator=aggregator.groupby(key=statepoint_without_wolf_related_keys_and_replica, sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator"))
 @Project.operation.with_directives(
      {
          "np": 1,
@@ -3813,7 +3813,7 @@ def part_5b_analysis_replica_averages(*jobs):
 # ******************************************************
 # ******************************************************
 
-@aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", select=lambda job: job.sp.wolf_model != "Calibrator")
+@Project.operation(aggregator=aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", select=lambda job: job.sp.wolf_model != "Calibrator"))
 @Project.operation.with_directives(
      {
          "np": 1,
@@ -4192,7 +4192,7 @@ def part_5c_analysis_critical_and_boiling__points_replicate_data(*jobs):
 # data analysis - get the critical and boilin point data avg and std. dev across the replicates (start)
 # ******************************************************
 # ******************************************************
-@aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", sort_ascending=True)
+@Project.operation(aggregator=aggregator.groupby(key=statepoint_without_temperature, sort_by="production_temperature_K", sort_ascending=True))
 @Project.operation.with_directives(
      {
          "np": 1,
