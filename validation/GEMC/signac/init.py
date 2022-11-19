@@ -83,6 +83,7 @@ wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
 total_statepoints = list()
 
 for replica_i in replicas:
+    print(replica_i)
     for solvent_i in solvent:
         for solute_i in solute:
             for prod_temp_i, liquid_densities_i, vapor_densities_i, liq_box_lengths_ang_i, \
