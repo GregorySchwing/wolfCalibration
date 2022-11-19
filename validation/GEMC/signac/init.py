@@ -110,7 +110,7 @@ for replica_i in replicas:
                                 total_statepoints.append(statepoint)
                     else:
                         statepoint = {
-                                "replica_number_int": 0,
+                                "replica_number_int": replica_i,
                                 "solvent": solvent_i,
                                 "solute": solute_i,
                                 "liquid_density" : liquid_densities_i,
