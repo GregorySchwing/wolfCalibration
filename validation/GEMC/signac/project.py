@@ -253,9 +253,16 @@ def append_wolf_calibration_parameters(job):
     if job.doc.production_ensemble in ["GEMC_NVT", "GEMC_NPT"]:
         WolfCutoffBoxList = [0,1]
 
-        WolfCutoffCoulombLowerBoundList = [10,10]
-        WolfCutoffCoulombUpperBoundList = [math.floor(job.doc.liq_box_lengths_ang/2.0),math.floor(job.doc.vap_box_lengths_ang/2.0)]
-        WolfCutoffCoulombIntervalList = [(math.floor(job.doc.liq_box_lengths_ang/2.0) - 10)/50,(math.floor(job.doc.vap_box_lengths_ang/2.0) - 10)/50]
+        lowerbound = 10
+        liqUB = math.floor(job.doc.liq_box_lengths_ang/2.0)
+        vapUB = math.floor(job.doc.vap_box_lengths_ang/2.0)
+
+        liqUB = float(liqUB) - (liqUB - lowerbound)*0.05
+        vapUB = float(vapUB) - (vapUB - lowerbound)*0.05   
+
+        WolfCutoffCoulombLowerBoundList = [lowerbound,lowerbound]
+        WolfCutoffCoulombUpperBoundList = [liqUB,vapUB]
+        WolfCutoffCoulombIntervalList = [math.floor((liqUB - lowerbound)/50),math.floor((vapUB - lowerbound)/50)]
 
         WolfAlphaLowerBoundList = [0.0, 0.0]
         WolfAlphabUpperBoundList = [0.5, 0.5]
