@@ -86,9 +86,9 @@ for replica_i in replicas:
     print(replica_i)
     for solvent_i in solvent:
         for solute_i in solute:
-            for prod_temp_i, liquid_densities_i, vapor_densities_i, liq_box_lengths_ang_i, \
-                vap_box_lengths_ang_i, N_liquid_solvent_i, N_vapor_solvent_i  in pymcmd_conditions:
-                for e_method in electrostatic_method:
+            for e_method in electrostatic_method:
+                for prod_temp_i, liquid_densities_i, vapor_densities_i, liq_box_lengths_ang_i, \
+                    vap_box_lengths_ang_i, N_liquid_solvent_i, N_vapor_solvent_i  in pymcmd_conditions:
                     if (e_method == "Wolf"):
                         for wolfM in wolfModel:
                             for wolfP in wolfPotential:
@@ -111,20 +111,20 @@ for replica_i in replicas:
                                 total_statepoints.append(statepoint)
                     else:
                         statepoint = {
-                                "replica_number_int": replica_i,
-                                "solvent": solvent_i,
-                                "solute": solute_i,
-                                "liquid_density" : liquid_densities_i,
-                                "vapor_density" : vapor_densities_i,
-                                "liq_box_lengths_ang" : liq_box_lengths_ang_i,
-                                "vap_box_lengths_ang" : vap_box_lengths_ang_i,
-                                "N_liquid_solvent" : N_liquid_solvent_i,
-                                "N_vapor_solvent" : N_vapor_solvent_i,
-                                "forcefield" : forcefield[0],
-                                "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
-                                "electrostatic_method": "Ewald",
-                                "wolf_model": "Ewald",
-                                "wolf_potential": "Ewald",
+                            "replica_number_int": replica_i,
+                            "solvent": solvent_i,
+                            "solute": solute_i,
+                            "liquid_density" : liquid_densities_i,
+                            "vapor_density" : vapor_densities_i,
+                            "liq_box_lengths_ang" : liq_box_lengths_ang_i,
+                            "vap_box_lengths_ang" : vap_box_lengths_ang_i,
+                            "N_liquid_solvent" : N_liquid_solvent_i,
+                            "N_vapor_solvent" : N_vapor_solvent_i,
+                            "forcefield" : forcefield[0],
+                            "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                            "electrostatic_method": "Ewald",
+                            "wolf_model": "Ewald",
+                            "wolf_potential": "Ewald",
                         }
                         total_statepoints.append(statepoint)           
                 # The calibration statepoints
