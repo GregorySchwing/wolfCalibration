@@ -236,6 +236,10 @@ def statepoint_without_temperature(job):
     keys = sorted(tuple(i for i in job.sp.keys() if i not in {"production_temperature_K"}))
     return [(key, job.sp[key]) for key in keys]
 
+def statepoint_without_wolf_related_keys_and_replica(job):
+    keys = sorted(tuple(i for i in job.sp.keys() if i not in {"wolf_model", "wolf_potential", "electrostatic_method", "replica_number_int"}))
+    return [(key, job.sp[key]) for key in keys]
+
 def append_wolf_calibration_parameters(job):
     import math
     WolfDefaultKind = "VlugtWIntraCutoff"
@@ -3527,8 +3531,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-@Project.operation(aggregator=aggregator.groupby("production_temperature_K"))
-#@aggregator.groupby(key=statepoint_without_replica, sort_by="production_temperature_K", sort_ascending=False)
+@aggregator.groupby(key=statepoint_without_wolf_related_keys_and_replica, sort_by="production_temperature_K", sort_ascending=False)
 @Project.operation.with_directives(
      {
          "np": 1,
