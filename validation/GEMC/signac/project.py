@@ -3535,7 +3535,7 @@ def part_5a_analysis_individual_simulation_averages(*jobs):
 # data analysis - get the average and std. dev. from/across all the replicate (start)
 # ******************************************************
 # ******************************************************
-@aggregator.groupby(key="production_temperature_K", sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator")
+@aggregator.groupby(key="replica_number_int", sort_by="production_temperature_K", sort_ascending=False, select=lambda job: job.sp.wolf_model != "Calibrator")
 @Project.operation.with_directives(
      {
          "np": 1,
