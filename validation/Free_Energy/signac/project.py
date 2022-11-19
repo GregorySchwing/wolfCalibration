@@ -58,8 +58,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
 
 
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
@@ -100,12 +100,6 @@ for post-simulation analysis every 5 × 10 3 MCS.
 """
 gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 10 * 10**3
 
-# calc MC steps
-MC_steps = int(gomc_steps_equilb_design_ensemble)
-EqSteps = 1000
-Calibration_MC_steps = 1000
-Calibration_MC_Eq_Steps = 100
-Wolf_Sanity_MC_steps = 10 * 10**7
 # Free energy calcs: set free energy data in doc
 # this number will generate the lamdas
 # set the number of lambda spacings, which includes 0 to 1
@@ -417,9 +411,8 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    equilibration_ensemble = "NVT"
+    equilibration_ensemble = "NPT"
     #equilibration_ensemble = "NPT"
-    production_ensemble = "NVT"
     production_ensemble = "NVT"
 
     # set the GOMC production ensemble temp, pressure, molecule, box dimenstion and residue names
