@@ -264,7 +264,7 @@ def append_wolf_calibration_parameters(job):
 
         WolfCutoffCoulombLowerBoundList = [lowerbound,lowerbound]
         WolfCutoffCoulombUpperBoundList = [liqUB,vapUB]
-        WolfCutoffCoulombIntervalList = [math.floor((liqUB - lowerbound)/50),math.floor((vapUB - lowerbound)/50)]
+        WolfCutoffCoulombIntervalList = [float(liqUB - lowerbound)/float(50),float(vapUB - lowerbound)/float(50)]
 
         WolfAlphaLowerBoundList = [0.0, 0.0]
         WolfAlphabUpperBoundList = [0.5, 0.5]
@@ -273,8 +273,8 @@ def append_wolf_calibration_parameters(job):
         WolfCutoffBoxList = [0]
 
         WolfCutoffCoulombLowerBoundList = [10]
-        WolfCutoffCoulombUpperBoundList = [math.floor(job.doc.liq_box_lengths_ang/2.0)]
-        WolfCutoffCoulombIntervalList = [(math.floor(job.doc.liq_box_lengths_ang/2.0) - 10)/50]
+        WolfCutoffCoulombUpperBoundList = [float(job.doc.liq_box_lengths_ang)/2.0]
+        WolfCutoffCoulombIntervalList = [(float((float(job.doc.liq_box_lengths_ang)/2.0) - float(10))/float(50))]
 
         WolfAlphaLowerBoundList = [0.0]
         WolfAlphabUpperBoundList = [0.5]
