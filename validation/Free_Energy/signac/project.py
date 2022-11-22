@@ -2397,78 +2397,6 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("Started: equilb NPT NAMD -> NPT GOMC control file writing")
     print("#**********************")
 
-
-    print("#**********************")
-    print("Started:  Wolf Sanity GOMC control file writing")
-    print("#**********************")
-    wolf_sanity_control_file_name = "wolf_sanity"
-    gomc_control.write_gomc_control_file(
-        gomc_charmm_object_with_files,
-        wolf_sanity_control_file_name,
-        job.doc.equilibration_ensemble,
-        Wolf_Sanity_MC_steps,
-        510,
-        ff_psf_pdb_file_directory=None,
-        check_input_files_exist=False,
-        Parameters="{}.inp".format(gomc_ff_filename_str),
-        Restart=True,
-        RestartCheckpoint=True,
-        ExpertMode=False,
-        Coordinates_box_0=job.doc.path_to_ref_pdb,
-        Structure_box_0=job.doc.path_to_ref_psf,
-        binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
-        extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
-        binVelocities_box_0=None,
-        Coordinates_box_1=None,
-        Structure_box_1=None,
-        binCoordinates_box_1=None,
-        extendedSystem_box_1=None,
-        binVelocities_box_1=None,
-        input_variables_dict={
-            "PRNG": seed_no,
-            "Pressure": production_pressure_bar,
-            "Ewald": job.sp.electrostatic_method == "Ewald",
-            "ElectroStatic": use_ElectroStatics,
-            "VDWGeometricSigma": VDWGeometricSigma,
-            "Rcut": job.doc.Rcut_ang,
-            "Exclude": Exclude,
-            "VolFreq": VolFreq[-1],
-            "MultiParticleFreq": MultiParticleFreq[-1],
-            "IntraSwapFreq": IntraSwapFreq[-1],
-            "CrankShaftFreq": CrankShaftFreq[-1],
-            "SwapFreq": SwapFreq[-1],
-            "DisFreq": DisFreq[-1],
-            "RotFreq": RotFreq[-1],
-            "RegrowthFreq": RegrowthFreq[-1],
-            "OutputName": wolf_sanity_control_file_name,
-            "EqSteps": EqSteps,
-            "PressureCalc": output_false_list_input,
-            "RestartFreq": output_true_list_input,
-            "CheckpointFreq": output_true_list_input,
-            "ConsoleFreq": console_output_true_list_input,
-            "BlockAverageFreq": output_true_list_input,
-            "HistogramFreq": output_false_list_input,
-            "CoordinatesFreq": output_false_list_input,
-            "DCDFreq": output_true_list_input,
-            "Potential": cutoff_style,
-            "LRC": True,
-            "RcutLow": 1.0,
-            "CBMC_First": CBMC_First[-1],
-            "CBMC_Nth": CBMC_Nth[-1],
-            "CBMC_Ang": CBMC_Ang[-1],
-            "CBMC_Dih": CBMC_Dih[-1],
-            #"FreeEnergyCalc": NoFreeEnergyCalc,
-            #"MoleculeType": MoleculeType,
-            #"InitialState": initial_state_sims_i,
-            #"LambdaVDW": list(job.doc.LambdaVDW_list),
-            #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
-        },
-    )
-    append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
-
-    print("#**********************")
-    print("Finished: Wolf Sanity GOMC control file writing")
-    print("#**********************")
     #
     if (job.sp.electrostatic_method == "Wolf"):
         output_name_control_file_calibration_name = "wolf_calibration"
@@ -2975,6 +2903,78 @@ def build_psf_pdb_ff_gomc_conf(job):
         # production NPT or GEMC-NVT - GOMC control file writing  (end)
         # ******************************************************
 
+    print("#**********************")
+    print("Started:  Wolf Sanity GOMC control file writing")
+    print("#**********************")
+    wolf_sanity_control_file_name = "wolf_sanity"
+    gomc_control.write_gomc_control_file(
+        gomc_charmm_object_with_files,
+        wolf_sanity_control_file_name,
+        job.doc.production_ensemble,
+        Wolf_Sanity_MC_steps,
+        510,
+        ff_psf_pdb_file_directory=None,
+        check_input_files_exist=False,
+        Parameters="{}.inp".format(gomc_ff_filename_str),
+        Restart=True,
+        RestartCheckpoint=True,
+        ExpertMode=False,
+        Coordinates_box_0=job.doc.path_to_ref_pdb,
+        Structure_box_0=job.doc.path_to_ref_psf,
+        binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
+        extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
+        binVelocities_box_0=None,
+        Coordinates_box_1=None,
+        Structure_box_1=None,
+        binCoordinates_box_1=None,
+        extendedSystem_box_1=None,
+        binVelocities_box_1=None,
+        input_variables_dict={
+            "PRNG": seed_no,
+            "Pressure": production_pressure_bar,
+            "Ewald": job.sp.electrostatic_method == "Ewald",
+            "ElectroStatic": use_ElectroStatics,
+            "VDWGeometricSigma": VDWGeometricSigma,
+            "Rcut": job.doc.Rcut_ang,
+            "Exclude": Exclude,
+            "VolFreq": VolFreq[-1],
+            "MultiParticleFreq": MultiParticleFreq[-1],
+            "IntraSwapFreq": IntraSwapFreq[-1],
+            "CrankShaftFreq": CrankShaftFreq[-1],
+            "SwapFreq": SwapFreq[-1],
+            "DisFreq": DisFreq[-1],
+            "RotFreq": RotFreq[-1],
+            "RegrowthFreq": RegrowthFreq[-1],
+            "OutputName": wolf_sanity_control_file_name,
+            "EqSteps": EqSteps,
+            "PressureCalc": output_false_list_input,
+            "RestartFreq": output_true_list_input,
+            "CheckpointFreq": output_true_list_input,
+            "ConsoleFreq": console_output_true_list_input,
+            "BlockAverageFreq": output_true_list_input,
+            "HistogramFreq": output_false_list_input,
+            "CoordinatesFreq": output_false_list_input,
+            "DCDFreq": output_true_list_input,
+            "Potential": cutoff_style,
+            "LRC": True,
+            "RcutLow": 1.0,
+            "CBMC_First": CBMC_First[-1],
+            "CBMC_Nth": CBMC_Nth[-1],
+            "CBMC_Ang": CBMC_Ang[-1],
+            "CBMC_Dih": CBMC_Dih[-1],
+            #"FreeEnergyCalc": NoFreeEnergyCalc,
+            #"MoleculeType": MoleculeType,
+            #"InitialState": initial_state_sims_i,
+            #"LambdaVDW": list(job.doc.LambdaVDW_list),
+            #"LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
+        },
+    )
+    append_checkpoint_line(job, wolf_sanity_control_file_name, job.doc.path_to_sseq_checkpoint)
+
+    print("#**********************")
+    print("Finished: Wolf Sanity GOMC control file writing")
+    print("#**********************")
+
 # ******************************************************
 # ******************************************************
 # Creating GOMC files (pdb, psf, force field (FF), and gomc control files (end)
@@ -3102,7 +3102,7 @@ def run_wolf_sanity_run_gomc_command(job):
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
-        str("GOMC_CPU_NVT"),
+        str(job.doc.gomc_production_ensemble_gomc_binary_file),
         str(job.doc.gomc_ncpu),
         str(wolf_sanity_control_file_name),
         str(wolf_sanity_control_file_name),
