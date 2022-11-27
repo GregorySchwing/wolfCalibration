@@ -694,12 +694,12 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     # Spline and pymoo prefer convex surfaces.
     # All are convex at zero intercept when nonabs except for VDSP and VWICDSP
-    if(wolfKind == "VLUGT" and potential == "DSP"):
-        z = np.abs(df4.iloc[:,0].to_numpy())
-    elif(wolfKind == "VLUGTWINTRACUTOFF" and potential == "DSP"):
-        z = np.abs(df4.iloc[:,0].to_numpy())
-    else:
-        z = df4.iloc[:,0].to_numpy()
+    #if(wolfKind == "VLUGT" and potential == "DSP"):
+    #    z = np.abs(df4.iloc[:,0].to_numpy())
+    #elif(wolfKind == "VLUGTWINTRACUTOFF" and potential == "DSP"):
+    #    z = np.abs(df4.iloc[:,0].to_numpy())
+    #else:
+    z = df4.iloc[:,0].to_numpy()
     z = np.reshape(z, (len(x),len(y)))
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
 
@@ -729,7 +729,26 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     pd_RCut_varies_alpha_constant = [1,0]
     pd_RCut_constant_alpha_varies = [0,1]
     pd_RCut_varies_alpha_varies = [1,1]
+    """
+    xx_quick_forplotting = np.linspace(x.min(), x.max(), 1000)
+    yy_quick_forplotting = np.linspace(y.min(), y.max(), 1000)
 
+    X_quick_forplotting, Y_quick_forplotting = np.meshgrid(xx_quick_forplotting, yy_quick_forplotting)
+    #zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+    zsquick_ = np.array(rect_B_spline.ev(X_quick_forplotting.ravel(), Y_quick_forplotting.ravel()))
+    Zquick = zsquick_.reshape(X_quick_forplotting.shape)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X_quick_forplotting, Y_quick_forplotting, Zquick)
+    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
+    ax.set_title(title)
+
+    ax.set_xlabel('Rc')
+    ax.set_ylabel('Alpha')
+    ax.set_zlabel('Error')
+
+    plt.show()
+    """
     # Bad - don't use this
     #derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_constant[0],pd_RCut_varies_alpha_constant[1])
     # OK - M.O. 2.0
