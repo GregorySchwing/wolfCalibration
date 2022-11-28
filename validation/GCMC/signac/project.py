@@ -419,7 +419,7 @@ def initial_parameters(job):
     else:
         job.doc.liq_box_lengths_ang = 2*(job.sp.shell_radius + padding) * u.angstrom
 
-    job.doc.res_box_lengths_ang = 30 * u.angstrom
+    job.doc.res_box_lengths_ang = 31.3 * u.angstrom
 
     job.doc.Rcut_ang = 14 * u.angstrom  # this is the Rcut for GOMC it is the Rswitch for NAMD
     job.doc.Rcut_for_switch_namd_ang = 17 * u.angstrom  # Switch Rcut for NAMD's Switch function
