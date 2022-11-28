@@ -62,8 +62,11 @@ gomc_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 
 # local bin paths
-#gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
-#namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
+gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GEMC/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
+
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/GEMC/signac/bin"
 
 #gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 #namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
@@ -82,6 +85,12 @@ gomc_steps_production = 100 * 10**6 # set value for paper = 60 * 10**6
 gomc_console_output_data_every_X_steps = 50 * 10**3# set value for paper = 100 * 10**3
 
 gomc_output_data_every_X_steps = 50 * 10**3 # # set value for paper = 50 * 10**3
+
+gomc_steps_equilb_design_ensemble = 5 * 10**3 #  set value for paper = 60 * 10**6
+gomc_steps_production = 100 * 10**6 # set value for paper = 60 * 10**6
+gomc_console_output_data_every_X_steps = 1 * 10**3# set value for paper = 100 * 10**3
+
+gomc_output_data_every_X_steps = 1 * 10**3 # # set value for paper = 50 * 10**3
 
 """
 During the
@@ -851,7 +860,7 @@ def part_3b_output_gomc_calibration_started(job):
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             if ewald_job.isfile(
-                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+                "out_wolf_calibration.dat"
             ):
                 return True
             else:
@@ -1084,10 +1093,6 @@ def part_4b_job_gomc_calibration_completed_properly(job):
                 control_file_name_str,
             ) is False:
                 return False
-            elif ewald_job.isfile(
-                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
-            ):
-                return True
             else:
                 return False
     except:
