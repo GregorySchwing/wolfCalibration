@@ -11,7 +11,8 @@ import unyt as u
 
 project=signac.init_project('density')
 
-forcefield = ["TRAPPE"] # ["Ne", "Rn"]
+#forcefield = ["TRAPPE"] # ["Ne", "Rn"]
+forcefield = {"SPCE" : "TRAPPE", "MTOH" : "OPLS"}
 solute = ["solvent_box"] # ["Ne", "Rn"]
 #solute = ["Ne", "ETOH"] # ["Ne", "Rn"]
 solvent = ["SPCE", "MTOH"] # ["Ne", "Rn"]
