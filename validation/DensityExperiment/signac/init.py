@@ -31,7 +31,8 @@ startingDensities = np.array([0.001, 0.01, 0.1])
 densities_spce = np.concatenate((startingDensities, densities_to_1), axis=0)* g_per_cm3
 print(densities_spce)
 
-densities_mtoh_to_7 = np.concatenate((startingDensities, densities_to_pt_7), axis=0)
+startingDensities_mtoh = np.array([0.01, 0.1])
+densities_mtoh_to_7 = np.concatenate((startingDensities_mtoh, densities_to_pt_7), axis=0)
 relevantLiquidDensities = np.array([0.748, 0.7863])
 
 densities_mtoh = np.concatenate((densities_mtoh_to_7, relevantLiquidDensities), axis=0)* g_per_cm3
@@ -73,7 +74,7 @@ for replica_i in replicas:
                                         "solvent": solvent_i,
                                         "solute": solute_i,
                                         "density" : density_i,
-                                        "forcefield" : forcefield[0],
+                                        "forcefield" : forcefield[solvent_i],
                                         "wolf_model": wolfM,
                                         "wolf_potential": wolfP,
                                         "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
@@ -86,7 +87,7 @@ for replica_i in replicas:
                                     "solvent": solvent_i,
                                     "solute": solute_i,
                                     "density" : density_i,
-                                    "forcefield" : forcefield[0],
+                                    "forcefield" : forcefield[solvent_i],
                                     "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                     "electrostatic_method": "Ewald",
                                     "wolf_model": "Ewald",
@@ -99,7 +100,7 @@ for replica_i in replicas:
                                     "solvent": solvent_i,
                                     "solute": solute_i,
                                     "density" : density_i,
-                                    "forcefield" : forcefield[0],
+                                    "forcefield" : forcefield[solvent_i],
                                     "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                     "electrostatic_method": "Wolf",
                                     "wolf_model": "Calibrator",
