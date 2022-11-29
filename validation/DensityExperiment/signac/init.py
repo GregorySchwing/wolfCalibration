@@ -24,14 +24,22 @@ g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 #densities_to_1 = np.arange (0.2, 0.3, 0.1)
 densities_to_1 = np.arange (0.2, 1.1, 0.1)
 
+densities_to_pt_7 = np.arange (0.2, 0.8, 0.1)
+
 startingDensities = np.array([0.001, 0.01, 0.1])
-densities = np.concatenate((startingDensities, densities_to_1), axis=0)* g_per_cm3
-print(densities)
+densities_spce = np.concatenate((startingDensities, densities_to_1), axis=0)* g_per_cm3
+print(densities_spce)
+
+densities_mtoh_to_7 = np.concatenate((startingDensities, densities_to_pt_7), axis=0)
+relevantLiquidDensities = np.array([0.748, 0.7863])
+
+densities_mtoh = np.concatenate((densities_mtoh_to_7, relevantLiquidDensities), axis=0)* g_per_cm3
+
 #production_temperatures = [275, 295, 315, 335, 355, 375] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 #production_temperatures = [275] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 production_temperatures = [510] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 
- 
+solvent_to_densities = {"SPCE": densities_spce, "MTOH": densities_mtoh}
 # *******************************************
 # the main user varying state points (end)
 # *******************************************
@@ -54,9 +62,7 @@ for replica_i in replicas:
     for solvent_i in solvent:
         for solute_i in solute:
             for prod_temp_i in production_temperatures:
-                for density_i in densities:
-                    if (density_i > 0.8 and solute_i == "MTOH"):
-                        continue
+                for density_i in solvent_to_densities[solvent_i]:
                     for e_method in electrostatic_method:
                         if (e_method == "Wolf"):
                             for wolfM in wolfModel:
