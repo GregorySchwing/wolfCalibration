@@ -14,7 +14,7 @@ project=signac.init_project('density')
 forcefield = ["TRAPPE"] # ["Ne", "Rn"]
 solute = ["solvent_box"] # ["Ne", "Rn"]
 #solute = ["Ne", "ETOH"] # ["Ne", "Rn"]
-solvent = ["SPCE"] # ["Ne", "Rn"]
+solvent = ["SPCE", "MTOH"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 
@@ -55,6 +55,8 @@ for replica_i in replicas:
         for solute_i in solute:
             for prod_temp_i in production_temperatures:
                 for density_i in densities:
+                    if (density_i > 0.8 and solute_i == "MTOH"):
+                        continue
                     for e_method in electrostatic_method:
                         if (e_method == "Wolf"):
                             for wolfM in wolfModel:

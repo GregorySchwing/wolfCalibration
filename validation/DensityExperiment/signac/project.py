@@ -169,6 +169,7 @@ forcefield_residue_to_ff_filename_dict = {
     "SPC": {"OPLS" : "spc_opls.xml", "TRAPPE" : "spc_trappe.xml"},
     "TIP3": {"OPLS" : "tip3_opls.xml", "TRAPPE" : "tip3_trappe.xml"},
     "TIP4": {"OPLS" : "tip4p_opls.xml", "TRAPPE" : "tip4p_trappe.xml"},
+    "MTOH": {"OPLS" : "oplsaa", "TRAPPE" : "trappe-ua.xml"},
     "ETOH": {"OPLS" : "oplsaa", "TRAPPE" : "trappe-ua.xml"},
     "Ne": "nobel_gas_vrabec_LB_mixing.xml",
     "Rn": "nobel_gas_vrabec_LB_mixing.xml",
@@ -184,6 +185,7 @@ smiles_or_mol2_name_to_value_dict = {
     "TIP4": {"OPLS" : 'tip4p.mol2', "TRAPPE" : 'tip4p.mol2'},
     "Ne": {"OPLS" : 'Ne', "TRAPPE" : 'Ne'},
     "Rn": {"OPLS" : 'Rn', "TRAPPE" : 'Rn'},
+    "MTOH": {"OPLS" : "CO", "TRAPPE" : "methanol.mol2"},
     "ETOH": {"OPLS" : "CCO", "TRAPPE" : "ethanol.mol2"},
 }
 
