@@ -12,9 +12,6 @@
 {%- endif %}
 
 #SBATCH -N 1
-#SBATCH --mail-type=ALL
-
-
 
 
 echo  "Running on host" hostname
