@@ -3183,7 +3183,7 @@ def run_wolf_sanity_run_gomc_command(job):
         "np": lambda job: job.doc.gomc_ncpu,
         "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
-        "walltime": 26,
+        "walltime": 48,
     }
 )
 @flow.with_job
