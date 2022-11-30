@@ -86,12 +86,6 @@ gomc_console_output_data_every_X_steps = 50 * 10**3# set value for paper = 100 *
 
 gomc_output_data_every_X_steps = 50 * 10**3 # # set value for paper = 50 * 10**3
 
-gomc_steps_equilb_design_ensemble = 5 * 10**3 #  set value for paper = 60 * 10**6
-gomc_steps_production = 100 * 10**6 # set value for paper = 60 * 10**6
-gomc_console_output_data_every_X_steps = 1 * 10**3# set value for paper = 100 * 10**3
-
-gomc_output_data_every_X_steps = 1 * 10**3 # # set value for paper = 50 * 10**3
-
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -105,8 +99,8 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 500000
-Calibration_MC_Eq_Steps = 10000
+Calibration_MC_steps = 50000
+Calibration_MC_Eq_Steps = 1000
 Wolf_Sanity_MC_steps =  100 * 10**6 # set value for paper = 60 * 10**6
 
 # Free energy calcs: set free energy data in doc
