@@ -76,7 +76,7 @@ pr = signac.get_project(pr_root)
 # DSP is difficult to calibrate.  dont even bother.
 wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
 #wolfPotential = ["DSF"] # ["Ne", "Rn"]
-wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
+wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS","HYBRID"] # ["Ne", "Rn"]
 
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
 # filter the list of dictionaries
