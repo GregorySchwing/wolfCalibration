@@ -1057,17 +1057,10 @@ def part_4b_job_gomc_calibration_completed_properly(job):
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             control_file_name_str = "wolf_calibration"
-            if gomc_sim_completed_properly(
+            return gomc_sim_completed_properly(
                 ewald_job,
                 control_file_name_str,
-            ) is False:
-                return False
-            elif ewald_job.isfile(
-                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
-            ):
-                return True
-            else:
-                return False
+            )
     except:
         return False
 
