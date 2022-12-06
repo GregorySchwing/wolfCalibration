@@ -12,14 +12,11 @@
 {%- endif %}
 
 #SBATCH -N 1
-#SBATCH --mail-type=ALL
-
-
 
 
 echo  "Running on host" hostname
 echo  "Time is" date
-conda activate mosdef-study38
+conda activate nobel_gas
 
 module load python/3.8
 

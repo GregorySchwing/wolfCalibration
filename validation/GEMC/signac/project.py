@@ -86,12 +86,6 @@ gomc_console_output_data_every_X_steps = 50 * 10**3# set value for paper = 100 *
 
 gomc_output_data_every_X_steps = 50 * 10**3 # # set value for paper = 50 * 10**3
 
-gomc_steps_equilb_design_ensemble = 5 * 10**3 #  set value for paper = 60 * 10**6
-gomc_steps_production = 100 * 10**6 # set value for paper = 60 * 10**6
-gomc_console_output_data_every_X_steps = 1 * 10**3# set value for paper = 100 * 10**3
-
-gomc_output_data_every_X_steps = 1 * 10**3 # # set value for paper = 50 * 10**3
-
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -105,8 +99,8 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 500000
-Calibration_MC_Eq_Steps = 10000
+Calibration_MC_steps = 50000
+Calibration_MC_Eq_Steps = 1000
 Wolf_Sanity_MC_steps =  100 * 10**6 # set value for paper = 60 * 10**6
 
 # Free energy calcs: set free energy data in doc
@@ -1088,13 +1082,10 @@ def part_4b_job_gomc_calibration_completed_properly(job):
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             control_file_name_str = "wolf_calibration"
-            if gomc_sim_completed_properly(
+            return gomc_sim_completed_properly(
                 ewald_job,
                 control_file_name_str,
-            ) is False:
-                return False
-            else:
-                return False
+            )
     except:
         return False
 
@@ -3192,7 +3183,7 @@ def run_wolf_sanity_run_gomc_command(job):
         "np": lambda job: job.doc.gomc_ncpu,
         "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
-        "walltime": 26,
+        "walltime": 48,
     }
 )
 @flow.with_job
