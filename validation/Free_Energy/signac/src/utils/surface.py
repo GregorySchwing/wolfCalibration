@@ -547,6 +547,123 @@ class MyDumProblemUnconstrained(ElementwiseProblem):
         
         #out["F"] = [f1, f2]
         #out["G"] = [g2]
+
+class MyProblemNorm(ElementwiseProblem):
+
+    def __init__(self, rect_B_spline, tck_pd, RCutMin, RCutMax, AlphaMin, AlphaMax, FMax, DEProblemDerivWRTRcut_max, DEProblemDerivWRTAlpha_max, DEProblemDerivWRT_RCut_and_Alpha_max, DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolerance_power):
+        super().__init__(n_var=2,
+                         n_obj=2,
+                         n_ieq_constr=0,
+                         xl=np.array([RCutMin,AlphaMin]),
+                         xu=np.array([RCutMax,AlphaMax]))
+        self.rect_B_spline = rect_B_spline
+        self.tck_pd = tck_pd
+        self.RCutMin = RCutMin
+        self.RCutMax = RCutMax
+        self.AlphaMin = AlphaMin
+        self.AlphaMax = AlphaMax
+        self.F1Min = 0
+        self.F2Min = 0
+        self.F3Min = 0
+        self.FMax = FMax
+        self.DEProblemDerivWRTRcut_max = DEProblemDerivWRTRcut_max
+        self.DEProblemDerivWRTAlpha_max = DEProblemDerivWRTAlpha_max
+        self.DEProblemDerivWRT_RCut_and_Alpha_max = DEProblemDerivWRT_RCut_and_Alpha_max
+        self.DEProblemDerivWRT_RCut_and_Alpha_DD_max = DEProblemDerivWRT_RCut_and_Alpha_DD_max
+        self.tolerance = pow(10, -tolerance_power)
+        
+        self.pd_RCut_constant_alpha_constant = [0,0]
+        self.pd_RCut_varies_alpha_constant = [1,0]
+        self.pd_RCut_constant_alpha_varies = [0,1]
+        self.pd_RCut_varies_alpha_varies = [1,1]
+        self.pd_RCut_varies_alpha_varies_DD = [2,2]
+
+        self.derivs_wrt_alpha = rect_B_spline.partial_derivative(self.pd_RCut_constant_alpha_varies[0],self.pd_RCut_constant_alpha_varies[1])
+        self.derivs_wrt_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_constant[0],self.pd_RCut_varies_alpha_constant[1])
+        self.derivs_wrt_alpha_and_rcut = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies[0],self.pd_RCut_varies_alpha_varies[1])
+        self.derivs_wrt_alpha_and_rcut_DD = rect_B_spline.partial_derivative(self.pd_RCut_varies_alpha_varies_DD[0],self.pd_RCut_varies_alpha_varies_DD[1])
+
+        self.tck_wrt_alpha = [self.derivs_wrt_alpha.tck[0], self.derivs_wrt_alpha.tck[1],self.derivs_wrt_alpha.tck[2],self.derivs_wrt_alpha.degrees[0],self.derivs_wrt_alpha.degrees[1]]
+        self.tck_wrt_rcut = [self.derivs_wrt_rcut.tck[0], self.derivs_wrt_rcut.tck[1],self.derivs_wrt_rcut.tck[2],self.derivs_wrt_rcut.degrees[0],self.derivs_wrt_rcut.degrees[1]]
+        self.tck_wrt_alpha_and_rcut = [self.derivs_wrt_alpha_and_rcut.tck[0], self.derivs_wrt_alpha_and_rcut.tck[1],self.derivs_wrt_alpha_and_rcut.tck[2],self.derivs_wrt_alpha_and_rcut.degrees[0],self.derivs_wrt_alpha_and_rcut.degrees[1]]
+        self.tck_wrt_alpha_and_rcut_DD = [self.derivs_wrt_alpha_and_rcut_DD.tck[0], self.derivs_wrt_alpha_and_rcut_DD.tck[1],self.derivs_wrt_alpha_and_rcut_DD.tck[2],self.derivs_wrt_alpha_and_rcut_DD.degrees[0],self.derivs_wrt_alpha_and_rcut_DD.degrees[1]]
+
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        # Minimize Relative Error
+        f1 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        f2 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut_DD))/self.DEProblemDerivWRT_RCut_and_Alpha_DD_max
+
+        # Minimize RCut
+        #f2 = (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        #g1 = np.abs(self.rect_B_spline.ev(x[0], x[1]))-self.tolerance
+        """
+        # Minimize dWRT RCut
+        f3 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max
+        # Minimize dWRT Alpha
+        f4 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max
+        # Minimize Gradient
+        f5 = np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max
+        # This way I don't wind up on the side of a hill
+        # Gradient <= RCutLoss
+        g1 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max) - (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        g2 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max) - (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        g3 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max) - (x[0]-self.RCutMin)/(self.RCutMax-self.RCutMin)
+        # Gradient <= RelError
+        #g4 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        # Gradient <= RelError
+        #g5 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        # Gradient <= RelError
+        #g6 = (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max) - (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax)
+        # RelError <= D_wrt_rcut
+        g4 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))/self.DEProblemDerivWRTRcut_max)
+        # RelError <= D_wrt_alpha
+        g5 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))/self.DEProblemDerivWRTAlpha_max)
+        # RelError <= Gradient
+        g6 = (np.abs(self.rect_B_spline.ev(x[0], x[1]))/self.FMax) - (np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))/self.DEProblemDerivWRT_RCut_and_Alpha_max)
+        g7 = np.abs(self.rect_B_spline.ev(x[0], x[1]))-self.tolerance
+        """
+        #out["F"] = [f1, f2, f3, f4, f5]
+        out["F"] = [f1, f2]
+        out["G"] = []
+        #out["G"] = [g1]
+
+        #out["G"] = [g1, g2, g3, g4, g5, g6, g7]
+        #out["G"] = [g1, g3, g5]
+
+    """
+    def _calc_pareto_front(self, flatten=True, *args, **kwargs):
+
+        num_pts = 100
+        rcuts = np.linspace(self.RCutMin, self.RCutMax, num_pts)
+        alphas = np.linspace(self.AlphaMin, self.AlphaMax, num_pts)
+        rcuts_g, alphas_g = np.meshgrid(rcuts, alphas)
+
+        points = np.array(list(zip(rcuts_g.ravel(), alphas_g.ravel())))
+
+
+        F1_a_costs = np.array((np.abs(self.rect_B_spline.ev(rcuts_g.ravel(), alphas_g.ravel())))/self.FMax)
+        F2_a_costs = ((rcuts_g.ravel()-self.RCutMin)/(self.RCutMax-self.RCutMin))
+        deriv1Lambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_rcut))
+        deriv2Lambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha))
+        deriv3Lambda = lambda x : np.abs(interpolate.bisplev(x[0], x[1], self.tck_wrt_alpha_and_rcut))
+
+        F3_a_costs = np.array([deriv1Lambda(i) for i in points])
+        F3_a_costs = F3_a_costs/self.DEProblemDerivWRTRcut_max
+
+        F4_a_costs = np.array([deriv2Lambda(i) for i in points])
+        F4_a_costs = F4_a_costs/self.DEProblemDerivWRTAlpha_max
+
+        F5_a_costs = np.array([deriv2Lambda(i) for i in points])
+        F5_a_costs = F5_a_costs/self.DEProblemDerivWRT_RCut_and_Alpha_max
+
+        costs = np.array(list(zip(F1_a_costs, F2_a_costs, F3_a_costs, F4_a_costs, F5_a_costs)))
+        pass2Method = np.array(list(zip(costs,points)))
+        boolean_array = is_pareto_efficient(costs)
+        print(boolean_array)
+        #pf_a = pareto_frontier_multi(costs)
+        return costs[boolean_array]
+    """
         
 def neg_bspline( x ):
     global tck
@@ -604,12 +721,17 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     pd_RCut_constant_alpha_varies = [0,1]
     pd_RCut_varies_alpha_varies = [1,1]
 
+    pd_RCut_constant_alpha_varies_curv = [0,2]
+    pd_RCut_varies_alpha_varies_curv = [2,2]
+
     # Bad - don't use this
     #derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_constant[0],pd_RCut_varies_alpha_constant[1])
     # OK - M.O. 2.0
     #derivs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies[0],pd_RCut_constant_alpha_varies[1])
     # M.O. 3.0
     derivs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies[0],pd_RCut_varies_alpha_varies[1])
+    curvs = rect_B_spline.partial_derivative(pd_RCut_varies_alpha_varies_curv[0],pd_RCut_varies_alpha_varies_curv[1])
+    alpha_curvs = rect_B_spline.partial_derivative(pd_RCut_constant_alpha_varies_curv[0],pd_RCut_constant_alpha_varies_curv[1])
 
 
     #smallestZDeriv = np.min(derivs, axis=0)
@@ -618,7 +740,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     print("smallestZDeriv", derivs)
     #print("largestZDeriv", largestZDeriv)
     tck_pd = [derivs.tck[0], derivs.tck[1],derivs.tck[2],derivs.degrees[0],derivs.degrees[1]]
- 
+    tck_pd_c = [curvs.tck[0], curvs.tck[1],curvs.tck[2],curvs.degrees[0],curvs.degrees[1]]
+    tck_pd_ac = [alpha_curvs.tck[0], alpha_curvs.tck[1],alpha_curvs.tck[2],alpha_curvs.degrees[0],alpha_curvs.degrees[1]]
+
     print("Derivative data:")
     print(tck_pd)
     #F2 = interpolate.RegularGridInterpolator(points=(x,y), values=z, method='linear', bounds_error=True, fill_value=None)
@@ -635,7 +759,98 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     val = interpolate.bisplev(exampleX2, exampleY2, tck_pd)
     print("deriv", exampleX2, exampleY2)
     print(val)
-    
+
+    """
+    xx_quick_forplotting = np.linspace(x.min(), x.max(), 1000)
+    yy_quick_forplotting = np.linspace(y.min(), y.max(), 1000)
+
+    X_quick_forplotting, Y_quick_forplotting = np.meshgrid(xx_quick_forplotting, yy_quick_forplotting)
+
+
+    zsquick_ = np.array(rect_B_spline.ev(X_quick_forplotting.ravel(), Y_quick_forplotting.ravel()))
+    Zquick = zsquick_.reshape(X_quick_forplotting.shape)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X_quick_forplotting, Y_quick_forplotting, Zquick)
+    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
+    ax.set_title(title)
+
+    ax.set_xlabel('Rc')
+    ax.set_ylabel('Alpha')
+    ax.set_zlabel('Error')
+
+    plt.show()
+
+    zsquick_ = []
+    for alpha in yy_quick_forplotting:
+        for RC in xx_quick_forplotting:
+            val = interpolate.bisplev(RC, alpha, tck_pd)
+            zsquick_.append(val)
+
+    #zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+    #zsquick_ = np.array(interpolate.bisplev(X_quick_forplotting[:,0], Y_quick_forplotting[0,:], tck_pd))
+    Zquick = np.array(zsquick_).reshape(X_quick_forplotting.shape)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X_quick_forplotting, Y_quick_forplotting, Zquick)
+    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box+"_gradient"
+    ax.set_title(title)
+
+    ax.set_xlabel('Rc')
+    ax.set_ylabel('Alpha')
+    ax.set_zlabel('Error')
+
+    plt.show()
+
+
+    zsquick_c_ = []
+    for alpha in yy_quick_forplotting:
+        for RC in xx_quick_forplotting:
+            val = interpolate.bisplev(RC, alpha, tck_pd_c)
+            zsquick_c_.append(val)
+
+    #zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+    #zsquick_ = np.array(interpolate.bisplev(X_quick_forplotting[:,0], Y_quick_forplotting[0,:], tck_pd))
+    #zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+    Zquick_c = np.array(zsquick_c_).reshape(X_quick_forplotting.shape)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X_quick_forplotting, Y_quick_forplotting, Zquick_c)
+    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box+"_curv"
+    ax.set_title(title)
+
+    ax.set_xlabel('Rc')
+    ax.set_ylabel('Alpha')
+    ax.set_zlabel('Error')
+
+    plt.show()
+
+
+
+    zsquick_c_a = []
+    #for RC in xx_quick_forplotting:
+    #    for alpha in yy_quick_forplotting:
+    for alpha in yy_quick_forplotting:
+        for RC in xx_quick_forplotting:
+            val = interpolate.bisplev(RC, alpha, tck_pd_ac)
+            zsquick_c_a.append(val)
+
+    #zs = np.exp(np.array(rect_B_spline.ev(X_forplotting.ravel(), Y_forplotting.ravel())))
+    Zquick_c = np.array(zsquick_c_a).reshape(X_quick_forplotting.shape)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X_quick_forplotting, Y_quick_forplotting, Zquick)
+    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box+"_alpha_curv"
+    ax.set_title(title)
+
+    ax.set_xlabel('Rc')
+    ax.set_ylabel('Alpha')
+    ax.set_zlabel('Error')
+
+    plt.show()
+
+    """
+
     from pymoo.termination import get_termination
     # Create problem to get the unnormalized Pareto Front
     # Since I only use gradient, it's a single objective, no need to scale.
@@ -646,7 +861,13 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
     foundSoln = False
     tolPower = 0
-    for tolPow in range(8, -8, -1):
+    from pymoo.termination import get_termination
+    # Create problem to get the unnormalized Pareto Front
+    # Since I only use gradient, it's a single objective, no need to scale.
+    problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+    #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
+    #for tolPow in range(8, -8, -1):
+    for tolPow in range(2, -8, -1):
         print("Tolerance = ", pow(10, -tolPow))
         tolPower = tolPow
         
@@ -658,8 +879,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         termination = get_termination("n_gen", 400)
-
-        prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
+        prob = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+        #prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
         algorithm = NSGA2(
             pop_size=400,
             n_offsprings=100,
@@ -889,8 +1110,8 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.savefig(convFigPath)
     """
     # if you use MO 1.0
-    weights = np.array([1.0])
-    #weights = np.array([0.5,0.5])
+    #weights = np.array([1.0])
+    weights = np.array([0.5,0.5])
     #weights = np.array([0.333, 0.333, 0.333])
     #weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
