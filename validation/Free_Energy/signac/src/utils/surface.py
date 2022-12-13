@@ -21,6 +21,32 @@ import scipy
 from scipy.optimize import OptimizeResult, least_squares
 from  scipy.interpolate import UnivariateSpline
 import math
+
+def strictly_increasing(L):
+    return all(x<y for x, y in zip(L, L[1:]))
+
+def strictly_decreasing(L):
+    return all(x>y for x, y in zip(L, L[1:]))
+
+def non_increasing(L):
+    return all(x>=y for x, y in zip(L, L[1:]))
+
+def non_decreasing(L):
+    return all(x<=y for x, y in zip(L, L[1:]))
+
+def monotonic(L):
+    return non_increasing(L) or non_decreasing(L)
+
+def isMonotonic(A):
+    return (all(A[i] <= A[i + 1] for i in range(len(A) - 1)) or
+            all(A[i] >= A[i + 1] for i in range(len(A) - 1)))
+
+def isAllPositive(L):
+    return all(val > 0 for val in L)
+
+def isConverged(L):
+    return all(val < 0.001 for val in L)
+
 def pareto_frontier_multi(myArray):
     # Sort on first dimension
     myArray = myArray[myArray[:,0].argsort()]
@@ -163,7 +189,7 @@ class DEProblem(ElementwiseProblem):
         self.RCutMax = RCutMax
         self.AlphaMin = AlphaMin
         self.AlphaMax = AlphaMax
-        self.tolerance = 0.01
+        self.tolerance = 0.1
 
 
     def _evaluate(self, x, out, *args, **kwargs):
@@ -188,7 +214,7 @@ class DEProblemDeriv(ElementwiseProblem):
         self.RCutMax = RCutMax
         self.AlphaMin = AlphaMin
         self.AlphaMax = AlphaMax
-        self.tolerance = 0.01
+        self.tolerance = 0.1
 
     def _evaluate(self, x, out, *args, **kwargs):
         # Maximize Relative Error
@@ -672,6 +698,8 @@ def neg_bspline( x ):
     return f, g
 
 def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
+    title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
+    print("Reading ", title)
     df = pd.read_csv(path,sep='\t',index_col=0)
     # remove the nan column
     df = df.iloc[: , :-1]
@@ -709,6 +737,23 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     #else:
     z = df4.iloc[:,0].to_numpy()
     z = np.reshape(z, (len(x),len(y)))
+
+    convergedRangeExists = False
+    firstConverged = 0
+    for col in range(0,len(x),1):
+        sliceOfSurf = z[:, col]
+        #if(monotonic(sliceOfSurf) or isMonotonic(sliceOfSurf)):
+        convergenceList = [abs(i-j) for i in sliceOfSurf for j in sliceOfSurf if i != j]
+        if (isConverged(convergenceList)):
+            firstConverged = col
+            convergedRangeExists = True
+            break
+
+    firstConvergedYMin = y[firstConverged]
+    print("first monotonic slice at constant alpha : ", y[firstConverged])
+    if (not convergedRangeExists):
+        print("No converged slice exists for", title)
+    #quit()
     #This is wrong : z = np.reshape(z, (len(y),len(x)))
 
     #F2 = interpolate.interp2d(x, y, z, kind='linear')
@@ -864,7 +909,10 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     from pymoo.termination import get_termination
     # Create problem to get the unnormalized Pareto Front
     # Since I only use gradient, it's a single objective, no need to scale.
-    problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
+    # constrain alpha values to monotonic ones indicating convergence
+    problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), firstConvergedYMin, y.max(), 10)
+    
+    #problemUnNorm = MyProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), 10)
     #pf_for_norm = problemUnNorm.pareto_front(use_cache=False, flatten=False)
     #for tolPow in range(8, -8, -1):
     for tolPow in range(2, -8, -1):
@@ -879,7 +927,9 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
 
 
         termination = get_termination("n_gen", 400)
-        prob = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+        #prob = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
+
+        prob = MyProblemNorm(rect_B_spline, tck_pd, x.min(), x.max(), firstConvergedYMin, y.max(), problemUnNorm.FMax, problemUnNorm.DEProblemDerivWRTRcut_max, problemUnNorm.DEProblemDerivWRTAlpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_max, problemUnNorm.DEProblemDerivWRT_RCut_and_Alpha_DD_max, tolPower)
         #prob = MyDumProblem(rect_B_spline, tck_pd, x.min(), x.max(), y.min(), y.max(), tolPower)
         algorithm = NSGA2(
             pop_size=400,
@@ -1162,7 +1212,6 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
     plt.show()
     """
     if(plotSuface):
-        title = model+"_"+wolfKind+"_"+potential+"_Box_"+box
 
         prefix = os.path.split(path)
         plotPath = os.path.join(prefix[0], title)
