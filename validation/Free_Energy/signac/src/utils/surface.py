@@ -47,6 +47,9 @@ def isAllPositive(L):
 def isConverged(L):
     return all(val < 0.001 for val in L)
 
+def percentConverged(L):
+    return np.divide(sum(val < 0.001 for val in L),len(L))
+
 def pareto_frontier_multi(myArray):
     # Sort on first dimension
     myArray = myArray[myArray[:,0].argsort()]
@@ -744,11 +747,11 @@ def find_minimum(path, model, wolfKind, potential, box, plotSuface=False):
         sliceOfSurf = z[:, col]
         #if(monotonic(sliceOfSurf) or isMonotonic(sliceOfSurf)):
         convergenceList = [abs(i-j) for i in sliceOfSurf for j in sliceOfSurf if i != j]
-        if (isConverged(convergenceList)):
+        if(percentConverged(convergenceList) > 0.75):
+        #if (isConverged(convergenceList)):
             firstConverged = col
             convergedRangeExists = True
             break
-
     firstConvergedYMin = y[firstConverged]
     print("first monotonic slice at constant alpha : ", y[firstConverged])
     if (not convergedRangeExists):
