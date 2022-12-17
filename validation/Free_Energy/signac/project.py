@@ -417,7 +417,7 @@ def initial_parameters(job):
     job.doc.LambdaVDW_list = LambdaVDW_list
     job.doc.LambdaCoul_list = LambdaCoul_list
     job.doc.InitialState_list = InitialState_list
-    equilibration_ensemble = "NPT"
+    equilibration_ensemble = "NVT"
     #equilibration_ensemble = "NPT"
     production_ensemble = "NVT"
 
