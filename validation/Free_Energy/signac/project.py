@@ -1472,24 +1472,6 @@ def part_4b_wolf_sanity_analysis(job):
 # data analysis - get the average data from each individual simulation (start)
 # ******************************************************
 # ******************************************************
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(part_4b_job_gomc_calibration_completed_properly)
-@flow.with_job
-def part_4b_job_gomc_wolf_parameters_found(job):
-    ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
-    ewald_sp['wolf_model']="Calibrator"        
-    ewald_sp['wolf_potential']="Calibrator"
-    ewald_sp['solute']="solvent_box"   
-    ewald_sp['replica_number_int']=0
-    jobs = list(pr.find_jobs(ewald_sp))
-    for ewald_job in jobs:
-        if (not ewald_job.isfile("bestWolfParameters.pickle")):
-            return False
-        else:
-            return True
         
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
@@ -1498,7 +1480,6 @@ def part_4b_job_gomc_wolf_parameters_found(job):
 @Project.label
 @flow.with_job
 @Project.pre(part_2a_wolf_sanity_control_file_written)
-@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 def part_4b_job_gomc_wolf_parameters_appended(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     import re
@@ -1533,7 +1514,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                 atLeastOneMatchExists = True
                 with open(file, "r") as openedfile:
                     last_line = openedfile.readlines()[-1]
-                if ("RcutCoulomb" in last_line):
+                if ("WolfAlpha" in last_line):
                     continue
                 else:
                     success = success and False
@@ -1545,7 +1526,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_2a_wolf_sanity_control_file_written)
-@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
     {
@@ -1567,90 +1547,28 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     winningWolf = {}
-    for ewald_job in jobs:
-        if (testEachWolf):
-            with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
-                winningWolf = pickle.load(handle)
-        else:
-            try:
-                import pickle as pickle
-                import re
-                with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
-                    model2BestWolfAlphaRCut = pickle.load(handle)
-                
-                bestModel = ""
-                smallestRelErr = 1.0
-                largestRelErr = 0
-                bestRCut = 0
-                bestAlpha = 0
-
-                #print("Replica :", job.sp.replica)
-                for model in model2BestWolfAlphaRCut:
-                    print("Model :", model)
-                    print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
-                    print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
-                    print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
-                    if (model2BestWolfAlphaRCut[model]['GD_relerr']  < smallestRelErr):
-                        bestModel = model
-                        smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                        bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                        bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                    if (model2BestWolfAlphaRCut[model]['GD_relerr']  > largestRelErr):
-                        worstModel = model
-                        largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                        worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                        worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                print("worstModel :", worstModel)
-                print("largestRelErr :", largestRelErr)
-                print("worstRCut :", worstRCut)
-                print("worstAlpha :", worstAlpha)
-
-                print("bestModel :", bestModel)
-                print("smallestRelErr :", smallestRelErr)
-                print("bestRCut :", bestRCut)
-                print("bestAlpha :", bestAlpha)
-
-                winningWolf = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
-                "Alpha":bestAlpha}
-                with open("winningWolfParameters.pickle", 'wb') as handle:
-                    pickle.dump(winningWolf, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-            except:
-                return False
 
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-    box = "0"
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                with open(file, "a") as myfile:
-                    if (testEachWolf):
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                        myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_rcut"])
-                        myfile.write(defRCutLine)
-                    else:
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
-                        myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
-                        myfile.write(defRCutLine)
+    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
+        box_list = [0, 1]
+    else:
+        box_list = [0]
 
+    cols = ["MODEL", "POT", "ALPHA"]
+    dataframes = []
+    for ewald_job in jobs:
+        for b in box_list:
+            dataframes.append(pd.read_csv(ewald_job.fn("WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(b)), header=None, delim_whitespace=True, names=cols))
 
+    """
+    wolfDict = { "VLUGT":"RAHBARI",
+                "GROSS":"WAIBEL2018",
+                "HYBRID":"WAIBEL2018",
+                "VLUGTWINTRACUTOFF":"WAIBEL2019"} # ["Ne", "Rn"]
+    """
+    print (dataframes)
     regex = re.compile("wolf_sanity.conf")
-    box = "0"
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
@@ -1662,21 +1580,36 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         myfile.write(defPotLine)
                         defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
                         myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, '0')]["GD_rcut"])
-                        myfile.write(defRCutLine)
-                    else:
+                        for box in box_list:
+                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
+                            #mask = dataframes[0]['MODEL'] == wolfDict[job.sp.wolf_model]
+                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
+                            c = np.logical_and(mask, mask2)
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
+                            myfile.write(defAlphaLine)
+
+    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+    for root, dirs, files in os.walk(job.fn("")):
+        for file in files:
+            if regex.match(file):
+                with open(file, "a") as myfile:
+                    if (testEachWolf):
                         defWolfLine = "Wolf\tTrue\n"
                         myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
+                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
                         myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
+                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
                         myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
-                        myfile.write(defRCutLine)
+                        for box in box_list:
+                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
+                            #mask = dataframes[0]['MODEL'] == wolfDict[job.sp.wolf_model]
+                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
+                            c = np.logical_and(mask, mask2)
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
+                            myfile.write(defAlphaLine)
+
+
+
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -3074,7 +3007,6 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.post(part_3b_output_gomc_wolf_sanity_started)
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
@@ -3146,46 +3078,6 @@ def run_calibration_run_gomc_command(job):
 
     print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
     return run_command
-
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(part_4b_job_gomc_calibration_completed_properly)
-@Project.post(part_4b_job_gomc_wolf_parameters_found)
-@Project.operation.with_directives(
-    {
-        "np": 1,
-        "ngpu": 0,
-        "memory": memory_needed,
-        "walltime": walltime_mosdef_hr,
-    }
-)
-@flow.with_job
-def part_4b_job_gomc_calibration_find_minimum(job):
-
-    from src.utils.surface import find_minimum
-    import pickle as pickle
-    import re
-    regex = re.compile("Wolf_Calibration_(\w+?)_(\w+?)_BOX_(\d+)_(\w+?).dat")
-
-    bestValueFileName = "bestWolfParameters"
-    if (not job.isfile(bestValueFileName+".pickle")):
-        model2BestWolfAlphaRCut = dict()
-        for root, dirs, files in os.walk(job.fn("")):
-            for file in files:
-                if regex.match(file):
-                    groups = regex.search(file)
-                    wolfKind = groups.group(1)
-                    potential = groups.group(2)
-                    box = groups.group(3)
-                    tupleMin = find_minimum(job.fn(file), job.sp.solute, wolfKind, potential, box, True)
-                    # Use smaller error, either BF or Grad Desc
-                    model2BestWolfAlphaRCut[(wolfKind, potential, box)] = dict(tupleMin)
-        with open(bestValueFileName+".pickle", 'wb') as handle:
-            pickle.dump(model2BestWolfAlphaRCut, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 # ******************************************************
