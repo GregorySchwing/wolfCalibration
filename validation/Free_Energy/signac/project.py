@@ -1051,6 +1051,8 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
         for ewald_job in jobs:
             return namd_sim_completed_properly(ewald_job, namd_equilb_NPT_control_file_name_str)
 
+
+
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
@@ -1074,6 +1076,23 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     except:
         return False
 
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+@flow.with_job
+def part_4b_job_gomc_wolf_parameters_found(job):
+    ewald_sp = job.statepoint()
+    ewald_sp['electrostatic_method']="Wolf"
+    ewald_sp['wolf_model']="Calibrator"        
+    ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['solute']="solvent_box"   
+    ewald_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(ewald_sp))
+    for ewald_job in jobs:
+        if (not ewald_job.isfile("WOLF_CALIBRATION_BOX_0.dat")):
+            return False
+        else:
+            return True
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1526,6 +1545,8 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_2a_wolf_sanity_control_file_written)
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+@Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
     {
