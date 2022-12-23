@@ -297,10 +297,6 @@ def append_wolf_calibration_parameters(job):
         for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, \
         in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
         WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
-            CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
-            print(CutoffLine)
-            myfile.write(CutoffLine)
-
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             print(alphaLine)
             myfile.write(alphaLine)
@@ -2293,7 +2289,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             "Potential": cutoff_style,
             "LRC": True,
             "RcutLow": 1.0,
-            "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20),
+            "RcutCoulomb_box_0" : 14,
+            "RcutCoulomb_box_1" : 14,
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -2365,7 +2362,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             "Potential": cutoff_style,
             "LRC": True,
             "RcutLow": 1.0,
-            "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20) if job.sp.electrostatic_method == "Ewald" else None,
+            "RcutCoulomb_box_0" : 14,
+            "RcutCoulomb_box_1" : 14,
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -2512,7 +2510,8 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "Potential": cutoff_style,
                 "LRC": True,
                 "RcutLow": 1.0,
-                "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20),
+                "RcutCoulomb_box_0" : 14,
+                "RcutCoulomb_box_1" : 14,
                 "CBMC_First": CBMC_First[-1],
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],
