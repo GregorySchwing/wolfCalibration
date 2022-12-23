@@ -266,10 +266,6 @@ def append_wolf_calibration_parameters(job):
         WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
             defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
             myfile.write(defAlphaLine)
-
-            CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
-            myfile.write(CutoffLine)
-
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             myfile.write(alphaLine)
 
@@ -2303,6 +2299,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "PRNG": seed_no,
             "Pressure": production_pressure_bar,
             "Ewald": True,
+            "RcutCoulomb_box_0" : 14,
             "ElectroStatic": use_ElectroStatics,
             "VDWGeometricSigma": VDWGeometricSigma,
             "Rcut": job.doc.Rcut_ang,
@@ -2438,6 +2435,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "PRNG": seed_no,
                 "Pressure": production_pressure_bar,
                 "Ewald": True,
+                "RcutCoulomb_box_0" : 14,
                 "ElectroStatic": use_ElectroStatics,
                 "VDWGeometricSigma": VDWGeometricSigma,
                 "Rcut": job.doc.Rcut_ang,
@@ -2608,6 +2606,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "Pressure": production_pressure_bar,
                 "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
                 "ElectroStatic": use_ElectroStatics,
+                "RcutCoulomb_box_0" : 14,
                 "VDWGeometricSigma": VDWGeometricSigma,
                 "Rcut": job.doc.Rcut_ang,
                 "Exclude": Exclude,
@@ -2805,6 +2804,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "PRNG": seed_no,
                 "Pressure": production_pressure_bar,
                 "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
+                "RcutCoulomb_box_0" : 14,
                 "ElectroStatic": use_ElectroStatics,
                 "VDWGeometricSigma": VDWGeometricSigma,
                 "Rcut": job.doc.Rcut_ang,
@@ -2881,6 +2881,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             "Pressure": production_pressure_bar,
             "Ewald": job.sp.electrostatic_method == "Ewald",
             "ElectroStatic": use_ElectroStatics,
+            "RcutCoulomb_box_0" : 14,
             "VDWGeometricSigma": VDWGeometricSigma,
             "Rcut": job.doc.Rcut_ang,
             "Exclude": Exclude,
