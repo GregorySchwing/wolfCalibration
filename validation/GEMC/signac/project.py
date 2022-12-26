@@ -285,7 +285,7 @@ def append_wolf_calibration_parameters(job):
         WolfAlphabUpperBoundList = [0.5]
         WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = gomc_output_data_every_X_steps
+    wolfCalFreq = 1000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
         defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
