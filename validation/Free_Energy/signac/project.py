@@ -3064,7 +3064,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
-@Project.post(part_3b_output_gomc_calibration_started)
+#@Project.post(part_3b_output_gomc_calibration_started)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
 #@Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
