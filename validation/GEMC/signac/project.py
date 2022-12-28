@@ -65,9 +65,11 @@ namd_binary_path = "/home6/go2432/wolfCalibration/validation/GEMC/signac/bin"
 gomc_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/GEMC/signac/bin/NAMD_Git-2022-07-21_Linux-x86_64-multicore-CUDA"
 
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
+
 gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/GEMC/signac/bin"
 namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/GEMC/signac/bin"
-
 #gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 #namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/GEMC/signac/bin"
 
@@ -99,7 +101,7 @@ gomc_free_energy_output_data_every_X_steps = 5 * 10**3 # set value for paper = 1
 # calc MC steps
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 50000
+Calibration_MC_steps = 100000
 Calibration_MC_Eq_Steps = 1000
 Wolf_Sanity_MC_steps =  100 * 10**6 # set value for paper = 60 * 10**6
 
@@ -283,24 +285,14 @@ def append_wolf_calibration_parameters(job):
         WolfAlphabUpperBoundList = [0.5]
         WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = gomc_output_data_every_X_steps
+    wolfCalFreq = 1000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
-        defPotLine = "Wolf\tFalse\n"
-        myfile.write(defPotLine)
-        defPotLine = "WolfPotential\t{pot}\n".format(pot=WolfDefaultPotential)
-        myfile.write(defPotLine)
-        defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
-        myfile.write(defKindLine)
         defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
         myfile.write(defPotLine)
         for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, \
         in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
         WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
-            CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
-            print(CutoffLine)
-            myfile.write(CutoffLine)
-
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             print(alphaLine)
             myfile.write(alphaLine)
@@ -1466,7 +1458,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
-        if (not ewald_job.isfile("bestWolfParameters.pickle")):
+        if (not ewald_job.isfile("WOLF_CALIBRATION_BOX_0.dat")):
             return False
         else:
             return True
@@ -1533,7 +1525,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
                 atLeastOneMatchExists = True
                 with open(file, "r") as openedfile:
                     last_line = openedfile.readlines()[-1]
-                if ("RcutCoulomb" in last_line):
+                if ("WolfAlpha" in last_line):
                     continue
                 else:
                     success = success and False
@@ -1543,6 +1535,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_2a_wolf_sanity_control_file_written)
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -1565,69 +1558,29 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     winningWolf = {}
-    for ewald_job in jobs:
-        if (testEachWolf):
-            with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
-                winningWolf = pickle.load(handle)
-        else:
-            try:
-                import pickle as pickle
-                import re
-                with open(ewald_job.fn("bestWolfParameters.pickle"), 'rb') as handle:
-                    model2BestWolfAlphaRCut = pickle.load(handle)
-                
-                bestModel = ""
-                smallestRelErr = 1.0
-                largestRelErr = 0
-                bestRCut = 0
-                bestAlpha = 0
 
-                #print("Replica :", job.sp.replica)
-                for model in model2BestWolfAlphaRCut:
-                    print("Model :", model)
-                    print("RelErr :",  model2BestWolfAlphaRCut[model]['GD_relerr'])
-                    print("RCut :", model2BestWolfAlphaRCut[model]['GD_rcut'])
-                    print("Alpha :", model2BestWolfAlphaRCut[model]['GD_alpha'])
-                    if (model2BestWolfAlphaRCut[model]['GD_relerr']  < smallestRelErr):
-                        bestModel = model
-                        smallestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                        bestRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                        bestAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                    if (model2BestWolfAlphaRCut[model]['GD_relerr']  > largestRelErr):
-                        worstModel = model
-                        largestRelErr = model2BestWolfAlphaRCut[model]['GD_relerr']   
-                        worstRCut =  model2BestWolfAlphaRCut[model]['GD_rcut']  
-                        worstAlpha =  model2BestWolfAlphaRCut[model]['GD_alpha']  
-                print("worstModel :", worstModel)
-                print("largestRelErr :", largestRelErr)
-                print("worstRCut :", worstRCut)
-                print("worstAlpha :", worstAlpha)
-
-                print("bestModel :", bestModel)
-                print("smallestRelErr :", smallestRelErr)
-                print("bestRCut :", bestRCut)
-                print("bestAlpha :", bestAlpha)
-
-                winningWolf = {"WolfKind": bestModel[0], "Potential": bestModel[1], "RCutCoul": bestRCut,
-                "Alpha":bestAlpha}
-                with open("winningWolfParameters.pickle", 'wb') as handle:
-                    pickle.dump(winningWolf, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-            except:
-                return False
 
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
     if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
-        box_list = ["0", "1"]
+        box_list = [0, 1]
     else:
-        box_list = ["0"]
+        box_list = [0]
 
+    cols = ["MODEL", "POT", "ALPHA"]
+    dataframes = []
+    for ewald_job in jobs:
+        for b in box_list:
+            dataframes.append(pd.read_csv(ewald_job.fn("WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(b)), header=None, delim_whitespace=True, names=cols))
+
+    """
+    wolfDict = { "VLUGT":"RAHBARI",
+                "GROSS":"WAIBEL2018",
+                "HYBRID":"WAIBEL2018",
+                "VLUGTWINTRACUTOFF":"WAIBEL2019"} # ["Ne", "Rn"]
+    """
+    print (dataframes)
     regex = re.compile("wolf_sanity.conf")
-    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
-        box_list = ["0", "1"]
-    else:
-        box_list = ["0"]
     for root, dirs, files in os.walk(job.fn("")):
         for file in files:
             if regex.match(file):
@@ -1640,21 +1593,12 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
                         myfile.write(defKindLine)
                         for box in box_list:
-                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_alpha"])
+                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
+                            #mask = dataframes[0]['MODEL'] == wolfDict[job.sp.wolf_model]
+                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
+                            c = np.logical_and(mask, mask2)
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
                             myfile.write(defAlphaLine)
-                            defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf[(job.sp.wolf_model, job.sp.wolf_potential, box)]["GD_rcut"])
-                            myfile.write(defRCutLine)
-                    else:
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=winningWolf["Potential"])
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=winningWolf["WolfKind"])
-                        myfile.write(defKindLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=winningWolf["Alpha"])
-                        myfile.write(defAlphaLine)
-                        defRCutLine = "RcutCoulomb\t{box}\t{val}\n".format(box=box, val=winningWolf["RCutCoul"])
-                        myfile.write(defRCutLine)
 
 # check if analysis is done for the individual replicates wrote the gomc files
 @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
@@ -2341,7 +2285,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             "Potential": cutoff_style,
             "LRC": True,
             "RcutLow": 1.0,
-            "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20),
+            "RcutCoulomb_box_0" : 14,
+            "RcutCoulomb_box_1" : 14,
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -2413,7 +2358,8 @@ def build_psf_pdb_ff_gomc_conf(job):
             "Potential": cutoff_style,
             "LRC": True,
             "RcutLow": 1.0,
-            "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20) if job.sp.electrostatic_method == "Ewald" else None,
+            "RcutCoulomb_box_0" : 14,
+            "RcutCoulomb_box_1" : 14,
             "CBMC_First": CBMC_First[-1],
             "CBMC_Nth": CBMC_Nth[-1],
             "CBMC_Ang": CBMC_Ang[-1],
@@ -2560,7 +2506,8 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "Potential": cutoff_style,
                 "LRC": True,
                 "RcutLow": 1.0,
-                "RcutCoulomb_box_1" : min((math.floor(job.doc.vap_box_lengths_ang/2.0)-1), 20),
+                "RcutCoulomb_box_0" : 14,
+                "RcutCoulomb_box_1" : 14,
                 "CBMC_First": CBMC_First[-1],
                 "CBMC_Nth": CBMC_Nth[-1],
                 "CBMC_Ang": CBMC_Ang[-1],

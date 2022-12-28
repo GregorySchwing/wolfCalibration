@@ -18,8 +18,7 @@ solvent = ["SPCE"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
 
-replicas = [0] # [0, 1, 2, 3, 4]
-#replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
+replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
 #replicas = [0]# [0, 1, 2, 3, 4]
 
 #production_temperatures = [275, 295, 315, 335, 355, 375] * u.K # [275, 295, 315, 335, 355, 375] * u.K
@@ -42,7 +41,7 @@ pr_root = os.path.join(os.getcwd(), "src")
 pr = signac.get_project(pr_root)
 
 wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
-wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS","HYBRID"] # ["Ne", "Rn"]
+wolfModel = ["RAHBARI","WAIBEL2018","WAIBEL2019"] # ["Ne", "Rn"]
 
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
 # filter the list of dictionaries
