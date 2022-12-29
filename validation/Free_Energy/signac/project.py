@@ -1369,7 +1369,7 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(lambda j: j.sp.solute == "solvent_box")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
+#@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
@@ -1381,7 +1381,7 @@ def part_4b_wolf_sanity_analysis(job):
     df5 = pd.DataFrame()
 
 
-    jobs = list(pr.find_jobs({"replica_number_int": 0}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int}))
     print(jobs)
     for other_job in jobs:
             print("reading wolf_sanity_equilibrated_energies_{}.csv".format(other_job.id))
