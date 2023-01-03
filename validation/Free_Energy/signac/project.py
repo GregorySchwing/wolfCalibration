@@ -1191,6 +1191,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     dict_of_energies = {}
     dict_of_densities = {}
     dict_of_equilibrated_energies = {}
+    dict_of_equilibrated_energies_stats = {}
     dict_of_equilibrated_densities = {}
     dict_of_uncorr_energies = {}
     dict_of_uncorr_densities = {}
@@ -1254,6 +1255,13 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
     dfUC2 = pd.DataFrame.from_dict(dict_of_equilibrated_densities)
     dfUC2.to_csv('wolf_sanity_equilibrated_densities_{}.csv'.format(job.id), header=True, index=False, sep=' ')
 
+    print("Num correlated equilibrated energy samples",np.shape(energies_np)[0])
+    dict_of_equilibrated_energies_stats[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_mean'] = [A_t_equil.mean()]
+    dict_of_equilibrated_energies_stats[f'{job.sp.wolf_model}_{job.sp.wolf_potential}_std'] = [A_t_equil.std()]
+    dfUC3 = pd.DataFrame.from_dict(dict_of_equilibrated_energies_stats)
+    dfUC3.to_csv('wolf_sanity_equilibrated_energies_avg{}.csv'.format(job.id))
+
+
     indices = timeseries.subsampleCorrelatedData(A_t_equil, g=g)
     steps_np = A_t_equil_steps[indices]
     energies_np = A_t_equil[indices]
@@ -1268,7 +1276,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
 
     df1 = pd.DataFrame.from_dict(dict_of_energies)
     df1.to_csv('wolf_sanity_energies_{}.csv'.format(job.id))
-    
+
     df2 = pd.DataFrame.from_dict(dict_of_uncorr_energies)
     df2.to_csv('wolf_sanity_uncorr_energies_{}.csv'.format(job.id), header=True, index=False, sep=' ')
     #df2.to_csv('wolf_sanity_full_energies_{}.csv'.format(job.id), header=False, index=False, sep=' ')
@@ -1398,7 +1406,7 @@ def part_4b_wolf_sanity_analysis(job):
                 
 
 
-    jobs = list(pr.find_jobs({"replica_number_int": 0}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int}))
     print(jobs)
     for other_job in jobs:
             print("reading wolf_sanity_uncorr_energies_{}.csv".format(other_job.id))
@@ -3119,17 +3127,21 @@ def run_calibration_run_gomc_command(job):
 @flow.with_job
 def part_4b_create_wolf_sanity_histograms(job):
     df1 = pd.DataFrame()
+    df_equilibrated_all = pd.DataFrame()
+    df_equilibrated_all = pd.DataFrame()
+
     ewald_sp = job.statepoint()
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"   
     ewald_sp['solute']="solvent_box"   
-    ewald_sp['replica_number_int']=0
+    #ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     try:
         for ewald_job in jobs:
             if (ewald_job.isfile("wolf_sanity_equilibrated_energies.csv")):
                 df1 = pd.read_csv (ewald_job.fn('wolf_sanity_equilibrated_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+                df_equilibrated_all = df_equilibrated_all.append(df1)
             else:
                 return False
     except:
