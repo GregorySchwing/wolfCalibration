@@ -3080,7 +3080,7 @@ def run_wolf_sanity_run_gomc_command(job):
         "np": 1,
         "ngpu": 1,
         "memory": memory_needed,
-        "walltime": 26,
+        "walltime": 72,
     }
 )
 @flow.with_job
