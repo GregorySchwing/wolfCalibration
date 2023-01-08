@@ -1861,6 +1861,9 @@ def build_charmm(job, write_files=True):
         print("residues_list  = " +str(residues_list ))
 
         #if job.doc.solvent in ["TIP4", "TIP3"]:
+        # Just to prove the point of why Waibel2018 DSP is failing.
+        #gomc_fix_bonds_angles_residues_list = [solvent.name]
+
         gomc_fix_bonds_angles_residues_list = [solvent.name, solute.name]
         #else:
         #    gomc_fix_bonds_angles_residues_list  = None
@@ -2884,14 +2887,14 @@ def build_psf_pdb_ff_gomc_conf(job):
             "VDWGeometricSigma": VDWGeometricSigma,
             "Rcut": job.doc.Rcut_ang,
             "Exclude": Exclude,
-            "VolFreq": VolFreq[-1],
-            "MultiParticleFreq": MultiParticleFreq[-1],
-            "IntraSwapFreq": IntraSwapFreq[-1],
-            "CrankShaftFreq": CrankShaftFreq[-1],
-            "SwapFreq": SwapFreq[-1],
-            "DisFreq": DisFreq[-1],
-            "RotFreq": RotFreq[-1],
-            "RegrowthFreq": RegrowthFreq[-1],
+            "VolFreq": 0,
+            "MultiParticleFreq": 0,
+            "IntraSwapFreq": 0,
+            "CrankShaftFreq": 0,
+            "SwapFreq": 0,
+            "DisFreq": 0.5,
+            "RotFreq": 0.5,
+            "RegrowthFreq": 0,
             "OutputName": wolf_sanity_control_file_name,
             "EqSteps": EqSteps,
             "PressureCalc": output_false_list_input,
