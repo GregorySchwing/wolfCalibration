@@ -2277,7 +2277,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         Single_state_gomc_eq_control_file_name,
         job.doc.equilibration_ensemble,
         MC_steps,
-        production_temperature_K,
+        510 if job.doc.solute in ["solvent_box"] else production_temperature_K,
         ff_psf_pdb_file_directory=None,
         check_input_files_exist=False,
         Parameters="{}.inp".format(gomc_ff_filename_str),
@@ -2413,7 +2413,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             output_name_control_file_calibration_name,
             job.doc.equilibration_ensemble,
             Calibration_MC_steps,
-            production_temperature_K,
+            510,
             ff_psf_pdb_file_directory=None,
             check_input_files_exist=False,
             Parameters="{}.inp".format(gomc_ff_filename_str),
@@ -3080,7 +3080,7 @@ def run_wolf_sanity_run_gomc_command(job):
         "np": 1,
         "ngpu": 1,
         "memory": memory_needed,
-        "walltime": 26,
+        "walltime": 72,
     }
 )
 @flow.with_job
