@@ -2215,6 +2215,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Ang = (50,)
         CBMC_Dih = (50,)
         if job.doc.equilibration_ensemble in ["NVT"]:
+            """
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -2223,7 +2224,15 @@ def build_psf_pdb_ff_gomc_conf(job):
             DisFreq = (0.4,)
             RotFreq = (0.3,)
             RegrowthFreq = (0.3,)
-
+            """
+            VolFreq = (0.00,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (0.00,)
+            SwapFreq = (00,)
+            DisFreq = (0.50,)
+            RotFreq = (0.50,)
+            RegrowthFreq = (0.00,)
         elif job.doc.equilibration_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
@@ -2247,6 +2256,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Ang = (100,)
         CBMC_Dih = (50,)
         if job.doc.equilibration_ensemble in ["NVT"]:
+            """
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -2255,7 +2265,15 @@ def build_psf_pdb_ff_gomc_conf(job):
             DisFreq = (0.50,)
             RotFreq = (0.2,)
             RegrowthFreq = (0.20,)
-
+            """
+            VolFreq = (0.00,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (0.00,)
+            SwapFreq = (00,)
+            DisFreq = (0.50,)
+            RotFreq = (0.50,)
+            RegrowthFreq = (0.00,)
         elif job.doc.equilibration_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
@@ -2280,7 +2298,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         Single_state_gomc_eq_control_file_name,
         job.doc.equilibration_ensemble,
         MC_steps,
-        510 if job.doc.solute in ["solvent_box"] else production_temperature_K,
+        510,
         ff_psf_pdb_file_directory=None,
         check_input_files_exist=False,
         Parameters="{}.inp".format(gomc_ff_filename_str),
@@ -2354,6 +2372,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Ang = (50,)
             CBMC_Dih = (50,)
             if job.doc.equilibration_ensemble in ["NVT"]:
+                """
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -2362,7 +2381,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.4,)
                 RotFreq = (0.3,)
                 RegrowthFreq = (0.3,)
-
+                """
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.00,)
+                SwapFreq = (00,)
+                DisFreq = (0.50,)
+                RotFreq = (0.50,)
+                RegrowthFreq = (0.00,)
             elif job.doc.equilibration_ensemble in ["NPT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (None,)
@@ -2386,6 +2413,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Ang = (100,)
             CBMC_Dih = (50,)
             if job.doc.equilibration_ensemble in ["NVT"]:
+                """
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -2394,7 +2422,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.50,)
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
-
+                """
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.00,)
+                SwapFreq = (00,)
+                DisFreq = (0.50,)
+                RotFreq = (0.50,)
+                RegrowthFreq = (0.00,)
             elif job.doc.equilibration_ensemble in ["NPT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (None,)
@@ -2523,6 +2559,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Ang = (50,)
             CBMC_Dih = (50,)
             if job.doc.equilibration_ensemble in ["NVT"]:
+                """
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -2531,7 +2568,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.4,)
                 RotFreq = (0.3,)
                 RegrowthFreq = (0.3,)
-
+                """
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.00,)
+                SwapFreq = (00,)
+                DisFreq = (0.50,)
+                RotFreq = (0.50,)
+                RegrowthFreq = (0.00,)
             elif job.doc.equilibration_ensemble in ["NPT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (None,)
@@ -2555,6 +2600,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Ang = (100,)
             CBMC_Dih = (50,)
             if job.doc.equilibration_ensemble in ["NVT"]:
+                """
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -2563,7 +2609,15 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.50,)
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
-
+                """
+                VolFreq = (0.00,)
+                MultiParticleFreq = (None,)
+                IntraSwapFreq = (0.0,)
+                CrankShaftFreq = (0.00,)
+                SwapFreq = (00,)
+                DisFreq = (0.50,)
+                RotFreq = (0.50,)
+                RegrowthFreq = (0.00,)
             elif job.doc.equilibration_ensemble in ["NPT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (None,)
@@ -2887,14 +2941,14 @@ def build_psf_pdb_ff_gomc_conf(job):
             "VDWGeometricSigma": VDWGeometricSigma,
             "Rcut": job.doc.Rcut_ang,
             "Exclude": Exclude,
-            "VolFreq": 0,
-            "MultiParticleFreq": 0,
-            "IntraSwapFreq": 0,
-            "CrankShaftFreq": 0,
-            "SwapFreq": 0,
-            "DisFreq": 0.5,
-            "RotFreq": 0.5,
-            "RegrowthFreq": 0,
+            "VolFreq": VolFreq[-1],
+            "MultiParticleFreq": MultiParticleFreq[-1],
+            "IntraSwapFreq": IntraSwapFreq[-1],
+            "CrankShaftFreq": CrankShaftFreq[-1],
+            "SwapFreq": SwapFreq[-1],
+            "DisFreq": DisFreq[-1],
+            "RotFreq": RotFreq[-1],
+            "RegrowthFreq": RegrowthFreq[-1],
             "OutputName": wolf_sanity_control_file_name,
             "EqSteps": EqSteps,
             "PressureCalc": output_false_list_input,
