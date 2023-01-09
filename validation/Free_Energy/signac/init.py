@@ -81,7 +81,7 @@ for replica_i in replicas:
                             total_statepoints.append(statepoint) 
                             # The calibration statepoints
                             statepoint = {
-                                            "replica_number_int": 0,
+                                            "replica_number_int": replica_i,
                                             "solute": "solvent_box",
                                             "solvent": solvent_i,
                                             "forcefield": ff_i,
@@ -93,7 +93,7 @@ for replica_i in replicas:
                             total_statepoints.append(statepoint)
                             # The calibration statepoints
                             statepoint = {
-                                            "replica_number_int": 0,
+                                            "replica_number_int": replica_i,
                                             "solute": "solvent_box",
                                             "solvent": solvent_i,
                                             "forcefield": ff_i,
@@ -106,7 +106,7 @@ for replica_i in replicas:
                                         
                 # The calibration statepoints
                 statepoint = {
-                                "replica_number_int": 0,
+                                "replica_number_int": replica_i,
                                 "solute": "solvent_box",
                                 "solvent": solvent_i,
                                 "forcefield": ff_i,
@@ -118,7 +118,7 @@ for replica_i in replicas:
                 total_statepoints.append(statepoint)
                 # The calibration statepoints
                 statepoint = {
-                                "replica_number_int": 0,
+                                "replica_number_int": replica_i,
                                 "solute": "solvent_box",
                                 "solvent": solvent_i,
                                 "forcefield": ff_i,
