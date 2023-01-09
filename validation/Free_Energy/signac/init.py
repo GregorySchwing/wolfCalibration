@@ -82,7 +82,7 @@ for replica_i in replicas:
                             # The calibration statepoints
                             statepoint = {
                                             "replica_number_int": replica_i,
-                                            "solute": "solvent_box",
+                                            "solute": solute_i,
                                             "solvent": solvent_i,
                                             "forcefield": ff_i,
                                             "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
@@ -94,7 +94,7 @@ for replica_i in replicas:
                             # The calibration statepoints
                             statepoint = {
                                             "replica_number_int": replica_i,
-                                            "solute": "solvent_box",
+                                            "solute": solute_i,
                                             "solvent": solvent_i,
                                             "forcefield": ff_i,
                                             "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
