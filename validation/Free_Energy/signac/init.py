@@ -79,6 +79,30 @@ for replica_i in replicas:
                                         "electrostatic_method": e_method,
                             }
                             total_statepoints.append(statepoint) 
+                            # The calibration statepoints
+                            statepoint = {
+                                            "replica_number_int": 0,
+                                            "solute": "solvent_box",
+                                            "solvent": solvent_i,
+                                            "forcefield": ff_i,
+                                            "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                                            "electrostatic_method": "Wolf",
+                                            "wolf_model": "Calibrator",
+                                            "wolf_potential": "Calibrator",
+                                        }
+                            total_statepoints.append(statepoint)
+                            # The calibration statepoints
+                            statepoint = {
+                                            "replica_number_int": 0,
+                                            "solute": "solvent_box",
+                                            "solvent": solvent_i,
+                                            "forcefield": ff_i,
+                                            "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                                            "electrostatic_method": "Ewald",
+                                            "wolf_model": "Calibrator",
+                                            "wolf_potential": "Calibrator",
+                                        }
+                            total_statepoints.append(statepoint)
                                         
                 # The calibration statepoints
                 statepoint = {
@@ -92,7 +116,7 @@ for replica_i in replicas:
                                 "wolf_potential": "Calibrator",
                             }
                 total_statepoints.append(statepoint)
-                # The calibration statepoint
+                # The calibration statepoints
                 statepoint = {
                                 "replica_number_int": 0,
                                 "solute": "solvent_box",
