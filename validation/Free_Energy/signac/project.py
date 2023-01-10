@@ -1090,14 +1090,14 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     Single_state_gomc_eq_control_file_name = "single_state_eq"
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     if(job.sp.electrostatic_method == "Wolf"):
-        if (job.sp.solute in ["solvent_box"]):
-            ewald_sp = job.statepoint()
-            ewald_sp['electrostatic_method']="Ewald"
-            ewald_sp['wolf_model']="Calibrator"
-            ewald_sp['wolf_potential']="Calibrator"
-            jobs = list(pr.find_jobs(ewald_sp))
-            for ewald_job in jobs:
-                return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
+        #if (job.sp.solute in ["solvent_box"]):
+        ewald_sp = job.statepoint()
+        ewald_sp['electrostatic_method']="Ewald"
+        ewald_sp['wolf_model']="Calibrator"
+        ewald_sp['wolf_potential']="Calibrator"
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
         else:
             ewald_sp = job.statepoint()
             ewald_sp['electrostatic_method']="Ewald"
