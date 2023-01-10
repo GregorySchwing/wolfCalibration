@@ -12,7 +12,7 @@ import unyt as u
 project=signac.init_project('free_energy')
 
 forcefield = ["TRAPPE"] # ["Ne", "Rn"]
-solute = ["ETOH"] # ["Ne", "Rn"]
+solute = ["ETOH", "solvent_box"] # ["Ne", "Rn"]
 #solute = ["Ne", "ETOH"] # ["Ne", "Rn"]
 solvent = ["SPCE"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
@@ -103,31 +103,6 @@ for replica_i in replicas:
                                             "wolf_potential": "Calibrator",
                                         }
                             total_statepoints.append(statepoint)
-                                        
-                # The calibration statepoints
-                statepoint = {
-                                "replica_number_int": replica_i,
-                                "solute": "solvent_box",
-                                "solvent": solvent_i,
-                                "forcefield": ff_i,
-                                "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
-                                "electrostatic_method": "Wolf",
-                                "wolf_model": "Calibrator",
-                                "wolf_potential": "Calibrator",
-                            }
-                total_statepoints.append(statepoint)
-                # The calibration statepoints
-                statepoint = {
-                                "replica_number_int": replica_i,
-                                "solute": "solvent_box",
-                                "solvent": solvent_i,
-                                "forcefield": ff_i,
-                                "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
-                                "electrostatic_method": "Ewald",
-                                "wolf_model": "Calibrator",
-                                "wolf_potential": "Calibrator",
-                            }
-                total_statepoints.append(statepoint)
                     
 
 for sp in total_statepoints:
