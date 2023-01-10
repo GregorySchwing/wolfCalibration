@@ -2067,9 +2067,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
         if (job.sp.wolf_model == "Calibrator"):
-            ref_sp['wolf_model']="Calibrator"
-            ref_sp['wolf_potential']="Calibrator"
-        else:
             ref_sp['wolf_model']="Ewald"
             ref_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(ref_sp))
