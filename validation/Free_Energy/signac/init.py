@@ -92,17 +92,17 @@ for replica_i in replicas:
                                         }
                             total_statepoints.append(statepoint)
                             # The calibration statepoints
-                            #statepoint = {
-                            #                "replica_number_int": replica_i,
-                            #                "solute": solute_i,
-                            #                "solvent": solvent_i,
-                            #                "forcefield": ff_i,
-                            #                "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
-                            #                "electrostatic_method": "Ewald",
-                            #                "wolf_model": "Calibrator",
-                            #                "wolf_potential": "Calibrator",
-                            #            }
-                            #total_statepoints.append(statepoint)
+                            statepoint = {
+                                            "replica_number_int": replica_i,
+                                            "solute": solute_i,
+                                            "solvent": solvent_i,
+                                            "forcefield": ff_i,
+                                            "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                                            "electrostatic_method": "Ewald",
+                                            "wolf_model": "Calibrator",
+                                            "wolf_potential": "Calibrator",
+                                        }
+                            total_statepoints.append(statepoint)
                     
 
 for sp in total_statepoints:

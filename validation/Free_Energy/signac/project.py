@@ -2352,7 +2352,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("#**********************")
 
     #
-    if (job.sp.electrostatic_method == "Wolf"):
+    if (job.sp.wolf_model == "Calibrator"):
         output_name_control_file_calibration_name = "wolf_calibration"
 
         if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
