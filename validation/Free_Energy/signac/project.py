@@ -861,7 +861,7 @@ def part_3b_output_gomc_calibration_started(job):
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             if ewald_job.isfile(
-                "Wolf_Calibration_VLUGTWINTRACUTOFF_DSF_BOX_0_wolf_calibration.dat"
+                "Wolf_Calibration_WAIBEL2018_DSF_BOX_0_wolf_calibration.dat"
             ):
                 return True
             else:
@@ -1051,11 +1051,8 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     try:
         ewald_sp = job.statepoint()
-        ewald_sp['electrostatic_method']="Wolf"
-        ewald_sp['solute']="solvent_box"
         ewald_sp['wolf_model']="Calibrator"        
         ewald_sp['wolf_potential']="Calibrator"
-        ewald_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             control_file_name_str = "wolf_calibration"
@@ -1071,11 +1068,8 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_found(job):
     ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"
-    ewald_sp['solute']="solvent_box"   
-    ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
         if (not ewald_job.isfile("WOLF_CALIBRATION_BOX_0.dat")):
@@ -1095,19 +1089,11 @@ def part_4b_job_gomc_sseq_completed_properly(job):
         #if (job.sp.solute in ["solvent_box"]):
         ewald_sp = job.statepoint()
         ewald_sp['electrostatic_method']="Ewald"
-        ewald_sp['wolf_model']="Calibrator"
-        ewald_sp['wolf_potential']="Calibrator"
+        ewald_sp['wolf_model']="Ewald"
+        ewald_sp['wolf_potential']="Ewald"
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
             return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
-        else:
-            ewald_sp = job.statepoint()
-            ewald_sp['electrostatic_method']="Ewald"
-            ewald_sp['wolf_model']="Ewald"
-            ewald_sp['wolf_potential']="Ewald"
-            jobs = list(pr.find_jobs(ewald_sp))
-            for ewald_job in jobs:
-                return gomc_sim_completed_properly(ewald_job, Single_state_gomc_eq_control_file_name)
     else:
         return gomc_sim_completed_properly(job, Single_state_gomc_eq_control_file_name)
 
@@ -3130,7 +3116,6 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 #@Project.post(part_3b_output_gomc_calibration_started)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
 #@Project.post(part_4b_job_gomc_calibration_completed_properly)
