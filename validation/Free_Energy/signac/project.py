@@ -253,6 +253,18 @@ def append_wolf_calibration_parameters(job):
     wolfCalFreq = 10000
 
     with open(job.fn("wolf_calibration.conf"), "a") as myfile:
+        
+        defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
+        myfile.write(defPotLine)
+        
+        defPotLine = "WolfKind\t{freq}\n".format(freq="WAIBEL2018")
+        myfile.write(defPotLine)       
+        defPotLine = "WolfPotential\t{freq}\n".format(freq="DSP")
+        myfile.write(defPotLine)   
+        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=0.11)
+        myfile.write(defPotLine)   
+        defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
+        myfile.write(defPotLine)
         defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
         myfile.write(defPotLine)
         for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \
@@ -2460,7 +2472,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         input_variables_dict={
             "PRNG": seed_no,
             "Pressure": production_pressure_bar,
-            "Ewald": True,
+            "Ewald": job.sp.electrostatic_method == "Ewald",
             "RcutCoulomb_box_0" : 14,
             "ElectroStatic": use_ElectroStatics,
             "VDWGeometricSigma": VDWGeometricSigma,
