@@ -641,8 +641,8 @@ def namd_control_file_written(job, control_filename_str):
 def part_2a_wolf_calibration_control_file_written(job):
     """General check that the namd_equilb_NVT_control_file
     (high temperature to set temp NAMD control file) is written."""
-    if (job.sp.wolf_model != "Calibrator"):
-        return True
+    #if (job.sp.wolf_model != "Calibrator"):
+    #    return True
     output_name_control_file_name = "wolf_calibration"
     try:
         return gomc_control_file_written(
@@ -1965,6 +1965,7 @@ def build_charmm(job, write_files=True):
 @Project.post(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.post(part_2c_gomc_production_control_file_written)
 @Project.post(mosdef_input_written)
+@Project.post(part_2a_wolf_calibration_control_file_written)
 @Project.operation.with_directives(
     {
         "np": 1,
