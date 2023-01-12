@@ -1544,10 +1544,10 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     import pickle as pickle
     testEachWolf = True
     ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
+    #ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"
     ewald_sp['wolf_potential']="Calibrator"
-    ewald_sp['solute']="solvent_box"
+    #ewald_sp['solute']="solvent_box"
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     winningWolf = {}
