@@ -3108,7 +3108,7 @@ def run_wolf_sanity_run_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 #@Project.pre(lambda j: j.sp.replica_number_int == 0)
