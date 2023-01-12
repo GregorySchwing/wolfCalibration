@@ -1174,12 +1174,12 @@ def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
      }
 )
 @Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
-@Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
 @Project.post(part_4b_wolf_sanity_individual_simulation_averages_completed)
-
 @flow.with_job
 def part_4b_wolf_sanity_individual_simulation_averages(job):
-    
+    if(job.sp.wolf_model == "Calibrator"):
+        return
+
     import re
     EnRegex = re.compile("ENER_0")
     DensRegex = re.compile("STAT_0")
