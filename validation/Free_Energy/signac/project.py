@@ -1221,12 +1221,18 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
             if DensRegex.match(line):
                 #print('\n'.join(line.split()[1] for line in f))
                 try:
-                    if (job.doc.production_ensemble in ["NVT"]):
-                        densities.append(float(line.split()[7]))
-                    elif (job.doc.production_ensemble in ["NPT"]):
-                        densities.append(float(line.split()[8]))      
-                    elif (job.doc.production_ensemble in ["GEMC_NVT"]):
-                        densities.append(float(line.split()[4]))              
+                    if (job.sp.solute in "solvent_box"):
+                        if (job.doc.production_ensemble in ["NVT"]):
+                            densities.append(float(line.split()[4]))
+                        elif (job.doc.production_ensemble in ["NPT"]):
+                            densities.append(float(line.split()[5]))      
+                    elif(job.sp.solute in "ETOH"):    
+                        if (job.doc.production_ensemble in ["NVT"]):
+                            densities.append(float(line.split()[7]))
+                        elif (job.doc.production_ensemble in ["NPT"]):
+                            densities.append(float(line.split()[8]))      
+                        elif (job.doc.production_ensemble in ["GEMC_NVT"]):
+                            densities.append(float(line.split()[4])) 
                 except:
                     print("An exception occurred") 
     steps_np = np.array(steps)
