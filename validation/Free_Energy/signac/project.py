@@ -3052,7 +3052,7 @@ def run_namd_equilb_NPT_gomc_command(job):
 # ******************************************************
 # ******************************************************
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.wolf_method == "Ewald")
+@Project.pre(lambda j: j.sp.wolf_model == "Ewald")
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
