@@ -2001,12 +2001,17 @@ def build_psf_pdb_ff_gomc_conf(job):
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
     restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
 
+    # Get prefix to namd runs.
     prefix = ""
-    if(job.sp.electrostatic_method == "Ewald" and job.sp.replica_number_int == 0):
+    if(job.sp.electrostatic_method == "Ewald" and \
+        job.sp.wolf_model == "Ewald" and \
+        job.sp.replica_number_int == 0):
         prefix = job.fn("")
     else:
         ref_sp = job.statepoint()
         ref_sp['electrostatic_method']="Ewald"
+        ref_sp['wolf_model']="Ewald"
+        ref_sp['wolf_potential']="Ewald"
         ref_sp['replica_number_int']=0
         jobs = list(pr.find_jobs(ref_sp))
         for ref_job in jobs:
