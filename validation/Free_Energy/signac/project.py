@@ -1079,6 +1079,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
     ewald_sp = job.statepoint()
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"
+    ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
         if (not ewald_job.isfile("WOLF_CALIBRATION_BOX_0.dat")):
@@ -1554,7 +1555,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_2a_wolf_sanity_control_file_written)
-@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+#@Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -3141,8 +3142,8 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 #@Project.post(part_3b_output_gomc_calibration_started)
-#@Project.post(part_4b_job_gomc_wolf_parameters_found)
-@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_4b_job_gomc_wolf_parameters_found)
+#@Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
     {
         "np": 1,
