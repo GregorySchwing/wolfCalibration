@@ -1323,8 +1323,8 @@ def part_4b_wolf_sanity_analysis_completed(job):
     try:
         for ewald_job in jobs:
             if (ewald_job.isfile("wolf_statistics.csv")):
-                job.doc.winningWolfPotential = ewald_job.doc.winningWolfPotential
-                job.doc.winningWolfModel = ewald_job.doc.winningWolfModel
+                #job.doc.winningWolfPotential = ewald_job.doc.winningWolfPotential
+                #job.doc.winningWolfModel = ewald_job.doc.winningWolfModel
                 return True
             else:
                 return False
@@ -1339,7 +1339,7 @@ def part_4b_wolf_sanity_histograms_created(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"   
-    ewald_sp['solute']="solvent_box"   
+    #ewald_sp['solute']="solvent_box"   
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     try:
@@ -1380,6 +1380,8 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
             return False
     except:
         return False
+
+"""
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1391,7 +1393,7 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
-@Project.pre(lambda j: j.sp.solute == "solvent_box")
+#@Project.pre(lambda j: j.sp.solute == "solvent_box")
 #@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
                                for j in jobs[0]._project))
@@ -1494,7 +1496,7 @@ def part_4b_wolf_sanity_analysis(job):
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
 
-
+"""
 
 # ******************************************************
 # ******************************************************
@@ -3181,9 +3183,11 @@ def run_calibration_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
-@Project.pre(lambda j: j.sp.solute == "solvent_box")
+#@Project.pre(lambda j: j.sp.solute == "solvent_box")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(part_4b_wolf_sanity_analysis_completed)
+#@Project.pre(part_4b_wolf_sanity_analysis_completed)
+@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
+                               for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_histograms_created)
 @Project.operation.with_directives(
     {
@@ -3197,13 +3201,13 @@ def run_calibration_run_gomc_command(job):
 def part_4b_create_wolf_sanity_histograms(job):
     df1 = pd.DataFrame()
     df_equilibrated_all = pd.DataFrame()
-    df_equilibrated_all = pd.DataFrame()
+    #df_equilibrated_all = pd.DataFrame()
 
     ewald_sp = job.statepoint()
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"   
-    ewald_sp['solute']="solvent_box"   
+    #ewald_sp['solute']="solvent_box"   
     #ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     try:
