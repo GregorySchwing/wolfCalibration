@@ -3289,7 +3289,7 @@ def part_4b_create_wolf_sanity_histograms(job):
         plt.plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
         plt.xlim(xmin, xmax)
         plt.ylabel('Probability', fontsize=22)
-        plt.xlabel('Total Energy (K)', fontsize=22)
+        plt.xlabel('Total Electrostatic (K)', fontsize=22)
         plt.legend()
         plt.savefig("PotentialEnergyDistribution_Ewald_vs_{}".format(col), dpi=300, bbox_inches='tight')
         plt.figure().clear()   
@@ -3334,7 +3334,7 @@ def part_4b_create_wolf_sanity_histograms(job):
         axs[counter // 3, counter % 3].plot(binList, kde1, color="black", linewidth=2, label="Ewald")
         axs[counter // 3, counter % 3].plot(binList, kde2, color="red", linewidth=2, label=Col_Dict[col])
         axs[counter // 3, counter % 3].title.set_text(Col_Dict[col])
-        axs[counter // 3, counter % 3].set_xlabel('Total Energy (K)', labelpad=20)
+        axs[counter // 3, counter % 3].set_xlabel('Total Electrostatic (K)', labelpad=20)
         axs[counter // 3, counter % 3].set_ylabel('Probability')
         from matplotlib.offsetbox import AnchoredText
         anchored_text = AnchoredText("{}%".format(round((df2[col].iloc[2])*100,3)), loc=2)
@@ -3343,7 +3343,7 @@ def part_4b_create_wolf_sanity_histograms(job):
 
     #figSP.legend()
     #figSP.ylabel('Probability', fontsize=22)
-    #figSP.xlabel('Total Energy (K)', fontsize=22)
+    #figSP.xlabel('Total Electrostatic (K)', fontsize=22)
     import matplotlib.patches as mpatches
     red_patch = mpatches.Patch(color='red', label='Wolf')
     black_patch = mpatches.Patch(color='black', label='Ewald')
