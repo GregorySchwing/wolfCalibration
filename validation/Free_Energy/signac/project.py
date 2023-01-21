@@ -1348,21 +1348,23 @@ def part_4b_wolf_sanity_histograms_created(job):
                 return False
     except:
         return False
-
-    colList = df1.columns.tolist()
-    colList.remove("Ewald_Ewald")
-    colList.remove("steps")
     try:
-        for ewald_job in jobs:
-            for col, col_i in zip(colList, range(0, len(colList))):
-                try:
-                    if (ewald_job.isfile("PotentialEnergyDistribution_Ewald_vs_{}.png".format(col))):
-                        continue
-                    else:
+        colList = df1.columns.tolist()
+        colList.remove("Ewald_Ewald")
+        colList.remove("steps")
+        try:
+            for ewald_job in jobs:
+                for col, col_i in zip(colList, range(0, len(colList))):
+                    try:
+                        if (ewald_job.isfile("PotentialEnergyDistribution_Ewald_vs_{}.png".format(col))):
+                            continue
+                        else:
+                            return False
+                    except:
                         return False
-                except:
-                    return False
-        return True
+            return True
+        except:
+            return False
     except:
         return False
 @Project.label
