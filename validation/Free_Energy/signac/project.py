@@ -1407,12 +1407,7 @@ def part_4b_wolf_sanity_analysis(job):
     df3 = pd.DataFrame()
     df5 = pd.DataFrame()
 
-    # All different wolf models and ewald within a replica.
-    ewald_sp = job.statepoint()
-    ewald_sp['wolf_model']=""        
-    ewald_sp['wolf_potential']=""   
-    jobs = list(pr.find_jobs(ewald_sp))
-
+    # All different wolf models and ewald within a replicas
     jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "solute": job.sp.solute}))
     print(jobs)
     for other_job in jobs:
@@ -3203,11 +3198,8 @@ def part_4b_create_wolf_sanity_histograms(job):
     df_equilibrated_all = pd.DataFrame()
     #df_equilibrated_all = pd.DataFrame()
 
-    ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
-    ewald_sp['wolf_model']=""        
-    ewald_sp['wolf_potential']=""   
-    jobs = list(pr.find_jobs(ewald_sp))
+    # All different wolf models and ewald across replicas
+    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute}))
     try:
         for ewald_job in jobs:
             print(ewald_job.sp.wolf_model,ewald_job.sp.wolf_potential,ewald_job.sp.replica_number_int)
