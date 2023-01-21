@@ -1381,7 +1381,6 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
     except:
         return False
 
-"""
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1496,7 +1495,6 @@ def part_4b_wolf_sanity_analysis(job):
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
 
-"""
 
 # ******************************************************
 # ******************************************************
@@ -3178,7 +3176,6 @@ def run_calibration_run_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
