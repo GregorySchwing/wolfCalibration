@@ -1410,6 +1410,7 @@ def part_4b_wolf_sanity_analysis(job):
     ewald_sp['wolf_potential']=""   
     jobs = list(pr.find_jobs(ewald_sp))
 
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "solute": job.sp.solute}))
     print(jobs)
     for other_job in jobs:
             print("reading wolf_sanity_equilibrated_energies_{}.csv".format(other_job.id))
@@ -1424,10 +1425,6 @@ def part_4b_wolf_sanity_analysis(job):
             except:
                 print("failed to read dataframe")
                 
-
-
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int}))
-    print(jobs)
     for other_job in jobs:
             print("reading wolf_sanity_uncorr_energies_{}.csv".format(other_job.id))
             try:
