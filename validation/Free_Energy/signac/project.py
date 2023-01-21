@@ -1317,8 +1317,6 @@ def part_4b_wolf_sanity_analysis_completed(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']="Calibrator"        
     ewald_sp['wolf_potential']="Calibrator"   
-    ewald_sp['solute']="solvent_box"   
-    ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     try:
         for ewald_job in jobs:
