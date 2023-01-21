@@ -1215,7 +1215,10 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
             if EnRegex.match(line):
                 try:
                     steps.append(float(line.split()[1]))
-                    energies.append(float(line.split()[2]))
+                    #energies.append(float(line.split()[2]))
+                    # Use Total_Elec to avoid underreporting error.
+                    energies.append(float(line.split()[7]))
+
                 except:
                     print(line)
                     print("An exception occurred") 
