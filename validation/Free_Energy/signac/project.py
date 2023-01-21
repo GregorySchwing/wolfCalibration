@@ -3180,8 +3180,7 @@ def run_calibration_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 #@Project.pre(lambda j: j.sp.solute == "solvent_box")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
-#@Project.pre(part_4b_wolf_sanity_analysis_completed)
-@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
+@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_analysis_completed(j)
                                for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_histograms_created)
 @Project.operation.with_directives(
@@ -3202,19 +3201,15 @@ def part_4b_create_wolf_sanity_histograms(job):
     ewald_sp['electrostatic_method']="Wolf"
     ewald_sp['wolf_model']=""        
     ewald_sp['wolf_potential']=""   
-    #ewald_sp['solute']="solvent_box"   
-    #ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     try:
         for ewald_job in jobs:
             print(ewald_job.sp.wolf_model,ewald_job.sp.wolf_potential,ewald_job.sp.replica_number_int)
-            """
             if (ewald_job.isfile("wolf_sanity_equilibrated_energies.csv")):
                 df1 = pd.read_csv (ewald_job.fn('wolf_sanity_equilibrated_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
                 df_equilibrated_all = df_equilibrated_all.append(df1)
             else:
                 return False
-            """
     except:
         return False
     return
@@ -3246,14 +3241,16 @@ def part_4b_create_wolf_sanity_histograms(job):
     A_t_equil_ewald = ref_ewald.dropna()
     print(A_t_equil_ewald)
 
-    Col_Dict = {"GROSS_DSF": "Waibel2018a (DSF)", "VLUGT_DSF": 'Rahbari (DSF)', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b (DSF)',
-    "GROSS_DSP": 'Waibel2018a (DSP)', "VLUGT_DSP": 'Rahbari (DSP)', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b (DSP)'}
+    #Col_Dict = {"GROSS_DSF": "Waibel2018a (DSF)", "VLUGT_DSF": 'Rahbari (DSF)', "VLUGTWINTRACUTOFF_DSF": 'Waibel2018b (DSF)',
+    #"GROSS_DSP": 'Waibel2018a (DSP)', "VLUGT_DSP": 'Rahbari (DSP)', "VLUGTWINTRACUTOFF_DSP": 'Waibel2018b (DSP)'}
+    Col_Dict = {"WAIBEL2018_DSF": "Waibel2018a (DSF)", "RAHBARI_DSF": 'Rahbari (DSF)', "WAIBEL2019_DSF": 'Waibel2018b (DSF)',
+    "WAIBEL2018_DSP": 'Waibel2018a (DSP)', "RAHBARI_DSP": 'Rahbari (DSP)', "WAIBEL2019_DSP": 'Waibel2018b (DSP)'}
 
     colList = df1.columns.tolist()
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
 
-    colList = ["GROSS_DSP", "VLUGTWINTRACUTOFF_DSP", "VLUGT_DSP", "GROSS_DSF", "VLUGTWINTRACUTOFF_DSF", "VLUGT_DSF"]
+    colList = ["WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
 
     for col, col_i in zip(colList, range(0, len(colList))):
 
