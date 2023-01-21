@@ -3250,6 +3250,9 @@ def part_4b_create_wolf_sanity_histograms(job):
 
     colList = ["WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
 
+    ewald_mean = np.mean(A_t_equil_ewald)
+    wolf_mean = 0.0
+
     for col, col_i in zip(colList, range(0, len(colList))):
 
         wolf = df1[col]
@@ -3310,6 +3313,8 @@ def part_4b_create_wolf_sanity_histograms(job):
         A_t_equil_wolf = wolf.dropna()
         print(A_t_equil_wolf)
 
+        wolf_mean = np.mean(A_t_equil_wolf)
+        
         ref_min = min(A_t_equil_ewald)
         ref_max = max(A_t_equil_ewald)
 
@@ -3337,7 +3342,7 @@ def part_4b_create_wolf_sanity_histograms(job):
         axs[counter // 3, counter % 3].set_xlabel('Total Electrostatic (K)', labelpad=20)
         axs[counter // 3, counter % 3].set_ylabel('Probability')
         from matplotlib.offsetbox import AnchoredText
-        anchored_text = AnchoredText("{}%".format(round((df2[col].iloc[2])*100,3)), loc=2)
+        anchored_text = AnchoredText("{}%".format(round(((ewald_mean-wolf_mean)/ewald_mean)*100,3)), loc=2)
         axs[counter // 3, counter % 3].add_artist(anchored_text)
         counter = counter + 1
 
