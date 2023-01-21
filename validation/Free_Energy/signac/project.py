@@ -1491,8 +1491,8 @@ def part_4b_wolf_sanity_analysis(job):
     statistics = statistics.T.sort_values('p-value', ascending=False).T
     statistics.to_csv('wolf_statistics.csv', sep = ' ', )
 
-    job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
-    job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
+    #job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
+    #job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
 
 
