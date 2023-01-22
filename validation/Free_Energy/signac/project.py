@@ -3204,7 +3204,7 @@ def part_4b_create_wolf_sanity_histograms(job):
             print(ewald_job.sp.wolf_model,ewald_job.sp.wolf_potential,ewald_job.sp.replica_number_int)
             if (ewald_job.isfile("wolf_sanity_equilibrated_energies.csv")):
                 df1 = pd.read_csv (ewald_job.fn('wolf_sanity_equilibrated_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
-                df_equilibrated_all = df_equilibrated_all.append(df1)
+                df_equilibrated_all = df_equilibrated_all.append(df1, ignore_index=True)
             else:
                 print(ewald_job.fn("wolf_sanity_equilibrated_energies.csv"), "DNE\n")
     except:
