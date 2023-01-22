@@ -3196,23 +3196,14 @@ def run_calibration_run_gomc_command(job):
 def part_4b_create_wolf_sanity_histograms(job):
     df1 = pd.DataFrame()
     df_equilibrated_all = pd.DataFrame()
-    #df_equilibrated_all = pd.DataFrame()
 
-    # All different wolf models and ewald across replicas
-    ewald_sp = job.statepoint()
-    ewald_sp['electrostatic_method']="Wolf"
-    ewald_sp['wolf_model']="Calibrator"        
-    ewald_sp['wolf_potential']="Calibrator"   
-    jobs = list(pr.find_jobs(ewald_sp))
-
+    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Calibrator", "wolf_potential": "Calibrator"}))
     try:
         for ewald_job in jobs:
             print(ewald_job.sp.wolf_model,ewald_job.sp.wolf_potential,ewald_job.sp.replica_number_int)
             if (ewald_job.isfile("wolf_sanity_equilibrated_energies.csv")):
                 df1 = pd.read_csv (ewald_job.fn('wolf_sanity_equilibrated_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
                 df_equilibrated_all = df_equilibrated_all.append(df1)
-            else:
-                return False
     except:
         return False
     return
@@ -3221,8 +3212,6 @@ def part_4b_create_wolf_sanity_histograms(job):
         for ewald_job in jobs:
             if (ewald_job.isfile("wolf_statistics_equilibrated.csv")):
                 df2 = pd.read_csv (ewald_job.fn('wolf_statistics_equilibrated.csv'), sep=' ', header=0, na_values='NaN', index_col=0)
-            else:
-                return False
     except:
         return False
 
