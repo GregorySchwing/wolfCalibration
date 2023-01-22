@@ -3209,7 +3209,6 @@ def part_4b_create_wolf_sanity_histograms(job):
                 print(ewald_job.fn("wolf_sanity_equilibrated_energies.csv"), "DNE\n")
     except:
         return False
-    return
     
     try:
         for ewald_job in jobs:
