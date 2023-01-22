@@ -3198,6 +3198,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     df_equilibrated_all = pd.DataFrame()
 
     jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Calibrator", "wolf_potential": "Calibrator"}))
+    print(jobs)
     try:
         for ewald_job in jobs:
             print(ewald_job.sp.wolf_model,ewald_job.sp.wolf_potential,ewald_job.sp.replica_number_int)
