@@ -3373,6 +3373,10 @@ def part_4b_create_wolf_sanity_histograms(job):
     statistics = statistics.T.sort_values('p-value', ascending=False).T
     statistics.to_csv('wolf_statistics_all_replicates.csv', sep = ' ', )
 
+    job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
+    job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
+    print(statistics)
+
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
