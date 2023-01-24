@@ -1370,6 +1370,8 @@ def part_4b_wolf_sanity_histograms_created(job):
             return False
     except:
         return False
+
+
 @Project.label
 @flow.with_job
 def part_4b_is_winning_wolf_model_or_ewald(job):
@@ -3376,6 +3378,28 @@ def part_4b_create_wolf_sanity_histograms(job):
     job.doc.winningWolfModel = (statistics.columns[1]).split("_")[0]
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
+
+@Project.pre(part_4b_wolf_sanity_histograms_created)
+@flow.with_job
+def part_4b_set_winning_wolf_model_or_ewald(job):
+    try:
+        if (job.sp.electrostatic_method == "Wolf"):
+            ewald_sp = job.statepoint()
+            ewald_sp['electrostatic_method']="Wolf"
+            ewald_sp['wolf_model']="Calibrator"
+            ewald_sp['wolf_potential']="Calibrator"
+            ewald_sp['replica_number_int']=0
+            jobs = list(pr.find_jobs(ewald_sp))
+            try:
+                for ewald_job in jobs:
+                    job.doc.winningWolfModel = ewald_job.doc.winningWolfModel
+                    job.doc.winningWolfPotential = ewald_job.doc.winningWolfPotential
+            except:
+                return False
+    except:
+        return False
+
+
 
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
