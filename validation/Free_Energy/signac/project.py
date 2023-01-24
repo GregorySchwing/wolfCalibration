@@ -3225,7 +3225,7 @@ def part_4b_create_wolf_sanity_histograms(job):
 
     numBins = 100
     nskip = 100
-    ref_ewald = df1["Ewald_Ewald"]
+    ref_ewald = df_equilibrated_all["Ewald_Ewald"]
     """
     from pymbar import timeseries
     t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald, nskip=nskip) # compute indices of uncorrelated timeseries
@@ -3240,7 +3240,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     Col_Dict = {"WAIBEL2018_DSF": "Waibel2018a (DSF)", "RAHBARI_DSF": 'Rahbari (DSF)', "WAIBEL2019_DSF": 'Waibel2018b (DSF)',
     "WAIBEL2018_DSP": 'Waibel2018a (DSP)', "RAHBARI_DSP": 'Rahbari (DSP)', "WAIBEL2019_DSP": 'Waibel2018b (DSP)'}
 
-    colList = df1.columns.tolist()
+    colList = df_equilibrated_all.columns.tolist()
     colList.remove("Ewald_Ewald")
     colList.remove("steps")
 
@@ -3251,7 +3251,7 @@ def part_4b_create_wolf_sanity_histograms(job):
 
     for col, col_i in zip(colList, range(0, len(colList))):
 
-        wolf = df1[col]
+        wolf = df_equilibrated_all[col]
         """
         t0, g, Neff_max = timeseries.detectEquilibration(wolf, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil_wolf = wolf[t0:].dropna()
@@ -3300,7 +3300,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     
     for col, col_i in zip(colList, range(0, len(colList))):
         print(colList)
-        wolf = df1[col]
+        wolf = df_equilibrated_all[col]
         """
         t0, g, Neff_max = timeseries.detectEquilibration(wolf, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil_wolf = wolf[t0:].dropna()
@@ -3353,6 +3353,25 @@ def part_4b_create_wolf_sanity_histograms(job):
     figSP.tight_layout(pad=1.5)
     figSP.savefig("PotentialEnergyDistribution_Ewald_vs_All", dpi=300, bbox_inches='tight')
   
+
+    import scipy
+    from scipy.stats import ttest_ind
+    from scipy.spatial.distance import jensenshannon
+    statistics = pd.DataFrame()
+    listOfWolfMethods = list(df_equilibrated_all.columns.values.tolist())
+    print(listOfWolfMethods)
+    listOfWolfMethods.remove("steps")
+    print(listOfWolfMethods)
+    ref_mean = df_equilibrated_all["Ewald_Ewald"].mean()
+    for method in listOfWolfMethods:
+        print("Comparing statistical identicallness of Ewald and", method)
+        welchs_output = scipy.stats.ttest_ind(df_equilibrated_all["Ewald_Ewald"], df_equilibrated_all[method], equal_var=False, nan_policy='omit')
+        statistics[method] = [df_equilibrated_all[method].mean(), df_equilibrated_all[method].std(),(df_equilibrated_all[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
+
+    # Change the row indexes
+    statistics.index = ['mean', 'std', 'relative_error', 't-statistic', 'p-value']   
+    statistics = statistics.T.sort_values('p-value', ascending=False).T
+    statistics.to_csv('wolf_statistics_all_replicates.csv', sep = ' ', )
 
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
