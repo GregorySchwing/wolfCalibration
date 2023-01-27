@@ -3380,12 +3380,12 @@ def part_4b_create_wolf_sanity_histograms(job):
     print(statistics)
 
 @Project.pre(part_4b_wolf_sanity_histograms_created)
+@Project.post(part_4b_is_winning_wolf_model_or_ewald)
 @flow.with_job
 def part_4b_set_winning_wolf_model_or_ewald(job):
     try:
         if (job.sp.electrostatic_method == "Wolf"):
             ewald_sp = job.statepoint()
-            ewald_sp['electrostatic_method']="Wolf"
             ewald_sp['wolf_model']="Calibrator"
             ewald_sp['wolf_potential']="Calibrator"
             ewald_sp['replica_number_int']=0
@@ -3399,8 +3399,6 @@ def part_4b_set_winning_wolf_model_or_ewald(job):
     except:
         return False
 
-
-
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
@@ -3409,7 +3407,6 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_wolf_sanity_histograms_created)  
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
-    @Project.pre(lambda j: j.sp.solute not in ["solvent_box"])
     @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
