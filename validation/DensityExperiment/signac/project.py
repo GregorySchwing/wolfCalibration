@@ -24,6 +24,8 @@ from src.utils.forcefields import get_ff_path
 from src.utils.forcefields import get_molecule_path
 from templates.NAMD_conf_template import generate_namd_equilb_control_file
 
+import warnings
+warnings.filterwarnings("ignore")
 
 class Project(FlowProject):
     """Subclass of FlowProject to provide custom methods and attributes."""
@@ -73,8 +75,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-#gomc_binary_path = "/home/brad/Programs/GOMC/GOMC_dev_1_21_22/bin"
-#namd_binary_path = "/home/brad/Programs/NAMD/NAMD_2.14_RTX_3080_build_Source_CUDA"
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
@@ -87,8 +89,8 @@ gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 1 * 10**7
-Calibration_MC_Eq_Steps = 1000
+Calibration_MC_steps = 2 * 10**5
+Calibration_MC_Eq_Steps = 10000
 Wolf_Sanity_MC_steps = 10 * 10**7
 """
 During the
@@ -1408,8 +1410,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
-@Project.pre(part_2c_gomc_production_control_file_written)
 @Project.pre(part_2a_wolf_sanity_control_file_written)
 #@Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_found)
@@ -1793,8 +1793,6 @@ def build_charmm(job, write_files=True):
 # ******************************************************
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.post(part_2a_namd_equilb_NPT_control_file_written)
-@Project.post(part_2b_gomc_equilb_design_ensemble_control_file_written)
-@Project.post(part_2c_gomc_production_control_file_written)
 @Project.post(mosdef_input_written)
 @Project.post(part_2a_wolf_calibration_control_file_written)
 @Project.operation.with_directives(
@@ -2511,7 +2509,6 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.post(part_3b_output_gomc_wolf_sanity_started)
@@ -2554,7 +2551,6 @@ def run_wolf_sanity_run_gomc_command(job):
 #@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 #@Project.post(part_3b_output_gomc_calibration_started)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
@@ -2812,104 +2808,6 @@ def part_4b_set_winning_wolf_model_or_ewald(job):
                 return False
     except:
         return False
-
-
-
-for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
-    @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-    @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
-    @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-    @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
-    @Project.pre(part_4b_wolf_sanity_histograms_created)  
-    @Project.pre(part_4b_wolf_sanity_analysis_completed)  
-    @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
-    @Project.pre(lambda j: j.sp.solute not in ["solvent_box"])
-    @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
-    @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-    @Project.operation.with_directives(
-        {
-            "np": lambda job: job.doc.gomc_ncpu,
-            "ngpu": lambda job: job.doc.gomc_ngpu,
-            "memory": memory_needed,
-            "walltime": walltime_gomc_equilbrium_hr,
-        },
-        name = f"gomc_equilb_design_ensemble_initial_state_{initial_state_j}"
-    )
-    @flow.with_job
-    @flow.cmd
-    def run_equilb_run_gomc_command(job, *, initial_state_j=initial_state_j):
-        """Run the gomc_equilb_run_ensemble simulation."""
-        control_file_name_str = job.doc.gomc_equilb_design_ensemble_dict[
-            str(initial_state_j)
-        ]["output_name_control_file_name"]
-
-        print(f"Running simulation job id {job}")
-        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-            str(gomc_binary_path),
-            str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
-            str(job.doc.gomc_ncpu),
-            str(control_file_name_str),
-            str(control_file_name_str),
-        )
-
-        print('gomc equilbrium_run run_command = ' + str(run_command))
-
-        return run_command
-# *****************************************
-# ******************************************************
-# equilb NPT - starting the GOMC simulation (end)
-# ******************************************************
-# ******************************************************
-
-
-# ******************************************************
-# ******************************************************
-# production run - starting the GOMC simulation (start)
-# ******************************************************
-# ******************************************************
-for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
-    @Project.pre(part_2c_gomc_production_control_file_written)
-    @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-    @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-    @Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-    @Project.post(part_part_3c_output_gomc_production_run_started)
-    @Project.post(part_4c_job_production_run_completed_properly)
-    @Project.operation.with_directives(
-        {
-            "np": lambda job: job.doc.gomc_ncpu,
-            "ngpu": lambda job: job.doc.gomc_ngpu,
-            "memory": memory_needed,
-            "walltime": walltime_gomc_production_hr,
-        },
-        name = f"gomc_production_ensemble_initial_state_{initial_state_i}"
-    )
-    @flow.with_job
-    @flow.cmd
-    def run_production_run_gomc_command(job, *, initial_state_i=initial_state_i):
-        """Run the gomc_production_ensemble simulation."""
-
-        control_file_name_str = job.doc.gomc_production_run_ensemble_dict[
-            str(initial_state_i)
-        ]["output_name_control_file_name"]
-
-        print(f"Running simulation job id {job}")
-        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-            str(gomc_binary_path),
-            str(job.doc.gomc_production_ensemble_gomc_binary_file),
-            str(job.doc.gomc_ncpu),
-            str(control_file_name_str),
-            str(control_file_name_str),
-        )
-
-        print('gomc production run_command = ' + str(run_command))
-
-        return run_command
-
-# ******************************************************
-# ******************************************************
-# production run - starting the GOMC simulation (end)
-# ******************************************************
-# ******************************************************
 
 @Project.operation.with_directives(
      {

@@ -55,7 +55,7 @@ pr = signac.get_project(pr_root)
 
 wolfPotential = ["DSP","DSF"] # ["Ne", "Rn"]
 #wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS"] # ["Ne", "Rn"]
-wolfModel = ["VLUGT","VLUGTWINTRACUTOFF","GROSS","HYBRID"] # ["Ne", "Rn"]
+wolfModel = ["RAHBARI","WAIBEL2018","WAIBEL2019"] # ["Ne", "Rn"]
 
 # ignore statepoints that are not being tested (gemc only for methane, pentane)
 # filter the list of dictionaries
