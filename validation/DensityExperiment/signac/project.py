@@ -964,33 +964,52 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 def part_4b_job_gomc_wolf_parameters_converged(job):
     try:
-        ewald_sp = job.statepoint()
-        ewald_sp['wolf_model']="Calibrator"        
-        ewald_sp['wolf_potential']="Calibrator"
-        jobs = list(pr.find_jobs(ewald_sp))
-        for ewald_job in jobs:
-            if (ewald_job.doc.calibration_iteration_number > 0):
-                for b in range (2):
-                    curr = pd.DataFrame()
-                    prev = pd.DataFrame()
-                    if (ewald_job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(ewald_job.doc.calibration_iteration_number, b))):
-                        curr = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
-                    else:
-                        return False
-                    if (ewald_job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(ewald_job.doc.calibration_iteration_number-1, b))):
-                        prev = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
-                    else:
-                        return False
-
-                    changeBwRuns = pd.concat([curr,prev]).drop_duplicates(keep=False)
-                    print("Change in best alpha")
-                    print(changeBwRuns)
-                    #print("Run next iteration {} with alpha {} ({} {}".format(ewald_job.doc.calibration_iteration_number+1,
-                    ewald_job.doc.calibration_iteration_number = ewald_job.doc.calibration_iteration_number + 1
+        if (job.doc.calibration_iteration_number+1 == job.doc.calibration_iteration_number_max_number):
+            return True
+        if (job.doc.calibration_iteration_number == 0):
+            job.doc.calibration_iteration_number = job.doc.calibration_iteration_number + 1
+            return False
+        cols = ["MODEL", "POT", "ALPHA"]
+        print(job.doc.calibration_iteration_number)
+        converged = True
+        NUMBOXES = 1
+        for b in range (NUMBOXES):
+            curr = pd.DataFrame()
+            prev = pd.DataFrame()
+            if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b))):
+                curr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=cols)
             else:
-                ewald_job.doc.calibration_iteration_number = ewald_job.doc.calibration_iteration_number + 1
                 return False
+            if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b))):
+                prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None, names=cols)
+            else:
+                return False
+
+            print(prev)
+            print(curr)
+            print("Change in best alpha")
+            changeBwRuns = pd.concat([curr,prev]).drop_duplicates(keep=False)
+            print(changeBwRuns)
+            print(changeBwRuns.empty)
+            converged = converged and changeBwRuns.empty
+            WolfDefaultKind = job.doc.calibration_default_type
+            WolfDefaultPotential = job.doc.calibration_default_pot
+            mask = curr['MODEL'] == WolfDefaultKind
+            mask2 = curr['POT'] == WolfDefaultPotential
+            c = np.logical_and(mask, mask2)
+            nextAlpha = curr[c]["ALPHA"].values[0]
+            print(nextAlpha)
+            print("Run next iteration {} with alpha {} ({} {})".format(job.doc.calibration_iteration_number+1,nextAlpha,WolfDefaultKind,WolfDefaultPotential))
+            output_name_control_file_name = "wolf_calibration_{}.conf".format(
+                job.doc.calibration_iteration_number+1
+            )
+            with open(job.fn(output_name_control_file_name), "a") as myfile:
+                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
+                myfile.write(defAlphaLine)
+        job.doc.calibration_iteration_number = job.doc.calibration_iteration_number + 1
+        return converged   
     except:
+        print(repr(e))
         return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
