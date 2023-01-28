@@ -965,6 +965,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 def part_4b_job_gomc_wolf_parameters_converged(job):
     try:
         if (job.doc.calibration_iteration_number+1 == job.doc.calibration_iteration_number_max_number):
+            job.doc.calibration_converged = True
             return True
         if (job.doc.calibration_iteration_number == 0):
             job.doc.calibration_iteration_number = job.doc.calibration_iteration_number + 1
@@ -1006,7 +1007,9 @@ def part_4b_job_gomc_wolf_parameters_converged(job):
             with open(job.fn(output_name_control_file_name), "a") as myfile:
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
-        job.doc.calibration_iteration_number = job.doc.calibration_iteration_number + 1
+        if (not converged):
+            job.doc.calibration_iteration_number = job.doc.calibration_iteration_number + 1
+        job.doc.calibration_converged = converged
         return converged   
     except:
         print(repr(e))
@@ -1022,10 +1025,10 @@ def part_4b_job_gomc_wolf_parameters_found(job):
     ewald_sp['replica_number_int']=0
     jobs = list(pr.find_jobs(ewald_sp))
     for ewald_job in jobs:
-        if (not ewald_job.isfile("WOLF_CALIBRATION_BOX_0.dat")):
-            return False
-        else:
+        if (ewald_job.doc.calibration_converged):
             return True
+        else:
+            return False
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
@@ -1525,12 +1528,14 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         box_list = [0, 1]
     else:
         box_list = [0]
-
+    output_name_control_file_name = "wolf_calibration_{}_".format(
+        job.doc.calibration_iteration_number
+    )
     cols = ["MODEL", "POT", "ALPHA"]
     dataframes = []
     for ewald_job in jobs:
         for b in box_list:
-            dataframes.append(pd.read_csv(ewald_job.fn("WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(b)), header=None, delim_whitespace=True, names=cols))
+            dataframes.append(pd.read_csv(ewald_job.fn(output_name_control_file_name+"WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(b)), header=None, delim_whitespace=True, names=cols))
 
     """
     wolfDict = { "VLUGT":"RAHBARI",
@@ -2037,7 +2042,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         calibration_iteration_number_max_number
     )
     job.doc.calibration_iteration_number_under_limit = True
-    job.doc.calibrated = False
+    job.doc.calibration_converged = False
     
     Exclude = "1-4"
 
