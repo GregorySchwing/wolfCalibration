@@ -1,7 +1,7 @@
 """GOMC's setup for signac, signac-flow, signac-dashboard for this study."""
 # project.py
 
-
+import subprocess
 import flow
 # from flow.environment import StandardEnvironment
 import mbuild as mb
@@ -89,8 +89,8 @@ gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 2 * 10**5
-Calibration_MC_Eq_Steps = 10000
+Calibration_MC_steps = 5 * 10**3
+Calibration_MC_Eq_Steps = 1000
 Wolf_Sanity_MC_steps = 10 * 10**4
 """
 During the
@@ -249,7 +249,7 @@ def append_wolf_calibration_parameters(job, filename):
     WolfAlphabUpperBoundList = [0.5]
     WolfAlphaIntervalList = [0.01]
 
-    wolfCalFreq = 10000
+    wolfCalFreq = 1000
 
     with open(job.fn(filename), "a") as myfile:
         
@@ -955,21 +955,12 @@ def part_4b_job_gomc_calibration_completed_properly(job):
         return False
 
 
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@flow.with_job
-@Project.label
-@Project.pre(part_4b_job_gomc_calibration_completed_properly)
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+
 def part_4b_job_gomc_wolf_parameters_converged(job):
     try:
-        if (job.doc.calibration_iteration_number+1 == job.doc.calibration_iteration_number_max_number):
+        if (job.doc.calibration_iteration_number >= job.doc.calibration_iteration_number_max_number):
             job.doc.calibration_converged = True
             return True
-        if (job.doc.calibration_iteration_number == 0):
-            job.doc.calibration_iteration_number = job.doc.calibration_iteration_number + 1
-            return False
         cols = ["MODEL", "POT", "ALPHA"]
         print(job.doc.calibration_iteration_number)
         converged = True
@@ -981,10 +972,11 @@ def part_4b_job_gomc_wolf_parameters_converged(job):
                 curr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=cols)
             else:
                 return False
-            if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b))):
-                prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None, names=cols)
-            else:
-                return False
+            if (job.doc.calibration_iteration_number != 0):
+                if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b))):
+                    prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None, names=cols)
+                else:
+                    return False
 
             print(prev)
             print(curr)
@@ -1002,13 +994,11 @@ def part_4b_job_gomc_wolf_parameters_converged(job):
             print(nextAlpha)
             print("Run next iteration {} with alpha {} ({} {})".format(job.doc.calibration_iteration_number+1,nextAlpha,WolfDefaultKind,WolfDefaultPotential))
             output_name_control_file_name = "wolf_calibration_{}.conf".format(
-                job.doc.calibration_iteration_number+1
+                job.doc.calibration_iteration_number
             )
             with open(job.fn(output_name_control_file_name), "a") as myfile:
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
-        if (not converged):
-            job.doc.calibration_iteration_number = job.doc.calibration_iteration_number + 1
         job.doc.calibration_converged = converged
         return converged   
     except:
@@ -2031,13 +2021,13 @@ def build_psf_pdb_ff_gomc_conf(job):
     job.doc.calibration_default_pot = calibration_default_pot
 
     # max number of equilibrium selected runs
-    calibration_iteration_number_max_number = 10
+    calibration_iteration_number_max_number = int(10)
 
 
 
     # set the initial iteration number of the calibration simulation
     job.doc.equilb_design_ensemble_dict = {}
-    job.doc.calibration_iteration_number = 0
+    job.doc.calibration_iteration_number = int(0)
     job.doc.calibration_iteration_number_max_number = (
         calibration_iteration_number_max_number
     )
@@ -2675,10 +2665,10 @@ def run_wolf_sanity_run_gomc_command(job):
     }
 )
 @flow.with_job
-@flow.cmd
 def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
     control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
+    #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
@@ -2689,8 +2679,21 @@ def run_calibration_run_gomc_command(job):
         str(control_file_name_str),
     )
 
-    print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
-    return run_command
+    exec_run_command = subprocess.Popen(
+        run_command, shell=True, stderr=subprocess.STDOUT
+    )
+    os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
+
+    # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
+    if gomc_sim_completed_properly(
+        job,
+        control_file_name_str
+    ):
+        part_4b_job_gomc_wolf_parameters_converged(job)
+        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+        job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
+        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+        print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
 
 
 # ******************************************************
