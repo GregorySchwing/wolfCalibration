@@ -91,7 +91,7 @@ MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
 Calibration_MC_steps = 2 * 10**5
 Calibration_MC_Eq_Steps = 10000
-Wolf_Sanity_MC_steps = 10 * 10**7
+Wolf_Sanity_MC_steps = 10 * 10**4
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -233,10 +233,10 @@ def statepoint_without_temperature(job):
     keys = sorted(tuple(i for i in job.sp.keys() if i not in {"production_temperature_K"}))
     return [(key, job.sp[key]) for key in keys]
 
-def append_wolf_calibration_parameters(job):
+def append_wolf_calibration_parameters(job, filename):
 
-    WolfDefaultKind = "VlugtWIntraCutoff"
-    WolfDefaultPotential = "DSP"
+    WolfDefaultKind = job.doc.calibration_default_type
+    WolfDefaultPotential = job.doc.calibration_default_pot
     WolfDefaultAlpha = [0.21]
 
     WolfCutoffBoxList = [0]
@@ -251,26 +251,27 @@ def append_wolf_calibration_parameters(job):
 
     wolfCalFreq = 10000
 
-    with open(job.fn("wolf_calibration.conf"), "a") as myfile:
-        defPotLine = "Wolf\tFalse\n"
+    with open(job.fn(filename), "a") as myfile:
+        
+        defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
         myfile.write(defPotLine)
-        defPotLine = "WolfPotential\t{pot}\n".format(pot=WolfDefaultPotential)
+        
+        defPotLine = "WolfKind\t{freq}\n".format(freq=WolfDefaultKind)
+        myfile.write(defPotLine)       
+        defPotLine = "WolfPotential\t{freq}\n".format(freq=WolfDefaultPotential)
+        myfile.write(defPotLine)   
+        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=0.11)
+        myfile.write(defPotLine)   
+        defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
         myfile.write(defPotLine)
-        defKindLine = "WolfKind\t{kind}\n".format(kind=WolfDefaultKind)
-        myfile.write(defKindLine)
         defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
         myfile.write(defPotLine)
         for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \
         in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
         WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
-            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=defaultAlpha)
-            myfile.write(defAlphaLine)
-
-            CutoffLine = "WolfCutoffCoulombRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfCutoffLower, ub=wolfCutoffUpper, inter=wolfCutoffInterval)
-            myfile.write(CutoffLine)
-
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             myfile.write(alphaLine)
+
 
 def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_file):
     with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
@@ -472,11 +473,11 @@ def initial_parameters(job):
     if equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NPT"
     elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NVT"
     else:
         raise ValueError(
             "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
@@ -582,14 +583,19 @@ def part_2a_wolf_calibration_control_file_written(job):
     (high temperature to set temp NAMD control file) is written."""
     #if (job.sp.wolf_model != "Calibrator"):
     #    return True
-    output_name_control_file_name = "wolf_calibration"
-    try:
-        return gomc_control_file_written(
-            job,
-            output_name_control_file_name,
+    for cal_run in range(job.doc.calibration_iteration_number_max_number):
+
+        #
+        output_name_control_file_name = "wolf_calibration_{}".format(
+            cal_run
         )
-    except:
-        return False
+        try:
+            return gomc_control_file_written(
+                job,
+                output_name_control_file_name,
+            )
+        except:
+            return False
 
 
 @Project.label
@@ -940,11 +946,50 @@ def part_4b_job_gomc_calibration_completed_properly(job):
         ewald_sp['wolf_potential']="Calibrator"
         jobs = list(pr.find_jobs(ewald_sp))
         for ewald_job in jobs:
-            control_file_name_str = "wolf_calibration"
+            control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
             return gomc_sim_completed_properly(
                 ewald_job,
                 control_file_name_str,
             )
+    except:
+        return False
+
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@flow.with_job
+@Project.label
+@Project.pre(part_4b_job_gomc_calibration_completed_properly)
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+def part_4b_job_gomc_wolf_parameters_converged(job):
+    try:
+        ewald_sp = job.statepoint()
+        ewald_sp['wolf_model']="Calibrator"        
+        ewald_sp['wolf_potential']="Calibrator"
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            if (ewald_job.doc.calibration_iteration_number > 0):
+                for b in range (2):
+                    curr = pd.DataFrame()
+                    prev = pd.DataFrame()
+                    if (ewald_job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(ewald_job.doc.calibration_iteration_number, b))):
+                        curr = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+                    else:
+                        return False
+                    if (ewald_job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(ewald_job.doc.calibration_iteration_number-1, b))):
+                        prev = pd.read_csv (ewald_job.fn('wolf_sanity_all_energies.csv'), sep=',', header=0, na_values='NaN', index_col=0)
+                    else:
+                        return False
+
+                    changeBwRuns = pd.concat([curr,prev]).drop_duplicates(keep=False)
+                    print("Change in best alpha")
+                    print(changeBwRuns)
+                    #print("Run next iteration {} with alpha {} ({} {}".format(ewald_job.doc.calibration_iteration_number+1,
+                    ewald_job.doc.calibration_iteration_number = ewald_job.doc.calibration_iteration_number + 1
+            else:
+                ewald_job.doc.calibration_iteration_number = ewald_job.doc.calibration_iteration_number + 1
+                return False
     except:
         return False
 
@@ -962,6 +1007,7 @@ def part_4b_job_gomc_wolf_parameters_found(job):
             return False
         else:
             return True
+
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -1955,9 +2001,15 @@ def build_psf_pdb_ff_gomc_conf(job):
     else:
         VDWGeometricSigma = False
 
+    calibration_default_type = "WAIBEL2018"
+    calibration_default_pot = "DSP"
+    job.doc.calibration_default_type = calibration_default_type
+    job.doc.calibration_default_pot = calibration_default_pot
 
     # max number of equilibrium selected runs
     calibration_iteration_number_max_number = 10
+
+
 
     # set the initial iteration number of the calibration simulation
     job.doc.equilb_design_ensemble_dict = {}
@@ -2353,7 +2405,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Dih": CBMC_Dih[-1],
             },
         )
-        append_wolf_calibration_parameters(job)
+        append_wolf_calibration_parameters(job, output_name_control_file_calibration_name+".conf")
         append_checkpoint_line(job, output_name_control_file_calibration_name, job.doc.path_to_sseq_checkpoint)
 
         ### Need to append Wolf Calibration lines since they aren't in MosDef
@@ -2580,15 +2632,16 @@ def run_wolf_sanity_run_gomc_command(job):
 # ******************************************************
 # ******************************************************
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-#@Project.post(part_3b_output_gomc_calibration_started)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
-#@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_4b_job_gomc_wolf_parameters_converged)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -2601,7 +2654,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @flow.cmd
 def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
-    control_file_name_str = "wolf_calibration"
+    control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
