@@ -54,8 +54,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
 # please just enter and empty string (i.e., "" or '')
 
 # WSU grid binary paths
-gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/DensityExperiment/signac/bin"
+namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/DensityExperiment/signac/bin"
 
 
 #gomc_binary_path = "/wsu/home/go/go24/go2432/wolfCalibrationLong/validation/Free_Energy/signac/bin"
@@ -75,12 +75,12 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
-namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**5 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
@@ -89,9 +89,9 @@ gomc_output_data_every_X_steps = 100 * 10**3 # set value for paper = 100 * 10**3
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 5 * 10**3
-Calibration_MC_Eq_Steps = 1000
-Wolf_Sanity_MC_steps = 10 * 10**4
+Calibration_MC_steps = 2 * 10**5
+Calibration_MC_Eq_Steps = 10000
+Wolf_Sanity_MC_steps = 10 * 10**7
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -956,7 +956,23 @@ def part_4b_job_gomc_calibration_completed_properly(job):
 
 
 
-def part_4b_job_gomc_wolf_parameters_converged(job):
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_calibration_converged(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    try:
+        ewald_sp = job.statepoint()
+        ewald_sp['wolf_model']="Calibrator"        
+        ewald_sp['wolf_potential']="Calibrator"
+        jobs = list(pr.find_jobs(ewald_sp))
+        for ewald_job in jobs:
+            return ewald_job.doc.calibration_converged
+    except:
+        return False
+
+def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
     try:
         if (job.doc.calibration_iteration_number >= job.doc.calibration_iteration_number_max_number):
             job.doc.calibration_converged = True
@@ -994,7 +1010,7 @@ def part_4b_job_gomc_wolf_parameters_converged(job):
             print(nextAlpha)
             print("Run next iteration {} with alpha {} ({} {})".format(job.doc.calibration_iteration_number+1,nextAlpha,WolfDefaultKind,WolfDefaultPotential))
             output_name_control_file_name = "wolf_calibration_{}.conf".format(
-                job.doc.calibration_iteration_number
+                job.doc.calibration_iteration_number+1
             )
             with open(job.fn(output_name_control_file_name), "a") as myfile:
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
@@ -2655,7 +2671,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.post(part_4b_job_gomc_wolf_parameters_found)
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
-@Project.post(part_4b_job_gomc_wolf_parameters_converged)
+@Project.post(part_4b_job_gomc_calibration_converged)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -2678,6 +2694,7 @@ def run_calibration_run_gomc_command(job):
         str(control_file_name_str),
         str(control_file_name_str),
     )
+    print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
 
     exec_run_command = subprocess.Popen(
         run_command, shell=True, stderr=subprocess.STDOUT
@@ -2689,11 +2706,10 @@ def run_calibration_run_gomc_command(job):
         job,
         control_file_name_str
     ):
-        part_4b_job_gomc_wolf_parameters_converged(job)
+        part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
         print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
         job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
         print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-        print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
 
 
 # ******************************************************
