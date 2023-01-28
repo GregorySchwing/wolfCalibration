@@ -80,7 +80,7 @@ namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperim
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 3 * 10**7 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 3 * 10**5 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
@@ -317,6 +317,25 @@ def get_delta_BAR(BAR_estimate, k_b_T):
 # functions for free energy calcs MBAR, TI, and BAR for getting delta free energy and delta error (end)
 # ******************************************************
 # ******************************************************
+
+
+
+
+@Project.label
+def part_1b_under_equilb_design_ensemble_run_limit(job):
+    """Check that the equilbrium design ensemble run is under it's run limit."""
+    try:
+        if (
+            job.doc.calibration_iteration_number
+            >= job.doc.calibration_iteration_number_max_number
+        ):
+            job.doc.calibration_iteration_number_under_limit = False
+            return job.doc.calibration_iteration_number_under_limit
+
+        else:
+            return True
+    except:
+        return False
 
 @Project.label
 def part_1a_initial_data_input_to_json(job):
@@ -1936,7 +1955,18 @@ def build_psf_pdb_ff_gomc_conf(job):
     else:
         VDWGeometricSigma = False
 
-    
+
+    # max number of equilibrium selected runs
+    calibration_iteration_number_max_number = 10
+
+    # set the initial iteration number of the calibration simulation
+    job.doc.equilb_design_ensemble_dict = {}
+    job.doc.calibration_iteration_number = 0
+    job.doc.calibration_iteration_number_max_number = (
+        calibration_iteration_number_max_number
+    )
+    job.doc.calibration_iteration_number_under_limit = True
+    job.doc.calibrated = False
     
     Exclude = "1-4"
 
@@ -2548,7 +2578,7 @@ def run_wolf_sanity_run_gomc_command(job):
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
-#@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
