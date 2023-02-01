@@ -994,6 +994,12 @@ def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
                 else:
                     return False
 
+            if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b))):
+                modelRelErr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=cols, index_col=0)
+                modelRelErr.index.name = "alpha"
+            else:
+                return False 
+
             print(prev)
             print(curr)
             print("Change in best alpha")
