@@ -75,8 +75,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/DensityE
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
-namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
