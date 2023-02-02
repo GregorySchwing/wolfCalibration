@@ -75,8 +75,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/DensityE
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
-#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/DensityExperiment/signac/bin"
 
 # number of simulation steps
 #gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
@@ -978,6 +978,7 @@ def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
             job.doc.calibration_converged = True
             return True
         cols = ["MODEL", "POT", "ALPHA"]
+        colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
         print(job.doc.calibration_iteration_number)
         converged = True
         NUMBOXES = 1
@@ -995,8 +996,10 @@ def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
                     return False
 
             if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b))):
-                modelRelErr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=cols, index_col=0)
-                modelRelErr.index.name = "alpha"
+                modelRelErr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=colList, index_col=0)
+                print(modelRelErr)
+                print(modelRelErr.abs().min().idxmin().split("_"))
+                print(modelRelErr.abs().min().min())
             else:
                 return False 
 
@@ -1007,8 +1010,8 @@ def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
             print(changeBwRuns)
             print(changeBwRuns.empty)
             converged = converged and changeBwRuns.empty
-            WolfDefaultKind = job.doc.calibration_default_type
-            WolfDefaultPotential = job.doc.calibration_default_pot
+            WolfDefaultKind = modelRelErr.abs().min().idxmin().split("_")[0]
+            WolfDefaultPotential = modelRelErr.abs().min().idxmin().split("_")[1]
             mask = curr['MODEL'] == WolfDefaultKind
             mask2 = curr['POT'] == WolfDefaultPotential
             c = np.logical_and(mask, mask2)
@@ -2655,7 +2658,7 @@ def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
     control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
     #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
-
+    """
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
@@ -2670,16 +2673,16 @@ def run_calibration_run_gomc_command(job):
         run_command, shell=True, stderr=subprocess.STDOUT
     )
     os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
-
+    """
     # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
     if gomc_sim_completed_properly(
         job,
         control_file_name_str
     ):
         part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
-        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-        job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
-        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+        #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+        #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
+        #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
 
 
 # ******************************************************
