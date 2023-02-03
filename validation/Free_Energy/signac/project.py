@@ -976,9 +976,8 @@ def gomc_cal_completed_properly(job, control_filename_str):
 def gomc_sseq_completed_properly(job, control_filename_str):
     """General check to see if the gomc simulation was completed properly."""
     job_run_properly_bool = False
-    output_log_file = "out_{}.dat".format(control_filename_str)
     try:
-        if job.isfile(output_log_file):
+        if job.isfile(job.doc.path_to_gomc_eq_console):
             with open(job.doc.path_to_gomc_eq_console, "r") as fp:
                 out_gomc = fp.readlines()
                 for i, line in enumerate(out_gomc):
@@ -993,7 +992,7 @@ def gomc_sseq_completed_properly(job, control_filename_str):
                             job_run_properly_bool = True
         else:
             job_run_properly_bool = False
-            return job_run_properly_bool
+        return job_run_properly_bool
     except:
             return False
 
