@@ -621,6 +621,58 @@ def part_2a_namd_equilb_NPT_control_file_written(job):
     (high temperature to set temp NAMD control file) is written."""
     return namd_control_file_written(job, namd_equilb_NPT_control_file_name_str)
 
+
+# checking if the GOMC control file is written for the equilb run with the selected ensemble
+@Project.label
+@flow.with_job
+def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
+    """General check that the gomc_equilb_design_ensemble (run temperature) gomc control file is written."""
+    try:
+        if (job.doc.N_liquid_solute == 0):
+            return True
+    except:
+        return False
+    
+    try:
+        for initial_state_i in list(job.doc.InitialState_list):
+            try:
+                gomc_control_file_written(
+                    job,
+                    job.doc.gomc_equilb_design_ensemble_dict[
+                        str(initial_state_i)
+                    ]["output_name_control_file_name"],
+                )
+            except:
+                return False
+        return True
+    except:
+        return False
+
+# checking if the GOMC control file is written for the production run
+@Project.label
+@flow.with_job
+def part_2c_gomc_production_control_file_written(job):
+    """General check that the gomc_production_control_file (run temperature) is written."""
+    try:
+        if (job.doc.N_liquid_solute == 0):
+            return True
+    except:
+        return False
+    try:
+        for initial_state_i in list(job.doc.InitialState_list):
+            try:
+                return gomc_control_file_written(
+                    job,
+                    job.doc.gomc_production_run_ensemble_dict[
+                        str(initial_state_i)
+                    ]["output_name_control_file_name"],
+                )
+            except:
+                return False
+        return True
+    except:
+        return False
+
 # ******************************************************
 # ******************************************************
 # check if GOMC control file was written (end)
