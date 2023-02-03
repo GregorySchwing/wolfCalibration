@@ -1358,6 +1358,8 @@ def part_4b_wolf_sanity_analysis(job):
 @flow.with_job
 @Project.pre(part_2a_wolf_sanity_control_file_written)
 def part_4b_job_gomc_wolf_parameters_appended(job):
+    if (job.sp.electrostatic_methd == "Ewald"):
+        return True
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
@@ -1952,7 +1954,12 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
        
-
+    wolf_cal_sp = job.statepoint()
+    wolf_cal_sp['wolf_model']="Calibrator"
+    wolf_cal_sp['wolf_potential']="Calibrator"
+    jobs = list(pr.find_jobs(wolf_cal_sp))
+    for cal_job in jobs:
+        job.doc.path_to_wolf_cal_dir =  cal_job.fn("")
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
     # This has to be off during calibration
