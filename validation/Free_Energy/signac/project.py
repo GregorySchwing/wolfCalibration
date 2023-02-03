@@ -93,8 +93,8 @@ gomc_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 1 * 10**4
-Calibration_MC_Eq_Steps = 1000
+Calibration_MC_steps = 25 * 10**4
+Calibration_MC_Eq_Steps = 5 * 10**4 
 Wolf_Sanity_MC_steps = 1 * 10**4
 """
 During the
@@ -236,10 +236,6 @@ def statepoint_without_temperature(job):
 
 def append_wolf_calibration_parameters(job, filename):
 
-    WolfDefaultKind = job.doc.calibration_default_type
-    WolfDefaultPotential = job.doc.calibration_default_pot
-    WolfDefaultAlpha = [0.21]
-
     WolfCutoffBoxList = [0]
 
     WolfCutoffCoulombLowerBoundList = [10]
@@ -253,23 +249,15 @@ def append_wolf_calibration_parameters(job, filename):
     wolfCalFreq = 1000
 
     with open(job.fn(filename), "a") as myfile:
-        
-        defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
+        defPotLine = "InitStep\t{zero}\n".format(zero=0)
         myfile.write(defPotLine)
-        
-        defPotLine = "WolfKind\t{freq}\n".format(freq=WolfDefaultKind)
-        myfile.write(defPotLine)       
-        defPotLine = "WolfPotential\t{freq}\n".format(freq=WolfDefaultPotential)
-        myfile.write(defPotLine)   
-        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=0.11)
-        myfile.write(defPotLine)   
         defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
         myfile.write(defPotLine)
         defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
         myfile.write(defPotLine)
-        for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval, defaultAlpha \
+        for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval \
         in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
-        WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList, WolfDefaultAlpha):
+        WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
             alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
             myfile.write(alphaLine)
 
@@ -278,7 +266,17 @@ def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_fi
     with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
         checkpointLine = "Checkpoint\tTrue\t{}\n".format(path_to_previous_checkpoint_file)
         myfile.write(checkpointLine)
-            
+
+
+def append_default_wolf_parameters_line(job, config_file_name, path_to_previous_checkpoint_file):
+    with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
+        defPotLine = "WolfKind\t{freq}\n".format(freq=job.doc.WolfDefaultKind)
+        myfile.write(defPotLine)       
+        defPotLine = "WolfPotential\t{freq}\n".format(freq=job.doc.WolfDefaultPotential)
+        myfile.write(defPotLine)   
+        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=job.doc.DefaultWolfAlpha)
+        myfile.write(defPotLine)   
+
 # ******************************************************
 # ******************************************************
 # functions for selecting/grouping/aggregating in different ways (end)
@@ -562,11 +560,14 @@ def initial_parameters(job):
     if equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NPT"
+        #job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NPT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
     elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NVT"
+        #job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NVT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
+
     else:
         raise ValueError(
             "ERROR: The 'GCMC', 'GEMC_NVT', 'GEMC_NPT' ensembles is not currently available for this project.py "
@@ -860,8 +861,9 @@ def part_3b_output_gomc_sseq_started(job):
     """Check to see if the gomc_calibration simulation is started (set temperature)."""
     try: 
         output_name_control_file_name = "single_state_eq"
-
+        print(job.doc.path_to_gomc_eq_console, job.is_file(job.doc.path_to_gomc_eq_console))
         return job.is_file(job.doc.path_to_gomc_eq_console)
+
     except:
         return False
 
@@ -1037,24 +1039,6 @@ def part_4a_job_namd_equilb_NPT_completed_properly(job):
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
-def part_4b_job_gomc_calibration_completed_properly(job):
-    """Check to see if the gomc_calibration simulation is finished (set temperature)."""
-    try: 
-        output_name_control_file_name = "wolf_calibration_{}".format(
-            job.doc.calibration_iteration_number
-        )
-
-        return gomc_cal_completed_properly(
-            job,
-            output_name_control_file_name,
-        )
-    except:
-        return False
-
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.label
-@flow.with_job
 def part_4b_job_gomc_calibration_converged(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
@@ -1113,6 +1097,10 @@ def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
                 job.doc.calibration_iteration_number+1
             )
             with open(job.fn(output_name_control_file_name), "a") as myfile:
+                defAlphaLine = "WolfKind\t{val}\n".format(val=WolfDefaultKind)
+                myfile.write(defAlphaLine)
+                defAlphaLine = "WolfPotential\t{val}\n".format(val=WolfDefaultPotential)
+                myfile.write(defAlphaLine)
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
         job.doc.calibration_converged = converged
@@ -1312,7 +1300,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
 @flow.with_job
 def part_4b_wolf_sanity_analysis_completed(job):
     try:
-        if (job.isfile("wolf_statistics.csv")):
+        if (job.isfile(job.doc.path_to_wolf_cal_dir+"/wolf_statistics.csv")):
             return True
     except:
         return False
@@ -1322,7 +1310,7 @@ def part_4b_wolf_sanity_analysis_completed(job):
 def part_4b_wolf_sanity_histograms_created(job):
     try:
         df1 = pd.DataFrame()
-        if (job.isfile("wolf_sanity_all_energies.csv") and job.isfile("PotentialEnergyDistribution_Ewald_vs_All.png")):
+        if (job.isfile(job.doc.path_to_wolf_cal_repl_0_dir+"/wolf_sanity_all_energies.csv") and job.isfile(job.doc.path_to_wolf_cal_repl_0_dir+"/PotentialEnergyDistribution_Ewald_vs_All.png")):
             return True
         else:
             return False
@@ -1336,11 +1324,26 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
     try:
         if (job.sp.electrostatic_method == "Ewald"):
             return True
+        elif (job.doc.winningWolfModel== "" \
+            and job.doc.winningWolfPotential == ""):
+                # All different wolf models and ewald within a replicas
+                ewald_sp = job.statepoint()
+                ewald_sp['electrostatic_method']="Wolf"
+                ewald_sp['wolf_model']="Calibrator"
+                ewald_sp['wolf_potential']="Calibrator"
+                ewald_sp['replica_number_int']=0
+                jobs = list(pr.find_jobs(ewald_sp))
+                for ref_job in jobs:
+                    job.doc.winningWolfModel = ref_job.doc.winningWolfModel
+                    job.doc.winningWolfPotential = ref_job.doc.winningWolfPotential
+                return  (job.sp.wolf_model == job.doc.winningWolfModel \
+                            and job.sp.wolf_potential == job.doc.winningWolfPotential)
         elif (job.sp.wolf_model == job.doc.winningWolfModel \
             and job.sp.wolf_potential == job.doc.winningWolfPotential):
             return True
         else:
             return False
+
     except:
         return False
 
@@ -1496,9 +1499,11 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
     return success and atLeastOneMatchExists
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.wolf_model != "Calibrator" and j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_2a_wolf_sanity_control_file_written)
-#@Project.pre(part_4b_job_gomc_calibration_completed_properly)
 @Project.pre(part_4b_job_gomc_calibration_converged)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -1511,78 +1516,68 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 )
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
-    import pickle as pickle
-    testEachWolf = True
-    ewald_sp = job.statepoint()
-    #ewald_sp['electrostatic_method']="Wolf"
-    ewald_sp['wolf_model']="Calibrator"
-    ewald_sp['wolf_potential']="Calibrator"
-    #ewald_sp['solute']="solvent_box"
-    ewald_sp['replica_number_int']=0
-    jobs = list(pr.find_jobs(ewald_sp))
-    winningWolf = {}
-
-    import re
-    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+    output_name_control_file_name = "wolf_calibration_{}_".format(
+        job.doc.calibration_iteration_number-1
+    )
+    cols = ["MODEL", "POT", "ALPHA"]
+    dataframes = []
     if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
         box_list = [0, 1]
     else:
         box_list = [0]
-    output_name_control_file_name = "wolf_calibration_{}_".format(
-        job.doc.calibration_iteration_number
-    )
-    cols = ["MODEL", "POT", "ALPHA"]
-    dataframes = []
-    for ewald_job in jobs:
-        for b in box_list:
-            dataframes.append(pd.read_csv(ewald_job.fn(output_name_control_file_name+"WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(b)), header=None, delim_whitespace=True, names=cols))
+    for b in box_list:
+        dataframes.append(pd.read_csv(job.fn(output_name_control_file_name+"WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(b)), header=None, delim_whitespace=True, names=cols))
 
-    """
-    wolfDict = { "VLUGT":"RAHBARI",
-                "GROSS":"WAIBEL2018",
-                "HYBRID":"WAIBEL2018",
-                "VLUGTWINTRACUTOFF":"WAIBEL2019"} # ["Ne", "Rn"]
-    """
-    print (dataframes)
-    regex = re.compile("wolf_sanity.conf")
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                with open(file, "a") as myfile:
-                    if (testEachWolf):
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                        myfile.write(defKindLine)
-                        for box in box_list:
-                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
-                            #mask = dataframes[0]['MODEL'] == wolfDict[job.sp.wolf_model]
-                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
-                            c = np.logical_and(mask, mask2)
-                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
-                            myfile.write(defAlphaLine)
+        jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", "solute": job.sp.solute}))
+        for ref_job in jobs:
+            print(ref_job.fn())
+            if (ref_job.sp.wolf_model == "Calibrator"):
+                continue
 
-    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                with open(file, "a") as myfile:
-                    if (testEachWolf):
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                        myfile.write(defKindLine)
-                        for box in box_list:
-                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
-                            #mask = dataframes[0]['MODEL'] == wolfDict[job.sp.wolf_model]
-                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
-                            c = np.logical_and(mask, mask2)
-                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
-                            myfile.write(defAlphaLine)
+            print (dataframes[b])
+
+            import re
+            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+
+
+            regex = re.compile("wolf_sanity.conf")
+            for root, dirs, files in os.walk(ref_job.fn("")):
+                for file in files:
+                    if regex.match(file):
+                        with open(file, "a") as myfile:
+                            defWolfLine = "Wolf\tTrue\n"
+                            myfile.write(defWolfLine)
+                            defPotLine = "WolfPotential\t{pot}\n".format(pot=ref_job.sp.wolf_potential)
+                            myfile.write(defPotLine)
+                            defKindLine = "WolfKind\t{kind}\n".format(kind=ref_job.sp.wolf_model)
+                            myfile.write(defKindLine)
+                            for box in box_list:
+                                mask = dataframes[0]['MODEL'] == ref_job.sp.wolf_model
+                                #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
+                                mask2 = dataframes[0]['POT'] == ref_job.sp.wolf_potential
+                                c = np.logical_and(mask, mask2)
+                                print(dataframes[0][c]["ALPHA"].values)
+                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
+                                myfile.write(defAlphaLine)
+
+            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+            for root, dirs, files in os.walk(ref_job.fn("")):
+                for file in files:
+                    if regex.match(file):
+                        with open(file, "a") as myfile:
+                            defWolfLine = "Wolf\tTrue\n"
+                            myfile.write(defWolfLine)
+                            defPotLine = "WolfPotential\t{pot}\n".format(pot=ref_job.sp.wolf_potential)
+                            myfile.write(defPotLine)
+                            defKindLine = "WolfKind\t{kind}\n".format(kind=ref_job.sp.wolf_model)
+                            myfile.write(defKindLine)
+                            for box in box_list:
+                                mask = dataframes[0]['MODEL'] == ref_job.sp.wolf_model
+                                #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
+                                mask2 = dataframes[0]['POT'] == ref_job.sp.wolf_potential
+                                c = np.logical_and(mask, mask2)
+                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
+                                myfile.write(defAlphaLine)
 
 
 
@@ -2055,12 +2050,21 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_extendedSystem_box_1 =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_1)
         job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
-       
+    """   
     wolf_cal_sp = job.statepoint()
     wolf_cal_sp['wolf_model']="Calibrator"
     wolf_cal_sp['wolf_potential']="Calibrator"
     jobs = list(pr.find_jobs(wolf_cal_sp))
     for cal_job in jobs:
+        job.doc.path_to_wolf_cal_dir =  cal_job.fn("")
+    """
+    wolf_cal_repl_0_sp = job.statepoint()
+    wolf_cal_repl_0_sp['wolf_model']="Calibrator"
+    wolf_cal_repl_0_sp['wolf_potential']="Calibrator"
+    wolf_cal_repl_0_sp['replica_number_int']=0
+    jobs = list(pr.find_jobs(wolf_cal_repl_0_sp))
+    for cal_job in jobs:
+        job.doc.path_to_wolf_cal_repl_0_dir =  cal_job.fn("")
         job.doc.path_to_wolf_cal_dir =  cal_job.fn("")
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
@@ -2076,10 +2080,12 @@ def build_psf_pdb_ff_gomc_conf(job):
     else:
         VDWGeometricSigma = False
 
-    calibration_default_type = "WAIBEL2018"
-    calibration_default_pot = "DSP"
-    job.doc.calibration_default_type = calibration_default_type
-    job.doc.calibration_default_pot = calibration_default_pot
+    DefaultWolfKind = "WAIBEL2018"
+    DefaultWolfPotential = "DSP"
+    DefaultWolfAlpha = 0.11
+    job.doc.DefaultWolfKind = DefaultWolfKind
+    job.doc.DefaultWolfPotential = DefaultWolfPotential
+    job.doc.DefaultWolfAlpha = DefaultWolfAlpha
 
     # max number of equilibrium selected runs
     calibration_iteration_number_max_number = int(10)
@@ -2982,7 +2988,7 @@ def run_namd_equilb_NPT_gomc_command(job):
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.post(part_3b_output_gomc_sseq_started)
+#@Project.post(part_3b_output_gomc_sseq_started)
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
     {
@@ -3018,7 +3024,7 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-@Project.post(part_3b_output_gomc_wolf_sanity_started)
+#@Project.post(part_3b_output_gomc_wolf_sanity_started)
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
@@ -3053,16 +3059,15 @@ def run_wolf_sanity_run_gomc_command(job):
 # ******************************************************
 # ******************************************************
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
 @Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
-#@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.post(part_3b_output_gomc_calibration_started)
 @Project.post(part_4b_job_gomc_calibration_converged)
-@Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -3072,22 +3077,34 @@ def run_wolf_sanity_run_gomc_command(job):
     }
 )
 @flow.with_job
-@flow.cmd
 def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
-    control_file_name_str = "wolf_calibration"
-
+    control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
+    #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
         str(job.doc.gomc_calibration_gomc_binary_file),
-        str(4),
+        str(1),
         str(control_file_name_str),
         str(control_file_name_str),
     )
-
     print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
-    return run_command
+    import subprocess
+
+    exec_run_command = subprocess.Popen(
+        run_command, shell=True, stderr=subprocess.STDOUT
+    )
+    os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
+    # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
+    if gomc_sim_completed_properly(
+        job,
+        control_file_name_str
+    ):
+        part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
+        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+        job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
+        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
 
 
 # ******************************************************
@@ -3297,26 +3314,6 @@ def part_4b_create_wolf_sanity_histograms(job):
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
 
-@Project.pre(part_4b_wolf_sanity_histograms_created)
-@Project.post(part_4b_is_winning_wolf_model_or_ewald)
-@flow.with_job
-def part_4b_set_winning_wolf_model_or_ewald(job):
-    try:
-        if (job.sp.electrostatic_method == "Wolf"):
-            ewald_sp = job.statepoint()
-            ewald_sp['wolf_model']="Calibrator"
-            ewald_sp['wolf_potential']="Calibrator"
-            ewald_sp['replica_number_int']=0
-            jobs = list(pr.find_jobs(ewald_sp))
-            try:
-                for ewald_job in jobs:
-                    job.doc.winningWolfModel = ewald_job.doc.winningWolfModel
-                    job.doc.winningWolfPotential = ewald_job.doc.winningWolfPotential
-            except:
-                return False
-    except:
-        return False
-
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
@@ -3325,7 +3322,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_wolf_sanity_histograms_created)  
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
-    @Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
+    #@Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
         {
@@ -3424,10 +3421,8 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 @Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
 @flow.with_job
 def part_5a_preliminary_analysis_individual_simulation_averages(job):
-    # remove the total averaged replicate data and all analysis data after this,
-    # as it is no longer valid when adding more simulations
-    if os.path.isfile(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'):
-        os.remove(f'../../analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}')
+
+ 
 
     output_column_temp_title = 'temp_K'  # column title title for temp
     output_column_solute_title = 'solute'  # column title title for temp
@@ -3480,31 +3475,15 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
     bar = BAR().fit(u_nk)
     delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
 
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(preliminary_output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
+
+    cols = [output_column_temp_title,output_column_solute_title, output_column_dFE_MBAR_title, \
+                output_column_dFE_MBAR_std_title, output_column_dFE_TI_title, output_column_dFE_TI_std_title, \
+                output_column_dFE_BAR_title,output_column_dFE_BAR_std_title]
+
+    allData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
     
+    allDataDF = pd.DataFrame(allData, cols=cols)
+
     from pymbar import timeseries
     nskip = 100
     # Read the data for TI estimator and BAR or MBAR estimators.
@@ -3540,31 +3519,8 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
     bar = BAR().fit(u_nk)
     delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
 
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(preliminary_uncorrelated_output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
+    deCorrData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
+    deCorrDataDF = pd.DataFrame(deCorrData, cols=cols)
 
 
 # ******************************************************
@@ -3585,10 +3541,6 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
 @Project.post(part_5a_analysis_individual_simulation_averages_completed)
 @flow.with_job
 def part_5a_analysis_individual_simulation_averages(job):
-    # remove the total averaged replicate data and all analysis data after this,
-    # as it is no longer valid when adding more simulations
-    if os.path.isfile(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'):
-        os.remove(f'../../analysis/{output_avg_std_of_replicates_txt_file_name_box_0}')
 
     output_column_temp_title = 'temp_K'  # column title title for temp
     output_column_solute_title = 'solute'  # column title title for temp
@@ -3600,18 +3552,31 @@ def part_5a_analysis_individual_simulation_averages(job):
     output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
 
 
-    # get the averages from each individual simulation and write the csv's.
-
     files = []
+    blk_files = []
     k_b = 1.9872036E-3  # kcal/mol/K
     temperature = job.sp.production_temperature_K
     k_b_T = temperature * k_b
-
+    dict_of_states = {}
     for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
         reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_production_control_file_name_str}_' \
                                         f'initial_state_{initial_state_iter}.dat'
         files.append(reading_filename_box_0_iter)
-
+        blk_file = f'Blk_{gomc_production_control_file_name_str}_' \
+                    f'initial_state_{initial_state_iter}_BOX_0.dat'
+        energies = []
+        with open(blk_file, 'r', encoding='utf8') as f:
+            for line in f:
+                #print('\n'.join(line.split()[1] for line in f))
+                try:
+                    energies.append(float(line.split()[1]))
+                except:
+                    print("An exception occurred") 
+        energies_np = np.array(energies)
+        print(energies_np.mean())
+        dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
+    df = pd.DataFrame.from_dict(dict_of_states)
+    df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
 
     #All samples
     # for TI estimator
@@ -3628,31 +3593,17 @@ def part_5a_analysis_individual_simulation_averages(job):
     bar = BAR().fit(u_nk)
     delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
 
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
 
+    cols = [output_column_temp_title,output_column_solute_title, output_column_dFE_MBAR_title, \
+                output_column_dFE_MBAR_std_title, output_column_dFE_TI_title, output_column_dFE_TI_std_title, \
+                output_column_dFE_BAR_title,output_column_dFE_BAR_std_title]
+
+    allData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
+    
+    allDataDF = pd.DataFrame(allData, cols=cols)
+
+    from pymbar import timeseries
+    nskip = 100
     # Read the data for TI estimator and BAR or MBAR estimators.
     list_data_TI = []
     list_data_BAR = []
@@ -3662,6 +3613,8 @@ def part_5a_analysis_individual_simulation_averages(job):
         #Detect uncorrelated samples using VDW+Coulomb term in derivative 
         # of energy time series (calculated for TI)
         srs = dHdl['VDW'] + dHdl['Coulomb'] 
+        t0, g, Neff_max = timeseries.detectEquilibration(srs, nskip=nskip) # compute indices of uncorrelated timeseries
+        A_t_equil = srs[t0:]
         list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
         list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
 
@@ -3684,74 +3637,9 @@ def part_5a_analysis_individual_simulation_averages(job):
     bar = BAR().fit(u_nk)
     delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
 
+    deCorrData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
+    deCorrDataDF = pd.DataFrame(deCorrData, cols=cols)
 
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(output_uncorrelated_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
-
-###
-
-    """
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    # write the data out in each job
-    box_0_replicate_data_txt_file = open(job.fn(output_replicate_txt_file_name_box_0), "w")
-    box_0_replicate_data_txt_file.write(
-        f"{output_column_temp_title: <30} "
-        f"{output_column_solute_title: <30} "
-        f"{output_column_dFE_MBAR_title: <30} "
-        f"{output_column_dFE_MBAR_std_title: <30} "
-        f"{output_column_dFE_TI_title: <30} "
-        f"{output_column_dFE_TI_std_title: <30} "
-        f"{output_column_dFE_BAR_title: <30} "
-        f"{output_column_dFE_BAR_std_title: <30} "
-        f" \n"
-    )
-    box_0_replicate_data_txt_file.write(
-        f"{job.sp.production_temperature_K: <30} "
-        f"{job.sp.solute: <30} "
-        f"{delta_mbar: <30} "
-        f"{delta_std_mbar: <30} "
-        f"{delta_ti: <30} "
-        f"{delta_std_ti: <30} "
-        f"{delta_bar: <30} "
-        f"{delta_std_bar: <30} "
-        f" \n"
-    )
-    """
 
 
 # ******************************************************
