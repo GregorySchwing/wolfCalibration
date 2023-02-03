@@ -769,10 +769,7 @@ def part_3b_output_gomc_sseq_started(job):
     try: 
         output_name_control_file_name = "single_state_eq"
 
-        return gomc_simulation_started(
-            job,
-            output_name_control_file_name,
-        )
+        return job.is_file(job.doc.path_to_gomc_eq_console)
     except:
         return False
 
