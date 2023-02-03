@@ -2067,7 +2067,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Ang = (50,)
         CBMC_Dih = (50,)
         if job.doc.equilibration_ensemble in ["NVT"]:
-            """
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -2076,15 +2075,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             DisFreq = (0.4,)
             RotFreq = (0.3,)
             RegrowthFreq = (0.3,)
-            """
-            VolFreq = (0.00,)
-            MultiParticleFreq = (None,)
-            IntraSwapFreq = (0.0,)
-            CrankShaftFreq = (0.00,)
-            SwapFreq = (00,)
-            DisFreq = (0.50,)
-            RotFreq = (0.50,)
-            RegrowthFreq = (0.00,)
+
         elif job.doc.equilibration_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
@@ -2108,7 +2099,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Ang = (100,)
         CBMC_Dih = (50,)
         if job.doc.equilibration_ensemble in ["NVT"]:
-            """
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -2117,15 +2107,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             DisFreq = (0.50,)
             RotFreq = (0.2,)
             RegrowthFreq = (0.20,)
-            """
-            VolFreq = (0.00,)
-            MultiParticleFreq = (None,)
-            IntraSwapFreq = (0.0,)
-            CrankShaftFreq = (0.00,)
-            SwapFreq = (00,)
-            DisFreq = (0.50,)
-            RotFreq = (0.50,)
-            RegrowthFreq = (0.00,)
+
         elif job.doc.equilibration_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
@@ -2224,7 +2206,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         CBMC_Ang = (50,)
         CBMC_Dih = (50,)
         if job.doc.equilibration_ensemble in ["NVT"]:
-            """
             VolFreq = (0.00,)
             MultiParticleFreq = (None,)
             IntraSwapFreq = (0.0,)
@@ -2233,15 +2214,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             DisFreq = (0.4,)
             RotFreq = (0.3,)
             RegrowthFreq = (0.3,)
-            """
-            VolFreq = (0.00,)
-            MultiParticleFreq = (None,)
-            IntraSwapFreq = (0.0,)
-            CrankShaftFreq = (0.00,)
-            SwapFreq = (00,)
-            DisFreq = (0.50,)
-            RotFreq = (0.50,)
-            RegrowthFreq = (0.00,)
+
         elif job.doc.equilibration_ensemble in ["NPT"]:
             VolFreq = (0.01,)
             MultiParticleFreq = (None,)
@@ -2484,7 +2457,6 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Ang = (50,)
             CBMC_Dih = (50,)
             if job.doc.equilibration_ensemble in ["NVT"]:
-                """
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -2493,15 +2465,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.4,)
                 RotFreq = (0.3,)
                 RegrowthFreq = (0.3,)
-                """
-                VolFreq = (0.00,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (0.00,)
-                SwapFreq = (00,)
-                DisFreq = (0.50,)
-                RotFreq = (0.50,)
-                RegrowthFreq = (0.00,)
+
             elif job.doc.equilibration_ensemble in ["NPT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (None,)
@@ -2525,7 +2489,6 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Ang = (100,)
             CBMC_Dih = (50,)
             if job.doc.equilibration_ensemble in ["NVT"]:
-                """
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -2534,15 +2497,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.50,)
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
-                """
-                VolFreq = (0.00,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (0.00,)
-                SwapFreq = (00,)
-                DisFreq = (0.50,)
-                RotFreq = (0.50,)
-                RegrowthFreq = (0.00,)
+
             elif job.doc.equilibration_ensemble in ["NPT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (None,)
