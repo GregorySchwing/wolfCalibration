@@ -1989,7 +1989,6 @@ def build_psf_pdb_ff_gomc_conf(job):
     # Path to namd output
     gomc_eq_control_file_name_str = "single_state_eq"
     job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
-    job.doc.path_to_gomc_eq_console =  prefix+f"out_{gomc_eq_control_file_name_str}.dat"
 
     job.doc.path_to_ref_pdb =  Coordinates_box_0
     job.doc.path_to_ref_psf =  Structure_box_0
@@ -2045,6 +2044,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     jobs = list(pr.find_jobs(ref_sp))
     for ref_job in jobs:
         #if (ref_job.isfile(f"{Coordinates_box_0}")):
+        job.doc.path_to_gomc_eq_console =  ref_job.fn(f"out_{gomc_eq_control_file_name_str}.dat")
+
         job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
         job.doc.path_to_sseq_psf =  ref_job.fn(Single_state_gomc_eq_Structure_box_0)
         job.doc.path_to_sseq_pdb_box_1 =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_1)
