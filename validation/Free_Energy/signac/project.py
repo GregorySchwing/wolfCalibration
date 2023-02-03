@@ -699,9 +699,7 @@ def gomc_simulation_started(job, control_filename_str):
 def namd_simulation_started(job, control_filename_str):
     """General check to see if the namd simulation is started."""
     output_started_bool = False
-    if job.isfile("out_{}.dat".format(control_filename_str)) and job.isfile(
-        "{}.restart.xsc".format(control_filename_str)
-    ):
+    if job.isfile(job.doc.path_to_namd_console):
         output_started_bool = True
 
     return output_started_bool
@@ -861,18 +859,42 @@ def gomc_sim_completed_properly(job, control_filename_str):
 
     return job_run_properly_bool
 
+# ******************************************************
+# ******************************************************
+# check if GOMC and NAMD simulation are completed properly (start)
+# ******************************************************
+# ******************************************************
+# function for checking if GOMC simulations are completed properly
+def gomc_sseq_completed_properly(job, control_filename_str):
+    """General check to see if the gomc simulation was completed properly."""
+    job_run_properly_bool = False
+    output_log_file = "out_{}.dat".format(control_filename_str)
+    if job.isfile(output_log_file):
+        with open(job.doc.path_to_gomc_eq_console, "r") as fp:
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if "Move" in line:
+                    split_move_line = line.split()
+                    if (
+                        split_move_line[0] == "Move"
+                        and split_move_line[1] == "Type"
+                        and split_move_line[2] == "Mol."
+                        and split_move_line[3] == "Kind"
+                    ):
+                        job_run_properly_bool = True
+    else:
+        job_run_properly_bool = False
+
+    return job_run_properly_bool
+
 # function for checking if NAMD simulations are completed properly
 def namd_sim_completed_properly(job, control_filename_str):
     """General check to see if the namd simulation was completed properly."""
     job_run_properly_bool = False
 
     try:
-        if (job.sp.electrostatic_method == "Wolf"):
-            output_log_file = job.doc.path_to_namd_console
-        else:
-            output_log_file = "out_{}.dat".format(control_filename_str)
-        if job.isfile(output_log_file):
-            with open(job.fn(f"{output_log_file}"), "r") as fp:
+        if job.isfile(job.doc.path_to_namd_console):
+            with open(job.doc.path_to_namd_console, "r") as fp:
                 out_namd = fp.readlines()
                 for i, line in enumerate(out_namd):
                     if "WallClock:" in line:
@@ -996,7 +1018,7 @@ def part_4b_job_gomc_sseq_completed_properly(job):
     try: 
         output_name_control_file_name = "single_state_eq"
 
-        return gomc_sim_completed_properly(
+        return gomc_sseq_completed_properly(
             job,
             output_name_control_file_name,
         )
@@ -1860,7 +1882,10 @@ def build_psf_pdb_ff_gomc_conf(job):
     )
 
     # Path to namd output
+    gomc_eq_control_file_name_str = "single_state_eq"
     job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
+    job.doc.path_to_gomc_eq_console =  prefix+f"out_{gomc_eq_control_file_name_str}.dat"
+
     job.doc.path_to_ref_pdb =  Coordinates_box_0
     job.doc.path_to_ref_psf =  Structure_box_0
     job.doc.path_to_ref_binCoordinates =  binCoordinates_box_0
