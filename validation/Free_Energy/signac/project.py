@@ -756,11 +756,8 @@ def part_3b_output_gomc_calibration_started(job):
         output_name_control_file_name = "wolf_calibration_{}".format(
             job.doc.calibration_iteration_number
         )
+        return job.is_file(job.doc.wolf_cal_dir+"/"+output_name_control_file_name)
 
-        return gomc_simulation_started(
-            job,
-            output_name_control_file_name,
-        )
     except:
         return False
 
@@ -859,6 +856,28 @@ def gomc_sim_completed_properly(job, control_filename_str):
 
     return job_run_properly_bool
 
+def gomc_cal_completed_properly(job, control_filename_str):
+    """General check to see if the gomc simulation was completed properly."""
+    job_run_properly_bool = False
+    output_log_file = "out_{}.dat".format(control_filename_str)
+    if job.isfile(output_log_file):
+        with open((job.doc.wolf_cal_dir+"/"+f"{output_log_file}"), "r") as fp:
+            out_gomc = fp.readlines()
+            for i, line in enumerate(out_gomc):
+                if "Move" in line:
+                    split_move_line = line.split()
+                    if (
+                        split_move_line[0] == "Move"
+                        and split_move_line[1] == "Type"
+                        and split_move_line[2] == "Mol."
+                        and split_move_line[3] == "Kind"
+                    ):
+                        job_run_properly_bool = True
+    else:
+        job_run_properly_bool = False
+
+    return job_run_properly_bool
+
 # ******************************************************
 # ******************************************************
 # check if GOMC and NAMD simulation are completed properly (start)
@@ -933,7 +952,7 @@ def part_4b_job_gomc_calibration_completed_properly(job):
             job.doc.calibration_iteration_number
         )
 
-        return gomc_sim_completed_properly(
+        return gomc_cal_completed_properly(
             job,
             output_name_control_file_name,
         )
@@ -2938,9 +2957,9 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-#@Project.post(part_3b_output_gomc_calibration_started)
-@Project.post(part_4b_job_gomc_wolf_parameters_found)
-#@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_3b_output_gomc_calibration_started)
+@Project.post(part_4b_job_gomc_calibration_converged)
+@Project.post(part_4b_job_gomc_calibration_completed_properly)
 @Project.operation.with_directives(
     {
         "np": 1,
