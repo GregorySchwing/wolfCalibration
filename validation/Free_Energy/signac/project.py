@@ -79,8 +79,8 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
 gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
@@ -2366,7 +2366,6 @@ def build_psf_pdb_ff_gomc_conf(job):
             CBMC_Ang = (100,)
             CBMC_Dih = (50,)
             if job.doc.equilibration_ensemble in ["NVT"]:
-                """
                 VolFreq = (0.00,)
                 MultiParticleFreq = (None,)
                 IntraSwapFreq = (0.0,)
@@ -2375,15 +2374,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 DisFreq = (0.50,)
                 RotFreq = (0.2,)
                 RegrowthFreq = (0.20,)
-                """
-                VolFreq = (0.00,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (0.00,)
-                SwapFreq = (00,)
-                DisFreq = (0.50,)
-                RotFreq = (0.50,)
-                RegrowthFreq = (0.00,)
+
             elif job.doc.equilibration_ensemble in ["NPT"]:
                 VolFreq = (0.01,)
                 MultiParticleFreq = (None,)
