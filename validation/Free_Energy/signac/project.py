@@ -79,12 +79,12 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-#gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
+precal_eq_gomc_steps =  1 * 10**7 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
@@ -93,9 +93,9 @@ gomc_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 25 * 10**4
-Calibration_MC_Eq_Steps = 5 * 10**4 
-Wolf_Sanity_MC_steps = 1 * 10**4
+Calibration_MC_steps = 5 * 10**5
+Calibration_MC_Eq_Steps = 1 * 10**5 
+Wolf_Sanity_MC_steps = 1 * 10**8
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -244,7 +244,7 @@ def append_wolf_calibration_parameters(job, filename):
 
     WolfAlphaLowerBoundList = [0.0]
     WolfAlphabUpperBoundList = [0.5]
-    WolfAlphaIntervalList = [0.01]
+    WolfAlphaIntervalList = [0.005]
 
     wolfCalFreq = 1000
 
@@ -2256,7 +2256,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         gomc_charmm_object_with_files,
         Single_state_gomc_eq_control_file_name,
         job.doc.equilibration_ensemble,
-        MC_steps,
+        precal_eq_gomc_steps,
         510,
         ff_psf_pdb_file_directory=None,
         check_input_files_exist=False,
