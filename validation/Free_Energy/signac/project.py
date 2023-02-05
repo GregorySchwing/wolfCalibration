@@ -2910,6 +2910,7 @@ def check_convergence_of_cal(job):
                         print(ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)))
                         return False
                     master = master.append(curr, ignore_index=True)
+
                     continue
                     # Make this job eligibile for the next cal run
                     job.doc.check_convergence = True
@@ -2957,7 +2958,12 @@ def check_convergence_of_cal(job):
                         myfile.write(defAlphaLine)
 
                 """
-            print(master)
+            #print(master)
+            #simple = master.groupby(['WOLF_KIND','COUL_KIND'])['MEAN_REL_ERR'].min()
+            #print(simple)
+            result = master.loc[master.groupby(['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()].reset_index(drop=True)
+            print(result)
+
             return
             job.doc.calibration_converged = converged
             return converged   
