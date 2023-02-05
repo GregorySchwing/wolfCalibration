@@ -251,15 +251,15 @@ def append_wolf_calibration_parameters(job, filename):
     with open(job.fn("{}.conf".format(filename)), "a") as myfile:
         defPotLine = "InitStep\t{zero}\n".format(zero=0)
         myfile.write(defPotLine)
-        defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
+        defPotLine = "Wolf\t{freq}\n".format(freq=True)
         myfile.write(defPotLine)
         defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
         myfile.write(defPotLine)
         for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval \
         in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
         WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
-            alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
-            myfile.write(alphaLine)
+           alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
+           myfile.write(alphaLine)
 
 
 def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_file):
@@ -783,7 +783,7 @@ def part_4b_job_check_convergence(job):
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
-def part_4b_job_gomc_calibration_has_been_checked(job):
+def part_4b_job_gomc_calibration_needs_to_be_checked(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     try:
@@ -2184,7 +2184,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             input_variables_dict={
                 "PRNG": seed_no,
                 "Pressure": production_pressure_bar,
-                "Ewald": job.sp.electrostatic_method == "Ewald",
+                "Ewald": False,
                 "RcutCoulomb_box_0" : 14,
                 "ElectroStatic": use_ElectroStatics,
                 "VDWGeometricSigma": VDWGeometricSigma,
@@ -2809,9 +2809,9 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.pre(part_4b_job_gomc_calibration_has_been_checked)
+@Project.pre(part_4b_job_check_convergence)
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
-@Project.post(part_4b_job_check_convergence)
+@Project.post(part_4b_job_gomc_calibration_converged)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -2854,9 +2854,7 @@ def run_calibration_run_gomc_command(job):
         control_file_name_str
     ):
         ##part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
-        if (job.doc.calibration_iteration_number>0):
-            job.doc.check_convergence = True
-
+        job.doc.check_convergence = False
         print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
         job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
         print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
@@ -2870,11 +2868,12 @@ def run_calibration_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
                                for j in jobs[0]._project))
-@Project.pre(lambda *jobs: all(part_4b_job_check_convergence(j)
-                               for j in jobs[0]._project))
-@Project.post(part_4b_wolf_sanity_histograms_created)
+#@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_needs_to_be_checked(j)
+#                               for j in jobs[0]._project))
+@Project.post(part_4b_job_gomc_calibration_converged)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -2886,27 +2885,37 @@ def run_calibration_run_gomc_command(job):
 @flow.with_job
 def check_convergence_of_cal(job):
     try:
-
-        jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": job.sp.wolf_model, "wolf_potential": job.sp.wolf_potential}))
-        print(jobs)
+        # find all repl 0 wolf runs.
+        jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute}))
         try:
+            master = pd.DataFrame()
             for ewald_job in jobs:
-
+                if (ewald_job.sp.wolf_model == "Results"):
+                    continue
                 if (job.doc.calibration_iteration_number >= job.doc.calibration_iteration_number_max_number):
                     job.doc.calibration_converged = True
+                    ewald_job.doc.calibration_converged = True
                     return True
                 cols = ["MODEL", "POT", "ALPHA"]
                 colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
-                print(job.doc.calibration_iteration_number)
+                print(ewald_job.doc.calibration_iteration_number)
                 converged = True
                 NUMBOXES = 1
                 for b in range (NUMBOXES):
                     curr = pd.DataFrame()
                     prev = pd.DataFrame()
-                    if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b))):
-                        curr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=cols)
+                    if (ewald_job.isfile("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1))):
+                        curr = pd.read_csv (ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)), sep=",", header=0)
                     else:
+                        print(ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)))
                         return False
+                    master = master.append(curr, ignore_index=True)
+                    continue
+                    # Make this job eligibile for the next cal run
+                    job.doc.check_convergence = True
+
+                """
+                    return
                     if (job.doc.calibration_iteration_number != 0):
                         if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b))):
                             prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None, names=cols)
@@ -2946,8 +2955,12 @@ def check_convergence_of_cal(job):
                         #myfile.write(defAlphaLine)
                         defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                         myfile.write(defAlphaLine)
-                job.doc.calibration_converged = converged
-                return converged   
+
+                """
+            print(master)
+            return
+            job.doc.calibration_converged = converged
+            return converged   
         except:
             print(repr(e))
             return False
