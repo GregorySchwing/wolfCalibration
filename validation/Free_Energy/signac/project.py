@@ -79,12 +79,12 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
-precal_eq_gomc_steps =  1 * 10**7 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 30 * 10**4 # set value for paper = 10 * 10**6
+precal_eq_gomc_steps =  5 * 10**3 # set value for paper = 10 * 10**6
 
 gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
@@ -93,9 +93,9 @@ gomc_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 1000
-Calibration_MC_steps = 5 * 10**5
-Calibration_MC_Eq_Steps = 1 * 10**5 
-Wolf_Sanity_MC_steps = 1 * 10**8
+Calibration_MC_steps = 5 * 10**3
+Calibration_MC_Eq_Steps = 1 * 10**3 
+Wolf_Sanity_MC_steps = 1 * 10**4
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -248,7 +248,7 @@ def append_wolf_calibration_parameters(job, filename):
 
     wolfCalFreq = 1000
 
-    with open(job.fn(filename), "a") as myfile:
+    with open(job.fn("{}.conf".format(filename)), "a") as myfile:
         defPotLine = "InitStep\t{zero}\n".format(zero=0)
         myfile.write(defPotLine)
         defPotLine = "Wolf\t{freq}\n".format(freq=job.sp.electrostatic_method == "Wolf")
@@ -268,13 +268,13 @@ def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_fi
         myfile.write(checkpointLine)
 
 
-def append_default_wolf_parameters_line(job, config_file_name, path_to_previous_checkpoint_file):
+def append_default_wolf_parameters_line(job, config_file_name):
     with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
-        defPotLine = "WolfKind\t{freq}\n".format(freq=job.doc.WolfDefaultKind)
-        myfile.write(defPotLine)       
-        defPotLine = "WolfPotential\t{freq}\n".format(freq=job.doc.WolfDefaultPotential)
+        defPotLine = "WolfKind\t{freq}\n".format(freq=job.sp.wolf_model)
+        myfile.write(defPotLine)
+        defPotLine = "WolfPotential\t{freq}\n".format(freq=job.sp.wolf_potential)
         myfile.write(defPotLine)   
-        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=job.doc.DefaultWolfAlpha)
+        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=job.sp.alpha)
         myfile.write(defPotLine)   
 
 # ******************************************************
@@ -605,21 +605,22 @@ def initial_parameters(job):
 def mosdef_input_written(job):
     """Check that the mosdef files (psf, pdb, and force field (FF) files) are written ."""
     file_written_bool = False
+    try:
+        if (
+            job.isfile(job.doc.namd_output_dir+f"{namd_ff_filename_str}.inp")
+            and job.isfile(job.doc.namd_output_dir+f"{gomc_ff_filename_str}.inp")
+            and job.isfile(
+                job.doc.namd_output_dir+f"{mosdef_structure_box_0_name_str}.psf"
+            )
+            and job.isfile(
+                job.doc.namd_output_dir+f"{mosdef_structure_box_0_name_str}.pdb"
+            )
+        ):
+            file_written_bool = True
 
-    if (
-        job.isfile(f"{namd_ff_filename_str}.inp")
-        and job.isfile(f"{gomc_ff_filename_str}.inp")
-        and job.isfile(
-            f"{mosdef_structure_box_0_name_str}.psf"
-        )
-        and job.isfile(
-            f"{mosdef_structure_box_0_name_str}.pdb"
-        )
-    ):
-        file_written_bool = True
-
-    return file_written_bool
-
+        return file_written_bool
+    except:
+        return False
 
 # ******************************************************
 # ******************************************************
@@ -629,289 +630,9 @@ def mosdef_input_written(job):
 
 # ******************************************************
 # ******************************************************
-# check if GOMC control file was written (start)
-# ******************************************************
-# ******************************************************
-# function for checking if the GOMC control file is written
-def gomc_control_file_written(job, control_filename_str):
-    """General check that the gomc control files are written."""
-    file_written_bool = False
-    control_file = f"{control_filename_str}.conf"
-
-    if job.isfile(control_file):
-        with open(job.fn(f"{control_file}"), "r") as fp:
-            out_gomc = fp.readlines()
-            for i, line in enumerate(out_gomc):
-                if "OutputName" in line:
-                    split_move_line = line.split()
-                    if split_move_line[0] == "OutputName":
-                        file_written_bool = True
-
-    return file_written_bool
-
-# function for checking if the NAMD control file is written
-def namd_control_file_written(job, control_filename_str):
-    """General check that the NAMD control files are written."""
-    file_written_bool = False
-    control_file = f"{control_filename_str}.conf"
-    if job.isfile(control_file):
-        with open(job.fn(f"{control_file}"), "r") as fp:
-            out_namd = fp.readlines()
-            for i, line in enumerate(out_namd):
-                if "cellBasisVector1" in line:
-                    split_move_line = line.split()
-                    if split_move_line[0] == "cellBasisVector1":
-                        file_written_bool = True
-
-    return file_written_bool
-
-
-@Project.label
-@flow.with_job
-def part_2a_wolf_calibration_control_file_written(job):
-    """General check that the namd_equilb_NVT_control_file
-    (high temperature to set temp NAMD control file) is written."""
-    #if (job.sp.wolf_model != "Calibrator"):
-    #    return True
-    try:
-        for cal_run in range(job.doc.calibration_iteration_number_max_number):
-
-            #
-            output_name_control_file_name = "wolf_calibration_{}".format(
-                cal_run
-            )
-            try:
-                return gomc_control_file_written(
-                    job,
-                    output_name_control_file_name,
-                )
-            except:
-                return False
-    except:
-        return False
-
-@Project.label
-@flow.with_job
-def part_2a_wolf_sanity_control_file_written(job):
-    """General check that the namd_equilb_NVT_control_file
-    (high temperature to set temp NAMD control file) is written."""
-    output_name_control_file_name = "wolf_sanity"
-    try:
-        return gomc_control_file_written(
-            job,
-            output_name_control_file_name,
-        )
-    except:
-        return False
-
-# checking if the NAMD control file is written for the melt equilb NVT run
-@Project.label
-@flow.with_job
-def part_2a_namd_equilb_NPT_control_file_written(job):
-    """General check that the namd_equilb_NPT_control_file
-    (high temperature to set temp NAMD control file) is written."""
-    return namd_control_file_written(job, namd_equilb_NPT_control_file_name_str)
-
-
-# checking if the GOMC control file is written for the equilb run with the selected ensemble
-@Project.label
-@flow.with_job
-def part_2b_gomc_equilb_design_ensemble_control_file_written(job):
-    """General check that the gomc_equilb_design_ensemble (run temperature) gomc control file is written."""
-    try:
-        if (job.doc.N_liquid_solute == 0):
-            return True
-    except:
-        return False
-    
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                gomc_control_file_written(
-                    job,
-                    job.doc.gomc_equilb_design_ensemble_dict[
-                        str(initial_state_i)
-                    ]["output_name_control_file_name"],
-                )
-            except:
-                return False
-        return True
-    except:
-        return False
-
-# checking if the GOMC control file is written for the production run
-@Project.label
-@flow.with_job
-def part_2c_gomc_production_control_file_written(job):
-    """General check that the gomc_production_control_file (run temperature) is written."""
-    try:
-        if (job.doc.N_liquid_solute == 0):
-            return True
-    except:
-        return False
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                return gomc_control_file_written(
-                    job,
-                    job.doc.gomc_production_run_ensemble_dict[
-                        str(initial_state_i)
-                    ]["output_name_control_file_name"],
-                )
-            except:
-                return False
-        return True
-    except:
-        return False
-
-# ******************************************************
-# ******************************************************
 # check if GOMC control file was written (end)
 # ******************************************************
 # ******************************************************
-
-# ******************************************************
-# ******************************************************
-# check if GOMC simulations started (start)
-# ******************************************************
-# ******************************************************
-# function for checking if GOMC simulations are started
-def gomc_simulation_started(job, control_filename_str):
-    """General check to see if the gomc simulation is started."""
-    output_started_bool = False
-    if job.isfile("out_{}.dat".format(control_filename_str)) and job.isfile(
-        "{}_merged.psf".format(control_filename_str)
-    ):
-        output_started_bool = True
-
-    return output_started_bool
-
-# function for checking if NAMD simulations are started
-def namd_simulation_started(job, control_filename_str):
-    """General check to see if the namd simulation is started."""
-    output_started_bool = False
-    try:
-        if job.isfile(job.doc.path_to_namd_console):
-            output_started_bool = True
-
-        return output_started_bool
-    except:
-        return False
-
-# check if melt equilb_NVT namd run is started
-@Project.label
-@flow.with_job
-def part_3a_output_namd_equilb_NPT_started(job):
-    """Check to see if the namd_equilb_NPT_control_file is started"""
-    return namd_simulation_started(job, namd_equilb_NPT_control_file_name_str)
-
-
-# check if equilb_with design ensemble GOMC run is started
-@Project.label
-@flow.with_job
-def part_3b_output_gomc_equilb_design_ensemble_started(job):
-    """Check to see if the gomc_equilb_design_ensemble simulation is started (set temperature)."""
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                if job.isfile(
-                    "out_{}.dat".format(
-                        job.doc.gomc_equilb_design_ensemble_dict[
-                            str(initial_state_i)
-                        ]["output_name_control_file_name"]
-                    )
-                ):
-                    gomc_simulation_started(
-                        job,
-                        job.doc.gomc_equilb_design_ensemble_dict[
-                            str(initial_state_i)
-                        ]["output_name_control_file_name"],
-                    )
-
-                else:
-                    return False
-            except:
-                return False
-
-        return True
-    except:
-        return False
-
-
-# check if equilb_with design ensemble GOMC run is started
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.label
-@flow.with_job
-def part_3b_output_gomc_calibration_started(job):
-    """Check to see if the gomc_calibration simulation is started (set temperature)."""
-    try: 
-        output_name_control_file_name = "wolf_calibration_{}".format(
-            job.doc.calibration_iteration_number
-        )
-        return job.is_file(job.doc.wolf_cal_dir+"/"+output_name_control_file_name)
-
-    except:
-        return False
-
-# check if equilb_with design ensemble GOMC run is started
-@Project.label
-@flow.with_job
-def part_3b_output_gomc_sseq_started(job):
-    """Check to see if the gomc_calibration simulation is started (set temperature)."""
-    try: 
-        output_name_control_file_name = "single_state_eq"
-        print(job.doc.path_to_gomc_eq_console, job.is_file(job.doc.path_to_gomc_eq_console))
-        return job.is_file(job.doc.path_to_gomc_eq_console)
-
-    except:
-        return False
-
-
-
-# check if equilb_with design ensemble GOMC run is started
-@Project.label
-@flow.with_job
-def part_3b_output_gomc_wolf_sanity_started(job):
-    """Check to see if the gomc_calibration simulation is started (set temperature)."""
-    try: 
-        output_name_control_file_name = "wolf_sanity"
-
-        return gomc_simulation_started(
-            job,
-            output_name_control_file_name,
-        )
-    except:
-        return False
-
-# check if production GOMC run is started by seeing if the GOMC consol file and the merged psf exist
-@Project.label
-@flow.with_job
-def part_part_3c_output_gomc_production_run_started(job):
-    """Check to see if the gomc production run simulation is started (set temperature)."""
-    try:
-        for initial_state_i in list(job.doc.InitialState_list):
-            try:
-                if job.isfile(
-                    "out_{}.dat".format(
-                        job.doc.gomc_production_run_ensemble_dict[
-                            str(initial_state_i)
-                        ]["output_name_control_file_name"]
-                    )
-                ):
-                    gomc_simulation_started(
-                        job,
-                        job.doc.gomc_production_run_ensemble_dict[
-                            str(initial_state_i)
-                        ]["output_name_control_file_name"],
-                    )
-                else:
-                    return False
-            except:
-                return False
-        return True
-    except:
-        return False
 
 # ******************************************************
 # ******************************************************
@@ -952,7 +673,7 @@ def gomc_cal_completed_properly(job, control_filename_str):
     job_run_properly_bool = False
     output_log_file = "out_{}.dat".format(control_filename_str)
     if job.isfile(output_log_file):
-        with open((job.doc.wolf_cal_dir+"/"+f"{output_log_file}"), "r") as fp:
+        with open(job.fn(output_log_file), "r") as fp:
             out_gomc = fp.readlines()
             for i, line in enumerate(out_gomc):
                 if "Move" in line:
@@ -1047,6 +768,49 @@ def part_4b_job_gomc_calibration_converged(job):
     except:
         return False
 
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_check_convergence(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    try:
+        return job.doc.check_convergence
+    except:
+        return False
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_calibration_has_been_checked(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    try:
+        return not job.doc.check_convergence
+    except:
+        return True
+
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_calibration_completed_properly(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    if(job.sp.wolf_potential == "Results" or job.sp.electrostatic_method == "Ewald" or job.sp.replica_number_int != 0):
+        return True
+    try: 
+
+        output_name_control_file_name = "wolf_calibration_{}".format(
+            job.doc.calibration_iteration_number-1)
+        return gomc_sim_completed_properly(
+            job,
+            output_name_control_file_name,
+        )
+    except:
+        return False
+
 def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
     try:
         if (job.doc.calibration_iteration_number >= job.doc.calibration_iteration_number_max_number):
@@ -1097,10 +861,10 @@ def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
                 job.doc.calibration_iteration_number+1
             )
             with open(job.fn(output_name_control_file_name), "a") as myfile:
-                defAlphaLine = "WolfKind\t{val}\n".format(val=WolfDefaultKind)
-                myfile.write(defAlphaLine)
-                defAlphaLine = "WolfPotential\t{val}\n".format(val=WolfDefaultPotential)
-                myfile.write(defAlphaLine)
+                #defAlphaLine = "WolfKind\t{val}\n".format(val=WolfDefaultKind)
+                #myfile.write(defAlphaLine)
+                #defAlphaLine = "WolfPotential\t{val}\n".format(val=WolfDefaultPotential)
+                #myfile.write(defAlphaLine)
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
         job.doc.calibration_converged = converged
@@ -1300,7 +1064,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
 @flow.with_job
 def part_4b_wolf_sanity_analysis_completed(job):
     try:
-        if (job.isfile(job.doc.path_to_wolf_cal_dir+"/wolf_statistics.csv")):
+        if (job.isfile(job.doc.path_to_results_dir+"/wolf_statistics.csv")):
             return True
     except:
         return False
@@ -1310,7 +1074,7 @@ def part_4b_wolf_sanity_analysis_completed(job):
 def part_4b_wolf_sanity_histograms_created(job):
     try:
         df1 = pd.DataFrame()
-        if (job.isfile(job.doc.path_to_wolf_cal_repl_0_dir+"/wolf_sanity_all_energies.csv") and job.isfile(job.doc.path_to_wolf_cal_repl_0_dir+"/PotentialEnergyDistribution_Ewald_vs_All.png")):
+        if (job.isfile(job.doc.path_to_results_dir+"/wolf_sanity_all_energies.csv") and job.isfile(job.doc.path_to_results_dir+"/PotentialEnergyDistribution_Ewald_vs_All.png")):
             return True
         else:
             return False
@@ -1324,20 +1088,6 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
     try:
         if (job.sp.electrostatic_method == "Ewald"):
             return True
-        elif (job.doc.winningWolfModel== "" \
-            and job.doc.winningWolfPotential == ""):
-                # All different wolf models and ewald within a replicas
-                ewald_sp = job.statepoint()
-                ewald_sp['electrostatic_method']="Wolf"
-                ewald_sp['wolf_model']="Calibrator"
-                ewald_sp['wolf_potential']="Calibrator"
-                ewald_sp['replica_number_int']=0
-                jobs = list(pr.find_jobs(ewald_sp))
-                for ref_job in jobs:
-                    job.doc.winningWolfModel = ref_job.doc.winningWolfModel
-                    job.doc.winningWolfPotential = ref_job.doc.winningWolfPotential
-                return  (job.sp.wolf_model == job.doc.winningWolfModel \
-                            and job.sp.wolf_potential == job.doc.winningWolfPotential)
         elif (job.sp.wolf_model == job.doc.winningWolfModel \
             and job.sp.wolf_potential == job.doc.winningWolfPotential):
             return True
@@ -1356,8 +1106,8 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
     }
 )
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_potential == "Results")
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
 #@Project.pre(lambda j: j.sp.solute == "solvent_box")
 #@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
@@ -1470,7 +1220,6 @@ def part_4b_wolf_sanity_analysis(job):
 
 @Project.label
 @flow.with_job
-@Project.pre(part_2a_wolf_sanity_control_file_written)
 def part_4b_job_gomc_wolf_parameters_appended(job):
     if (job.sp.electrostatic_method == "Ewald"):
         return True
@@ -1500,10 +1249,6 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(part_2a_wolf_sanity_control_file_written)
 @Project.pre(part_4b_job_gomc_calibration_converged)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
@@ -1526,58 +1271,52 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     else:
         box_list = [0]
     for b in box_list:
-        dataframes.append(pd.read_csv(job.fn(output_name_control_file_name+"WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(b)), header=None, delim_whitespace=True, names=cols))
+        dataframes.append(pd.read_csv(job.fn(output_name_control_file_name+"WOLF_CALIBRATION_BOX_{}_BEST_ALPHA.csv".format(b)), header=None, delim_whitespace=True, names=cols))
 
-        jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", "solute": job.sp.solute}))
-        for ref_job in jobs:
-            print(ref_job.fn())
-            if (ref_job.sp.wolf_model == "Calibrator"):
-                continue
+        print (dataframes[b])
 
-            print (dataframes[b])
-
-            import re
-            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+        import re
+        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
 
 
-            regex = re.compile("wolf_sanity.conf")
-            for root, dirs, files in os.walk(ref_job.fn("")):
-                for file in files:
-                    if regex.match(file):
-                        with open(file, "a") as myfile:
-                            defWolfLine = "Wolf\tTrue\n"
-                            myfile.write(defWolfLine)
-                            defPotLine = "WolfPotential\t{pot}\n".format(pot=ref_job.sp.wolf_potential)
-                            myfile.write(defPotLine)
-                            defKindLine = "WolfKind\t{kind}\n".format(kind=ref_job.sp.wolf_model)
-                            myfile.write(defKindLine)
-                            for box in box_list:
-                                mask = dataframes[0]['MODEL'] == ref_job.sp.wolf_model
-                                #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
-                                mask2 = dataframes[0]['POT'] == ref_job.sp.wolf_potential
-                                c = np.logical_and(mask, mask2)
-                                print(dataframes[0][c]["ALPHA"].values)
-                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
-                                myfile.write(defAlphaLine)
+        regex = re.compile("wolf_sanity.conf")
+        for root, dirs, files in os.walk(job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    with open(file, "a") as myfile:
+                        defWolfLine = "Wolf\tTrue\n"
+                        myfile.write(defWolfLine)
+                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
+                        myfile.write(defPotLine)
+                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
+                        myfile.write(defKindLine)
+                        for box in box_list:
+                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
+                            #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
+                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
+                            c = np.logical_and(mask, mask2)
+                            print(dataframes[0][c]["ALPHA"].values)
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
+                            myfile.write(defAlphaLine)
 
-            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-            for root, dirs, files in os.walk(ref_job.fn("")):
-                for file in files:
-                    if regex.match(file):
-                        with open(file, "a") as myfile:
-                            defWolfLine = "Wolf\tTrue\n"
-                            myfile.write(defWolfLine)
-                            defPotLine = "WolfPotential\t{pot}\n".format(pot=ref_job.sp.wolf_potential)
-                            myfile.write(defPotLine)
-                            defKindLine = "WolfKind\t{kind}\n".format(kind=ref_job.sp.wolf_model)
-                            myfile.write(defKindLine)
-                            for box in box_list:
-                                mask = dataframes[0]['MODEL'] == ref_job.sp.wolf_model
-                                #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
-                                mask2 = dataframes[0]['POT'] == ref_job.sp.wolf_potential
-                                c = np.logical_and(mask, mask2)
-                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
-                                myfile.write(defAlphaLine)
+        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+        for root, dirs, files in os.walk(job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    with open(file, "a") as myfile:
+                        defWolfLine = "Wolf\tTrue\n"
+                        myfile.write(defWolfLine)
+                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
+                        myfile.write(defPotLine)
+                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
+                        myfile.write(defKindLine)
+                        for box in box_list:
+                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
+                            #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
+                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
+                            c = np.logical_and(mask, mask2)
+                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
+                            myfile.write(defAlphaLine)
 
 
 
@@ -1926,11 +1665,7 @@ def build_charmm(job, write_files=True):
 # ******************************************************
 # ******************************************************
 @Project.pre(part_1a_initial_data_input_to_json)
-@Project.post(part_2a_namd_equilb_NPT_control_file_written)
-@Project.post(part_2b_gomc_equilb_design_ensemble_control_file_written)
-@Project.post(part_2c_gomc_production_control_file_written)
 @Project.post(mosdef_input_written)
-@Project.post(part_2a_wolf_calibration_control_file_written)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1943,46 +1678,52 @@ def build_charmm(job, write_files=True):
 def build_psf_pdb_ff_gomc_conf(job):
     """Build the Charmm object and write the pdb, psd, and force field (FF)
     files for all the simulations in the workspace."""
-    [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
+    if (job.sp.electrostatic_method == "Ewald" and job.sp.wolf_model == "Ewald"):
+        [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
     restart_control_file_name_str = namd_equilb_NPT_control_file_name_str
 
     # Get prefix to namd runs.
-    prefix = ""
+    namd_output_prefix = ""
     jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Ewald", "wolf_potential" : "Ewald"}))
 
     for ref_job in jobs:
-        prefix = ref_job.fn("")
+        namd_output_prefix = ref_job.fn("")
 
-    Coordinates_box_0 = "{}.pdb".format(
-        prefix+mosdef_structure_box_0_name_str
+
+
+    # All wolf jobs will just copy the output of namd and gomc precal eq from here to local dir
+    job.doc.namd_output_dir = namd_output_prefix
+
+    Coordinates_box_0 = namd_output_prefix+"{}.pdb".format(
+        mosdef_structure_box_0_name_str
     )
-    Structure_box_0 = "{}.psf".format(
-        prefix+mosdef_structure_box_0_name_str
+    Structure_box_0 = namd_output_prefix+"{}.psf".format(
+        mosdef_structure_box_0_name_str
     )
-    Coordinates_box_1 = "{}.pdb".format(
-        prefix+mosdef_structure_box_1_name_str
+    Coordinates_box_1 = namd_output_prefix+"{}.pdb".format(
+        mosdef_structure_box_1_name_str
     )
-    Structure_box_1 = "{}.psf".format(
-        prefix+mosdef_structure_box_1_name_str
+    Structure_box_1 = namd_output_prefix+"{}.psf".format(
+        mosdef_structure_box_1_name_str
     )
-    binCoordinates_box_0 = "{}.restart.coor".format(
-        prefix+restart_control_file_name_str
+    binCoordinates_box_0 = namd_output_prefix+"{}.restart.coor".format(
+        restart_control_file_name_str
     )
-    extendedSystem_box_0 = "{}.restart.xsc".format(
-        prefix+restart_control_file_name_str
+    extendedSystem_box_0 = namd_output_prefix+"{}.restart.xsc".format(
+        restart_control_file_name_str
     )
-    binCoordinates_box_1 = "{}.coor".format(
-        prefix+mosdef_structure_box_1_name_str
+    binCoordinates_box_1 = namd_output_prefix+"{}.coor".format(
+        mosdef_structure_box_1_name_str
     )
-    extendedSystem_box_1 = "{}.xsc".format(
-        prefix+mosdef_structure_box_1_name_str
+    extendedSystem_box_1 = namd_output_prefix+"{}.xsc".format(
+        mosdef_structure_box_1_name_str
     )
 
     # Path to namd output
     gomc_eq_control_file_name_str = "single_state_eq"
-    job.doc.path_to_namd_console =  prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
+    job.doc.path_to_namd_console =  namd_output_prefix+f"out_{namd_equilb_NPT_control_file_name_str}.dat"
 
     job.doc.path_to_ref_pdb =  Coordinates_box_0
     job.doc.path_to_ref_psf =  Structure_box_0
@@ -2005,39 +1746,36 @@ def build_psf_pdb_ff_gomc_conf(job):
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
 
-    Single_state_gomc_eq_Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
+    Single_state_gomc_eq_Coordinates_box_0 = namd_output_prefix+"{}_BOX_0_restart.pdb".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_Structure_box_0 = "{}_BOX_0_restart.psf".format(
+    Single_state_gomc_eq_Structure_box_0 = namd_output_prefix+"{}_BOX_0_restart.psf".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
+    Single_state_gomc_eq_binCoordinates_box_0 = namd_output_prefix+"{}_BOX_0_restart.coor".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
+    Single_state_gomc_eq_extendedSystem_box_0 = namd_output_prefix+"{}_BOX_0_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
+    Single_state_gomc_eq_Coordinates_box_1 = namd_output_prefix+"{}_BOX_1_restart.pdb".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_Structure_box_1 = "{}_BOX_1_restart.psf".format(
+    Single_state_gomc_eq_Structure_box_1 = namd_output_prefix+"{}_BOX_1_restart.psf".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
+    Single_state_gomc_eq_binCoordinates_box_1 = namd_output_prefix+"{}_BOX_1_restart.coor".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
+    Single_state_gomc_eq_extendedSystem_box_1 = namd_output_prefix+"{}_BOX_1_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
 
-    # Path to sseq
-    ref_sp = job.statepoint()
-    ref_sp['electrostatic_method']="Ewald"
-    ref_sp['wolf_model']="Ewald"
-    ref_sp['wolf_potential']="Ewald"
-    jobs = list(pr.find_jobs(ref_sp))
+
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Ewald", "wolf_potential" : "Ewald"}))
     for ref_job in jobs:
         #if (ref_job.isfile(f"{Coordinates_box_0}")):
+        job.doc.path_to_gomc_sseq_dir =  ref_job.fn("")
         job.doc.path_to_gomc_eq_console =  ref_job.fn(f"out_{gomc_eq_control_file_name_str}.dat")
 
         job.doc.path_to_sseq_pdb =  ref_job.fn(Single_state_gomc_eq_Coordinates_box_0)
@@ -2050,22 +1788,24 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_extendedSystem_box_1 =  ref_job.fn(Single_state_gomc_eq_extendedSystem_box_1)
         job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
-    """   
-    wolf_cal_sp = job.statepoint()
-    wolf_cal_sp['wolf_model']="Calibrator"
-    wolf_cal_sp['wolf_potential']="Calibrator"
-    jobs = list(pr.find_jobs(wolf_cal_sp))
-    for cal_job in jobs:
-        job.doc.path_to_wolf_cal_dir =  cal_job.fn("")
-    """
-    wolf_cal_repl_0_sp = job.statepoint()
-    wolf_cal_repl_0_sp['wolf_model']="Calibrator"
-    wolf_cal_repl_0_sp['wolf_potential']="Calibrator"
-    wolf_cal_repl_0_sp['replica_number_int']=0
-    jobs = list(pr.find_jobs(wolf_cal_repl_0_sp))
-    for cal_job in jobs:
-        job.doc.path_to_wolf_cal_repl_0_dir =  cal_job.fn("")
-        job.doc.path_to_wolf_cal_dir =  cal_job.fn("")
+
+
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    for results_job in jobs:
+        job.doc.path_to_ew_results_dir =  results_job.fn("")
+
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    for results_job in jobs:
+        job.doc.path_to_wolf_results_repl_0_dir =  results_job.fn("")
+
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    for results_job in jobs:
+        job.doc.path_to_ew_results_repl_0_dir =  results_job.fn("")
+
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    for results_job in jobs:
+        job.doc.path_to_wolf_results_0_dir =  results_job.fn("")
+
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
     # This has to be off during calibration
@@ -2080,17 +1820,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     else:
         VDWGeometricSigma = False
 
-    DefaultWolfKind = "WAIBEL2018"
-    DefaultWolfPotential = "DSP"
-    DefaultWolfAlpha = 0.11
-    job.doc.DefaultWolfKind = DefaultWolfKind
-    job.doc.DefaultWolfPotential = DefaultWolfPotential
-    job.doc.DefaultWolfAlpha = DefaultWolfAlpha
-
     # max number of equilibrium selected runs
     calibration_iteration_number_max_number = int(10)
-
-
 
     # set the initial iteration number of the calibration simulation
     job.doc.equilb_design_ensemble_dict = {}
@@ -2100,7 +1831,8 @@ def build_psf_pdb_ff_gomc_conf(job):
     )
     job.doc.calibration_iteration_number_under_limit = True
     job.doc.calibration_converged = False    
-    
+    job.doc.check_convergence = True
+
     Exclude = "1-4"
 
     # common variables
@@ -2137,6 +1869,43 @@ def build_psf_pdb_ff_gomc_conf(job):
     else:
         namd_uses_water = False
         namd_water_model= None
+
+    job.doc.gomc_equilb_design_ensemble_dict = {}
+    job.doc.gomc_production_run_ensemble_dict = {}
+
+    for initial_state_sims_i in list(job.doc.InitialState_list):
+        output_name_control_file_name = "{}_initial_state_{}".format(
+            gomc_equilb_design_ensemble_control_file_name_str, initial_state_sims_i
+        )
+
+        job.doc.gomc_equilb_design_ensemble_dict.update(
+            {
+                initial_state_sims_i: {
+                    "restart_control_file_name": restart_control_file_name_str,
+                    "output_name_control_file_name": output_name_control_file_name,
+                }
+            }
+        )
+
+    for initial_state_sims_i in list(job.doc.InitialState_list):
+        output_name_control_file_name = "{}_initial_state_{}".format(
+            gomc_production_control_file_name_str, initial_state_sims_i
+        )
+        restart_control_file_name_str = "{}_initial_state_{}".format(
+            gomc_equilb_design_ensemble_control_file_name_str, int(initial_state_sims_i)
+        )
+        job.doc.gomc_production_run_ensemble_dict.update(
+            {
+                initial_state_sims_i: {
+                    "restart_control_file_name": restart_control_file_name_str,
+                    "output_name_control_file_name": output_name_control_file_name,
+                }
+            }
+        )
+
+    if (not(job.sp.electrostatic_method == "Ewald" and job.sp.wolf_model == "Ewald")):
+        return
+
 
     # generate the namd file
     # NOTE: the production and melt temps are converted to intergers so they can be ramped down
@@ -2320,7 +2089,6 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("Started: equilb NPT NAMD -> NPT GOMC control file writing")
     print("#**********************")
     for cal_run in range(job.doc.calibration_iteration_number_max_number):
-
         #
         output_name_control_file_calibration_name = "wolf_calibration_{}".format(
             cal_run
@@ -2449,7 +2217,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "CBMC_Dih": CBMC_Dih[-1],
             },
         )
-        append_wolf_calibration_parameters(job, output_name_control_file_calibration_name+".conf")
+        append_wolf_calibration_parameters(job, output_name_control_file_calibration_name)
         append_checkpoint_line(job, output_name_control_file_calibration_name, job.doc.path_to_sseq_checkpoint)
 
     ### Need to append Wolf Calibration lines since they aren't in MosDef
@@ -2542,22 +2310,13 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("#**********************")
     print("Started: equilb NPT or GEMC-NVT GOMC control file writing")
     print("#**********************")
-    job.doc.gomc_equilb_design_ensemble_dict = {}
-    job.doc.gomc_production_run_ensemble_dict = {}
 
     for initial_state_sims_i in list(job.doc.InitialState_list):
         output_name_control_file_name = "{}_initial_state_{}".format(
             gomc_equilb_design_ensemble_control_file_name_str, initial_state_sims_i
         )
 
-        job.doc.gomc_equilb_design_ensemble_dict.update(
-            {
-                initial_state_sims_i: {
-                    "restart_control_file_name": restart_control_file_name_str,
-                    "output_name_control_file_name": output_name_control_file_name,
-                }
-            }
-        )
+
 
         # output all data and calc frequecy
         output_true_list_input = [
@@ -2721,14 +2480,6 @@ def build_psf_pdb_ff_gomc_conf(job):
         )
         restart_control_file_name_str = "{}_initial_state_{}".format(
             gomc_equilb_design_ensemble_control_file_name_str, int(initial_state_sims_i)
-        )
-        job.doc.gomc_production_run_ensemble_dict.update(
-            {
-                initial_state_sims_i: {
-                    "restart_control_file_name": restart_control_file_name_str,
-                    "output_name_control_file_name": output_name_control_file_name,
-                }
-            }
         )
 
         # output all data and calc frequecy
@@ -2896,7 +2647,7 @@ def build_psf_pdb_ff_gomc_conf(job):
                 "LambdaCoulomb":  list(job.doc.LambdaCoul_list) if useCoul else None,
             },
         )
-        append_checkpoint_line(job, output_name_control_file_name, job.fn("{}_restart.chk".format(restart_control_file_name_str)))
+        append_checkpoint_line(job, output_name_control_file_name, "{}_restart.chk".format(restart_control_file_name_str))
 
         print("#**********************")
         print("Completed: production NPT or GEMC-NVT GOMC control file writing")
@@ -2920,11 +2671,9 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model == "Ewald")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.post(part_3a_output_namd_equilb_NPT_started)
 @Project.post(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.operation.with_directives(
     {
@@ -2974,11 +2723,13 @@ def run_namd_equilb_NPT_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+# Note replica isnt required to be zero.  replicas start branching at this point
+# Since GOMC is semi-reproducible (CPU binaries) with a seed.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
 @Project.pre(lambda j: j.sp.wolf_model == "Ewald")
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+
 #@Project.post(part_3b_output_gomc_sseq_started)
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
@@ -3008,14 +2759,11 @@ def run_sseq_run_gomc_command(job):
     return run_command
 
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_model != "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model != "Results")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
-@Project.pre(part_2b_gomc_equilb_design_ensemble_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-#@Project.post(part_3b_output_gomc_wolf_sanity_started)
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
@@ -3030,6 +2778,11 @@ def run_sseq_run_gomc_command(job):
 def run_wolf_sanity_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
     wolf_sanity_control_file_name = "wolf_sanity"
+
+    if (job.sp.electrostatic_method == "Wolf"):
+        import shutil
+        shutil.copyfile(job.doc.path_to_gomc_sseq_dir+wolf_sanity_control_file_name, wolf_sanity_control_file_name)
+        append_default_wolf_parameters_line(job,wolf_sanity_control_file_name)
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
@@ -3051,14 +2804,14 @@ def run_wolf_sanity_run_gomc_command(job):
 # ******************************************************
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_model != "Results")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_2a_namd_equilb_NPT_control_file_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.post(part_4b_job_gomc_calibration_converged)
+@Project.pre(part_4b_job_gomc_calibration_has_been_checked)
+@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_4b_job_check_convergence)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -3072,6 +2825,14 @@ def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
     control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
     #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
+
+    import shutil
+
+    shutil.copyfile(job.doc.path_to_gomc_sseq_dir+control_file_name_str+".conf", control_file_name_str+".conf")
+    shutil.copyfile(job.doc.path_to_gomc_sseq_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
+
+    append_default_wolf_parameters_line(job,control_file_name_str)
+
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
         str(gomc_binary_path),
@@ -3092,11 +2853,13 @@ def run_calibration_run_gomc_command(job):
         job,
         control_file_name_str
     ):
-        part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
+        ##part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
+        if (job.doc.calibration_iteration_number>0):
+            job.doc.check_convergence = True
+
         print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
         job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
         print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-
 
 # ******************************************************
 # ******************************************************
@@ -3105,10 +2868,98 @@ def run_calibration_run_gomc_command(job):
 # ******************************************************
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Calibrator")
-@Project.pre(lambda j: j.sp.wolf_model == "Calibrator")
+@Project.pre(lambda j: j.sp.wolf_potential == "Results")
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
+@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
+                               for j in jobs[0]._project))
+@Project.pre(lambda *jobs: all(part_4b_job_check_convergence(j)
+                               for j in jobs[0]._project))
+@Project.post(part_4b_wolf_sanity_histograms_created)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@flow.with_job
+def check_convergence_of_cal(job):
+    try:
+
+        jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": job.sp.wolf_model, "wolf_potential": job.sp.wolf_potential}))
+        print(jobs)
+        try:
+            for ewald_job in jobs:
+
+                if (job.doc.calibration_iteration_number >= job.doc.calibration_iteration_number_max_number):
+                    job.doc.calibration_converged = True
+                    return True
+                cols = ["MODEL", "POT", "ALPHA"]
+                colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
+                print(job.doc.calibration_iteration_number)
+                converged = True
+                NUMBOXES = 1
+                for b in range (NUMBOXES):
+                    curr = pd.DataFrame()
+                    prev = pd.DataFrame()
+                    if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b))):
+                        curr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=cols)
+                    else:
+                        return False
+                    if (job.doc.calibration_iteration_number != 0):
+                        if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b))):
+                            prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None, names=cols)
+                        else:
+                            return False
+
+                    if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b))):
+                        modelRelErr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=colList, index_col=0)
+                        print(modelRelErr)
+                        print(modelRelErr.abs().min().idxmin().split("_"))
+                        print(modelRelErr.abs().min().min())
+                    else:
+                        return False 
+
+                    print(prev)
+                    print(curr)
+                    print("Change in best alpha")
+                    changeBwRuns = pd.concat([curr,prev]).drop_duplicates(keep=False)
+                    print(changeBwRuns)
+                    print(changeBwRuns.empty)
+                    converged = converged and changeBwRuns.empty
+                    WolfDefaultKind = modelRelErr.abs().min().idxmin().split("_")[0]
+                    WolfDefaultPotential = modelRelErr.abs().min().idxmin().split("_")[1]
+                    mask = curr['MODEL'] == WolfDefaultKind
+                    mask2 = curr['POT'] == WolfDefaultPotential
+                    c = np.logical_and(mask, mask2)
+                    nextAlpha = curr[c]["ALPHA"].values[0]
+                    print(nextAlpha)
+                    print("Run next iteration {} with alpha {} ({} {})".format(job.doc.calibration_iteration_number+1,nextAlpha,WolfDefaultKind,WolfDefaultPotential))
+                    output_name_control_file_name = "wolf_calibration_{}.conf".format(
+                        job.doc.calibration_iteration_number+1
+                    )
+                    with open(job.fn(output_name_control_file_name), "a") as myfile:
+                        #defAlphaLine = "WolfKind\t{val}\n".format(val=WolfDefaultKind)
+                        #myfile.write(defAlphaLine)
+                        #defAlphaLine = "WolfPotential\t{val}\n".format(val=WolfDefaultPotential)
+                        #myfile.write(defAlphaLine)
+                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
+                        myfile.write(defAlphaLine)
+                job.doc.calibration_converged = converged
+                return converged   
+        except:
+            print(repr(e))
+            return False
+    except:
+        print(repr(e))
+        return False
+
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Results")
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
 #@Project.pre(lambda j: j.sp.solute == "solvent_box")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
+#@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_analysis_completed(j)
                                for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_histograms_created)
@@ -3125,7 +2976,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     df1 = pd.DataFrame()
     df_equilibrated_all = pd.DataFrame()
 
-    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Calibrator", "wolf_potential": "Calibrator"}))
+    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Results", "wolf_potential": "Results"}))
     print(jobs)
     try:
         for ewald_job in jobs:
@@ -3306,7 +3157,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     print(statistics)
 
 for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
-    @Project.pre(part_2a_namd_equilb_NPT_control_file_written)
+    
     @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
     @Project.pre(part_4b_job_gomc_sseq_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
@@ -3357,11 +3208,10 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
 # ******************************************************
 # ******************************************************
 for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
-    @Project.pre(part_2c_gomc_production_control_file_written)
     @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
     @Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-    @Project.post(part_part_3c_output_gomc_production_run_started)
+
     @Project.post(part_4c_job_production_run_completed_properly)
     @Project.operation.with_directives(
         {
