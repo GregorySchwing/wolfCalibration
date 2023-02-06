@@ -832,12 +832,12 @@ def part_4b_wrote_alpha_csv(job):
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.wolf_potential == "Results" or job.sp.electrostatic_method == "Ewald" or job.sp.replica_number_int != 0):
+    if(job.sp.wolf_potential == "Results" or job.sp.electrostatic_method == "Ewald"):
         return True
     try: 
 
         output_name_control_file_name = "wolf_calibration_{}".format(
-            job.doc.calibration_iteration_number-1)
+            job.doc.calibration_iteration_number)
         return gomc_sim_completed_properly(
             job,
             output_name_control_file_name,
@@ -1326,7 +1326,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 for file in files:
                     if regex.match(file):
                         print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
-                        shutil.copyfile(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), ref_job.fn(file))
+                        shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
                         append_default_wolf_parameters_line(ref_job,file)
 
                         return
@@ -1731,7 +1731,7 @@ def build_charmm(job, write_files=True):
 def build_psf_pdb_ff_gomc_conf(job):
     """Build the Charmm object and write the pdb, psd, and force field (FF)
     files for all the simulations in the workspace."""
-    if (job.sp.electrostatic_method == "Ewald" and job.sp.wolf_model == "Ewald"):
+    if (job.sp.wolf_model == "Results"):
         [namd_charmm_object_with_files, gomc_charmm_object_with_files] = build_charmm(job, write_files=True)
 
     namd_restart_pdb_psf_file_name_str = mosdef_structure_box_0_name_str
@@ -1739,7 +1739,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     # Get prefix to namd runs.
     namd_output_prefix = ""
-    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Ewald", "wolf_potential" : "Ewald"}))
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results"}))
 
     for ref_job in jobs:
         namd_output_prefix = ref_job.fn("")
@@ -1825,7 +1825,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     )
 
 
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Ewald", "wolf_potential" : "Ewald"}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results"}))
     for ref_job in jobs:
         #if (ref_job.isfile(f"{Coordinates_box_0}")):
         job.doc.path_to_gomc_sseq_dir =  ref_job.fn("")
@@ -1842,6 +1842,10 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
 
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results"}))
+    for ref_job in jobs:
+        #if (ref_job.isfile(f"{Coordinates_box_0}")):
+        job.doc.path_to_wolf_template_dir =  ref_job.fn("")
 
     jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results"}))
     for results_job in jobs:
@@ -1956,7 +1960,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             }
         )
 
-    if (not(job.sp.electrostatic_method == "Ewald" and job.sp.wolf_model == "Ewald")):
+    if (job.sp.wolf_model != "Results"):
         return
 
 
@@ -2141,137 +2145,135 @@ def build_psf_pdb_ff_gomc_conf(job):
     print("#**********************")
     print("Started: equilb NPT NAMD -> NPT GOMC control file writing")
     print("#**********************")
-    for cal_run in range(job.doc.calibration_iteration_number_max_number):
-        #
-        output_name_control_file_calibration_name = "wolf_calibration_{}".format(
-            cal_run
-        )
+
+    #
+    output_name_control_file_calibration_name = "wolf_calibration"
 
 
-        if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
-            useCoul = False
-            CBMC_First = (12,)
-            CBMC_Nth = (10,)
-            CBMC_Ang = (50,)
-            CBMC_Dih = (50,)
-            if job.doc.equilibration_ensemble in ["NVT"]:
-                VolFreq = (0.00,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (None,)
-                SwapFreq = (None,)
-                DisFreq = (0.4,)
-                RotFreq = (0.3,)
-                RegrowthFreq = (0.3,)
+    if job.doc.solute in ["He", "Ne", "Kr", "Ar", "Xe", "Rn"]:
+        useCoul = False
+        CBMC_First = (12,)
+        CBMC_Nth = (10,)
+        CBMC_Ang = (50,)
+        CBMC_Dih = (50,)
+        if job.doc.equilibration_ensemble in ["NVT"]:
+            VolFreq = (0.00,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.4,)
+            RotFreq = (0.3,)
+            RegrowthFreq = (0.3,)
 
-            elif job.doc.equilibration_ensemble in ["NPT"]:
-                VolFreq = (0.01,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (None,)
-                SwapFreq = (None,)
-                DisFreq = (0.39,)
-                RotFreq = (0.3,)
-                RegrowthFreq = (0.3,)
+        elif job.doc.equilibration_ensemble in ["NPT"]:
+            VolFreq = (0.01,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (None,)
+            SwapFreq = (None,)
+            DisFreq = (0.39,)
+            RotFreq = (0.3,)
+            RegrowthFreq = (0.3,)
 
-            else:
-                raise ValueError(
-                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
-                    "in the GOMC control file writer."
-                )
+        else:
+            raise ValueError(
+                "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                "in the GOMC control file writer."
+            )
 
-        if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
-            useCoul = True
-            CBMC_First = (10,)
-            CBMC_Nth = (10,)
-            CBMC_Ang = (100,)
-            CBMC_Dih = (50,)
-            if job.doc.equilibration_ensemble in ["NVT"]:
-                VolFreq = (0.00,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (0.1,)
-                SwapFreq = (None,)
-                DisFreq = (0.50,)
-                RotFreq = (0.2,)
-                RegrowthFreq = (0.20,)
+    if job.doc.solute in ["ETOH", "ETOH-OPLS", "solvent_box"]:
+        useCoul = True
+        CBMC_First = (10,)
+        CBMC_Nth = (10,)
+        CBMC_Ang = (100,)
+        CBMC_Dih = (50,)
+        if job.doc.equilibration_ensemble in ["NVT"]:
+            VolFreq = (0.00,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (0.1,)
+            SwapFreq = (None,)
+            DisFreq = (0.50,)
+            RotFreq = (0.2,)
+            RegrowthFreq = (0.20,)
 
-            elif job.doc.equilibration_ensemble in ["NPT"]:
-                VolFreq = (0.01,)
-                MultiParticleFreq = (None,)
-                IntraSwapFreq = (0.0,)
-                CrankShaftFreq = (0.1,)
-                SwapFreq = (None,)
-                DisFreq = (0.49,)
-                RotFreq = (0.2,)
-                RegrowthFreq = (0.20,)
+        elif job.doc.equilibration_ensemble in ["NPT"]:
+            VolFreq = (0.01,)
+            MultiParticleFreq = (None,)
+            IntraSwapFreq = (0.0,)
+            CrankShaftFreq = (0.1,)
+            SwapFreq = (None,)
+            DisFreq = (0.49,)
+            RotFreq = (0.2,)
+            RegrowthFreq = (0.20,)
 
-            else:
-                raise ValueError(
-                    "Moleules MC move ratios not listed for this solvent and solute or ensemble "
-                    "in the GOMC control file writer."
-                )                  
+        else:
+            raise ValueError(
+                "Moleules MC move ratios not listed for this solvent and solute or ensemble "
+                "in the GOMC control file writer."
+            )                  
 
-        gomc_control.write_gomc_control_file(
-            gomc_charmm_object_with_files,
-            output_name_control_file_calibration_name,
-            job.doc.equilibration_ensemble,
-            Calibration_MC_steps,
-            510,
-            ff_psf_pdb_file_directory=None,
-            check_input_files_exist=False,
-            Parameters="{}.inp".format(gomc_ff_filename_str),
-            Restart=True,
-            RestartCheckpoint=True,
-            ExpertMode=False,
-            Coordinates_box_0=job.doc.path_to_ref_pdb,
-            Structure_box_0=job.doc.path_to_ref_psf,
-            binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
-            extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
-            binVelocities_box_0=None,
-            Coordinates_box_1=None,
-            Structure_box_1=None,
-            binCoordinates_box_1=None,
-            extendedSystem_box_1=None,
-            binVelocities_box_1=None,
-            input_variables_dict={
-                "PRNG": seed_no,
-                "Pressure": production_pressure_bar,
-                "Ewald": False,
-                "RcutCoulomb_box_0" : 14,
-                "ElectroStatic": use_ElectroStatics,
-                "VDWGeometricSigma": VDWGeometricSigma,
-                "Rcut": job.doc.Rcut_ang,
-                "Exclude": Exclude,
-                "VolFreq": VolFreq[-1],
-                "MultiParticleFreq": MultiParticleFreq[-1],
-                "IntraSwapFreq": IntraSwapFreq[-1],
-                "CrankShaftFreq": CrankShaftFreq[-1],
-                "SwapFreq": SwapFreq[-1],
-                "DisFreq": DisFreq[-1],
-                "RotFreq": RotFreq[-1],
-                "RegrowthFreq": RegrowthFreq[-1],
-                "OutputName": output_name_control_file_calibration_name,
-                "EqSteps": Calibration_MC_Eq_Steps,
-                "PressureCalc": output_false_list_input,
-                "RestartFreq": output_true_list_input,
-                "CheckpointFreq": output_true_list_input,
-                "ConsoleFreq": console_output_true_list_input,
-                "BlockAverageFreq": output_true_list_input,
-                "HistogramFreq": output_false_list_input,
-                "CoordinatesFreq": output_false_list_input,
-                "DCDFreq": output_true_list_input,
-                "Potential": cutoff_style,
-                "LRC": True,
-                "RcutLow": 1.0,
-                "CBMC_First": CBMC_First[-1],
-                "CBMC_Nth": CBMC_Nth[-1],
-                "CBMC_Ang": CBMC_Ang[-1],
-                "CBMC_Dih": CBMC_Dih[-1],
-            },
-        )
-        append_wolf_calibration_parameters(job, output_name_control_file_calibration_name)
-        append_checkpoint_line(job, output_name_control_file_calibration_name, job.doc.path_to_sseq_checkpoint)
+    gomc_control.write_gomc_control_file(
+        gomc_charmm_object_with_files,
+        output_name_control_file_calibration_name,
+        job.doc.equilibration_ensemble,
+        Calibration_MC_steps,
+        510,
+        ff_psf_pdb_file_directory=None,
+        check_input_files_exist=False,
+        Parameters="{}.inp".format(gomc_ff_filename_str),
+        Restart=True,
+        RestartCheckpoint=True,
+        ExpertMode=False,
+        Coordinates_box_0=job.doc.path_to_ref_pdb,
+        Structure_box_0=job.doc.path_to_ref_psf,
+        binCoordinates_box_0=job.doc.path_to_sseq_binCoordinates,
+        extendedSystem_box_0=job.doc.path_to_sseq_extendedSystem,
+        binVelocities_box_0=None,
+        Coordinates_box_1=None,
+        Structure_box_1=None,
+        binCoordinates_box_1=None,
+        extendedSystem_box_1=None,
+        binVelocities_box_1=None,
+        input_variables_dict={
+            "PRNG": seed_no,
+            "Pressure": production_pressure_bar,
+            "Ewald": False,
+            "RcutCoulomb_box_0" : 14,
+            "ElectroStatic": use_ElectroStatics,
+            "VDWGeometricSigma": VDWGeometricSigma,
+            "Rcut": job.doc.Rcut_ang,
+            "Exclude": Exclude,
+            "VolFreq": VolFreq[-1],
+            "MultiParticleFreq": MultiParticleFreq[-1],
+            "IntraSwapFreq": IntraSwapFreq[-1],
+            "CrankShaftFreq": CrankShaftFreq[-1],
+            "SwapFreq": SwapFreq[-1],
+            "DisFreq": DisFreq[-1],
+            "RotFreq": RotFreq[-1],
+            "RegrowthFreq": RegrowthFreq[-1],
+            "OutputName": output_name_control_file_calibration_name,
+            "EqSteps": Calibration_MC_Eq_Steps,
+            "PressureCalc": output_false_list_input,
+            "RestartFreq": output_true_list_input,
+            "CheckpointFreq": output_true_list_input,
+            "ConsoleFreq": console_output_true_list_input,
+            "BlockAverageFreq": output_true_list_input,
+            "HistogramFreq": output_false_list_input,
+            "CoordinatesFreq": output_false_list_input,
+            "DCDFreq": output_true_list_input,
+            "Potential": cutoff_style,
+            "LRC": True,
+            "RcutLow": 1.0,
+            "CBMC_First": CBMC_First[-1],
+            "CBMC_Nth": CBMC_Nth[-1],
+            "CBMC_Ang": CBMC_Ang[-1],
+            "CBMC_Dih": CBMC_Dih[-1],
+        },
+    )
+    append_wolf_calibration_parameters(job, output_name_control_file_calibration_name)
+    append_checkpoint_line(job, output_name_control_file_calibration_name, job.doc.path_to_sseq_checkpoint)
 
     ### Need to append Wolf Calibration lines since they aren't in MosDef
 
@@ -2471,7 +2473,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             input_variables_dict={
                 "PRNG": seed_no,
                 "Pressure": production_pressure_bar,
-                "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
+                "Ewald": job.sp.electrostatic_method == "Ewald",
                 "ElectroStatic": use_ElectroStatics,
                 "RcutCoulomb_box_0" : 14,
                 "VDWGeometricSigma": VDWGeometricSigma,
@@ -2662,7 +2664,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             input_variables_dict={
                 "PRNG": seed_no,
                 "Pressure": production_pressure_bar,
-                "Ewald": True if job.sp.electrostatic_method == "Ewald" else False,
+                "Ewald": job.sp.electrostatic_method == "Ewald",
                 "RcutCoulomb_box_0" : 14,
                 "ElectroStatic": use_ElectroStatics,
                 "VDWGeometricSigma": VDWGeometricSigma,
@@ -2724,7 +2726,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 # Only run namd on the Ewald directories, then use the same 
 # final trajectory for Wolf.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.wolf_model == "Ewald")
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
 @Project.post(part_4a_job_namd_equilb_NPT_completed_properly)
@@ -2779,11 +2781,9 @@ def run_namd_equilb_NPT_gomc_command(job):
 # Note replica isnt required to be zero.  replicas start branching at this point
 # Since GOMC is semi-reproducible (CPU binaries) with a seed.
 @Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
-@Project.pre(lambda j: j.sp.wolf_model == "Ewald")
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
 @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
 @Project.pre(mosdef_input_written)
-
-#@Project.post(part_3b_output_gomc_sseq_started)
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
     {
@@ -2812,7 +2812,6 @@ def run_sseq_run_gomc_command(job):
     return run_command
 
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_model != "Results")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
@@ -2871,7 +2870,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @flow.with_job
 def run_calibration_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
-    control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
+    control_file_name_str = "wolf_calibration"
     #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
 
     import shutil

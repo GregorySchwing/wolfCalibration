@@ -31,6 +31,10 @@ production_temperatures = [298] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 #g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 #densities = [0.789] * g_per_cm3
 
+#densities_to_1 = np.arange (0.2, 0.3, 0.1)
+
+#alpha_range = np.arange (0.0, 0.505, 0.005)
+alpha_range = np.arange (0.0, 0.5, 0.1)
 
 # *******************************************
 # the main user varying state points (end)
@@ -59,19 +63,20 @@ for replica_i in replicas:
                         if (e_method == "Wolf"):
                             for wolfM in wolfModel:
                                 for wolfP in wolfPotential:
-                                    statepoint = {
-                                        "replica_number_int": replica_i,
-                                        "solvent": solvent_i,
-                                        "solute": solute_i,
-                                        "forcefield": ff_i,
-                                        "wolf_model": wolfM,
-                                        "wolf_potential": wolfP,
-                                        "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
-                                        "electrostatic_method": e_method,
-                                    }
-                                    total_statepoints.append(statepoint)
-                        elif replica_i == 0:
-                            # The calibration statepoints
+                                    for alpha in alpha_range:
+                                        statepoint = {
+                                            "replica_number_int": replica_i,
+                                            "solvent": solvent_i,
+                                            "solute": solute_i,
+                                            "forcefield": ff_i,
+                                            "wolf_model": wolfM,
+                                            "wolf_potential": wolfP,
+                                            "alpha": alpha,
+                                            "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                                            "electrostatic_method": e_method,
+                                        }
+                                        total_statepoints.append(statepoint)
+                                                        # The calibration statepoints
                             statepoint = {
                                             "replica_number_int": replica_i,
                                             "solute": solute_i,
@@ -79,6 +84,19 @@ for replica_i in replicas:
                                             "forcefield": ff_i,
                                             "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                             "electrostatic_method": "Wolf",
+                                            "wolf_model": "Results",
+                                            "wolf_potential": "Results",
+                                        }
+                            total_statepoints.append(statepoint)                     
+
+                            # The calibration statepoints
+                            statepoint = {
+                                            "replica_number_int": replica_i,
+                                            "solute": solute_i,
+                                            "solvent": solvent_i,
+                                            "forcefield": ff_i,
+                                            "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
+                                            "electrostatic_method": "Ewald",
                                             "wolf_model": "Results",
                                             "wolf_potential": "Results",
                                         }
