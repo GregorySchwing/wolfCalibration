@@ -925,9 +925,13 @@ def part_4b_job_gomc_sseq_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the wolf_sanity simulation is finished (set temperature)."""
+    if (job.sp.electrostatic_method == "Wolf" and job.sp.wolf_model == "Results"):
+        try:
+            return job.doc.append_done
+        except:
+            return False
     try: 
         output_name_control_file_name = "wolf_sanity"
-
         return gomc_sim_completed_properly(
             job,
             output_name_control_file_name,
@@ -1256,6 +1260,11 @@ def part_4b_wolf_sanity_analysis(job):
 def part_4b_job_gomc_wolf_parameters_appended(job):
     if (job.sp.electrostatic_method == "Ewald"):
         return True
+    if (job.sp.electrostatic_method == "Wolf" and job.sp.wolf_model == "Results"):
+        try:
+            return job.doc.append_done
+        except:
+            return False
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
@@ -1336,7 +1345,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
                         append_default_wolf_parameters_line(ref_job,file)
 
-
+    job.doc.append_done = True
         
 
 
@@ -2779,7 +2788,6 @@ def run_sseq_run_gomc_command(job):
     print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
     return run_command
 
-#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
