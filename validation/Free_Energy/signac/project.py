@@ -269,7 +269,9 @@ def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_fi
 
 
 def append_default_wolf_parameters_line(job, config_file_name):
-    with open(job.fn("{}.conf".format(config_file_name)), "a") as myfile:
+    with open(job.fn(config_file_name), "a") as myfile:
+        defPotLine = "Wolf\t{freq}\n".format(freq=True)
+        myfile.write(defPotLine)
         defPotLine = "WolfKind\t{freq}\n".format(freq=job.sp.wolf_model)
         myfile.write(defPotLine)
         defPotLine = "WolfPotential\t{freq}\n".format(freq=job.sp.wolf_potential)
@@ -1296,6 +1298,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 )
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
+    import shutil
 
     cols = ["MODEL", "POT", "ALPHA"]
     bestAlphas = pd.read_csv("best_alpha_all_replicas.csv")
@@ -1312,10 +1315,22 @@ def part_4b_job_gomc_append_wolf_parameters(job):
             "alpha": row['ALPHA'] }))
         for ref_job in jobs:
             print(ref_job.fn(""))
+
+            #shutil.copyfile(job.doc.path_to_gomc_sseq_dir+wolf_sanity_control_file_name, wolf_sanity_control_file_name)
+            #append_default_wolf_parameters_line(job,wolf_sanity_control_file_name)
+
+
             import re
             regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+            for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+                for file in files:
+                    if regex.match(file):
+                        print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                        shutil.copyfile(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), ref_job.fn(file))
+                        append_default_wolf_parameters_line(ref_job,file)
 
-
+                        return
+            """
             regex = re.compile("wolf_sanity.conf")
             for root, dirs, files in os.walk(ref_job.fn("")):
                 for file in files:
@@ -1345,6 +1360,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                             for box in box_list:
                                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=row['ALPHA'])
                                 myfile.write(defAlphaLine)
+            """
     return
     dataframes = []
 
@@ -2815,11 +2831,6 @@ def run_sseq_run_gomc_command(job):
 def run_wolf_sanity_run_gomc_command(job):
     """Run the gomc_calibration_run_ensemble simulation."""
     wolf_sanity_control_file_name = "wolf_sanity"
-
-    if (job.sp.electrostatic_method == "Wolf"):
-        import shutil
-        shutil.copyfile(job.doc.path_to_gomc_sseq_dir+wolf_sanity_control_file_name, wolf_sanity_control_file_name)
-        append_default_wolf_parameters_line(job,wolf_sanity_control_file_name)
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
