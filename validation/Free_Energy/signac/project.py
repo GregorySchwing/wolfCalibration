@@ -832,12 +832,11 @@ def part_4b_wrote_alpha_csv(job):
 def part_4b_job_gomc_calibration_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
-    if(job.sp.wolf_potential == "Results" or job.sp.electrostatic_method == "Ewald"):
+    if(job.sp.wolf_potential == "Results"):
         return True
     try: 
 
-        output_name_control_file_name = "wolf_calibration_{}".format(
-            job.doc.calibration_iteration_number)
+        output_name_control_file_name = "wolf_calibration"
         return gomc_sim_completed_properly(
             job,
             output_name_control_file_name,
@@ -2878,7 +2877,7 @@ def run_calibration_run_gomc_command(job):
     shutil.copyfile(job.doc.path_to_gomc_sseq_dir+control_file_name_str+".conf", control_file_name_str+".conf")
     shutil.copyfile(job.doc.path_to_gomc_sseq_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
 
-    append_default_wolf_parameters_line(job,control_file_name_str)
+    append_default_wolf_parameters_line(job,control_file_name_str+".conf")
 
     print(f"Running simulation job id {job}")
     run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
