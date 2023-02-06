@@ -764,10 +764,26 @@ def part_4b_job_gomc_calibration_converged(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     try:
-        return job.doc.calibration_converged
+        if (job.doc.current_best_alpha == job.doc.previous_best_alpha):
+            job.doc.calibration_converged = True
     except:
         return False
 
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_all_replicates_best_alpha_found(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    try:
+        if (job.sp.replica_number_int != 0 or \
+            job.sp.wolf_model != "Results" or \
+            job.sp.electrostatic_method != "Wolf"):
+            return True
+        else:
+            return job.isfile("best_alpha_all_replicas.csv")
+    except:
+        return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -790,6 +806,22 @@ def part_4b_job_gomc_calibration_needs_to_be_checked(job):
         return not job.doc.check_convergence
     except:
         return True
+
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_wrote_alpha_csv(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    try:
+        if (job.sp.wolf_model == "Results" and job.sp.electrostatic_method == "Wolf"):
+            return job.doc.wrote_alpha_csv
+        else:
+            return True
+    except:
+        return False
+
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
@@ -1249,7 +1281,10 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(part_4b_job_gomc_calibration_converged)
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
+@Project.pre(lambda j: j.sp.wolf_potential == "Results")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_4b_all_replicates_best_alpha_found)
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
     {
@@ -1261,62 +1296,64 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 )
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
-    output_name_control_file_name = "wolf_calibration_{}_".format(
-        job.doc.calibration_iteration_number-1
-    )
+
     cols = ["MODEL", "POT", "ALPHA"]
-    dataframes = []
+    bestAlphas = pd.read_csv("best_alpha_all_replicas.csv")
+    print(bestAlphas)
     if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
         box_list = [0, 1]
     else:
         box_list = [0]
+    for index, row in bestAlphas.iterrows():
+        print(row)
+        jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
+            "wolf_model": row['WOLF_KIND'], \
+            "wolf_potential" : row['COUL_KIND'],\
+            "alpha": row['ALPHA'] }))
+        for ref_job in jobs:
+            print(ref_job.fn(""))
+            import re
+            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+
+
+            regex = re.compile("wolf_sanity.conf")
+            for root, dirs, files in os.walk(ref_job.fn("")):
+                for file in files:
+                    if regex.match(file):
+                        with open(file, "a") as myfile:
+                            defWolfLine = "Wolf\tTrue\n"
+                            myfile.write(defWolfLine)
+                            defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
+                            myfile.write(defPotLine)
+                            defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
+                            myfile.write(defKindLine)
+                            for box in box_list:
+                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=row['ALPHA'])
+                                myfile.write(defAlphaLine)
+
+            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+            for root, dirs, files in os.walk(ref_job.fn("")):
+                for file in files:
+                    if regex.match(file):
+                        with open(file, "a") as myfile:
+                            defWolfLine = "Wolf\tTrue\n"
+                            myfile.write(defWolfLine)
+                            defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
+                            myfile.write(defPotLine)
+                            defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
+                            myfile.write(defKindLine)
+                            for box in box_list:
+                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=row['ALPHA'])
+                                myfile.write(defAlphaLine)
+    return
+    dataframes = []
+
     for b in box_list:
         dataframes.append(pd.read_csv(job.fn(output_name_control_file_name+"WOLF_CALIBRATION_BOX_{}_BEST_ALPHA.csv".format(b)), header=None, delim_whitespace=True, names=cols))
 
         print (dataframes[b])
 
-        import re
-        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-
-
-        regex = re.compile("wolf_sanity.conf")
-        for root, dirs, files in os.walk(job.fn("")):
-            for file in files:
-                if regex.match(file):
-                    with open(file, "a") as myfile:
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                        myfile.write(defKindLine)
-                        for box in box_list:
-                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
-                            #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
-                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
-                            c = np.logical_and(mask, mask2)
-                            print(dataframes[0][c]["ALPHA"].values)
-                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
-                            myfile.write(defAlphaLine)
-
-        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-        for root, dirs, files in os.walk(job.fn("")):
-            for file in files:
-                if regex.match(file):
-                    with open(file, "a") as myfile:
-                        defWolfLine = "Wolf\tTrue\n"
-                        myfile.write(defWolfLine)
-                        defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                        myfile.write(defPotLine)
-                        defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                        myfile.write(defKindLine)
-                        for box in box_list:
-                            mask = dataframes[0]['MODEL'] == job.sp.wolf_model
-                            #mask = dataframes[0]['MODEL'] == wolfDict[ref_job.sp.wolf_model]
-                            mask2 = dataframes[0]['POT'] == job.sp.wolf_potential
-                            c = np.logical_and(mask, mask2)
-                            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=dataframes[0][c]["ALPHA"].values[0])
-                            myfile.write(defAlphaLine)
+        
 
 
 
@@ -2805,7 +2842,7 @@ def run_wolf_sanity_run_gomc_command(job):
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_model != "Results")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
+#@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
@@ -2849,15 +2886,7 @@ def run_calibration_run_gomc_command(job):
     )
     os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
     # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
-    if gomc_sim_completed_properly(
-        job,
-        control_file_name_str
-    ):
-        ##part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
-        job.doc.check_convergence = False
-        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-        job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
-        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+
 
 # ******************************************************
 # ******************************************************
@@ -2868,12 +2897,12 @@ def run_calibration_run_gomc_command(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
+#@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
                                for j in jobs[0]._project))
 #@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_needs_to_be_checked(j)
 #                               for j in jobs[0]._project))
-@Project.post(part_4b_job_gomc_calibration_converged)
+@Project.post(part_4b_wrote_alpha_csv)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -2883,91 +2912,112 @@ def run_calibration_run_gomc_command(job):
     }
 )
 @flow.with_job
-def check_convergence_of_cal(job):
+def write_replicate_alpha_csv(job):
     try:
-        # find all repl 0 wolf runs.
-        jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute}))
+        jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute}))
         try:
-            master = pd.DataFrame()
-            for ewald_job in jobs:
-                if (ewald_job.sp.wolf_model == "Results"):
-                    continue
-                if (job.doc.calibration_iteration_number >= job.doc.calibration_iteration_number_max_number):
-                    job.doc.calibration_converged = True
-                    ewald_job.doc.calibration_converged = True
-                    return True
+            NUMBOXES = 1
+            for b in range (NUMBOXES):
+                master = pd.DataFrame()
+
                 cols = ["MODEL", "POT", "ALPHA"]
                 colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
-                print(ewald_job.doc.calibration_iteration_number)
-                converged = True
-                NUMBOXES = 1
-                for b in range (NUMBOXES):
+                for ewald_job in jobs:
+                    if (ewald_job.sp.wolf_model == "Results"):
+                        continue
                     curr = pd.DataFrame()
                     prev = pd.DataFrame()
                     if (ewald_job.isfile("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1))):
                         curr = pd.read_csv (ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)), sep=",", header=0)
                     else:
-                        print(ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)))
-                        return False
+                        print(ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv DNE: converged".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)))
+                        #return False
                     master = master.append(curr, ignore_index=True)
-
-                    continue
                     # Make this job eligibile for the next cal run
                     job.doc.check_convergence = True
+                    master = master.sort_values(['WOLF_KIND', 'COUL_KIND'],ascending = [True, False])
+                master = master.sort_values(['WOLF_KIND', 'COUL_KIND', 'ALPHA'],ascending = [True, False, True])
+                master.to_csv('full_calibration_replica_{}_BOX_{}.csv'.format(job.doc.replica_number_int, b), header=True, index=False, sep=',')
 
-                """
-                    return
-                    if (job.doc.calibration_iteration_number != 0):
-                        if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b))):
-                            prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None, names=cols)
-                        else:
-                            return False
-
-                    if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b))):
-                        modelRelErr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}.dat".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=colList, index_col=0)
-                        print(modelRelErr)
-                        print(modelRelErr.abs().min().idxmin().split("_"))
-                        print(modelRelErr.abs().min().min())
-                    else:
-                        return False 
-
-                    print(prev)
-                    print(curr)
-                    print("Change in best alpha")
-                    changeBwRuns = pd.concat([curr,prev]).drop_duplicates(keep=False)
-                    print(changeBwRuns)
-                    print(changeBwRuns.empty)
-                    converged = converged and changeBwRuns.empty
-                    WolfDefaultKind = modelRelErr.abs().min().idxmin().split("_")[0]
-                    WolfDefaultPotential = modelRelErr.abs().min().idxmin().split("_")[1]
-                    mask = curr['MODEL'] == WolfDefaultKind
-                    mask2 = curr['POT'] == WolfDefaultPotential
-                    c = np.logical_and(mask, mask2)
-                    nextAlpha = curr[c]["ALPHA"].values[0]
-                    print(nextAlpha)
-                    print("Run next iteration {} with alpha {} ({} {})".format(job.doc.calibration_iteration_number+1,nextAlpha,WolfDefaultKind,WolfDefaultPotential))
-                    output_name_control_file_name = "wolf_calibration_{}.conf".format(
-                        job.doc.calibration_iteration_number+1
-                    )
-                    with open(job.fn(output_name_control_file_name), "a") as myfile:
-                        #defAlphaLine = "WolfKind\t{val}\n".format(val=WolfDefaultKind)
-                        #myfile.write(defAlphaLine)
-                        #defAlphaLine = "WolfPotential\t{val}\n".format(val=WolfDefaultPotential)
-                        #myfile.write(defAlphaLine)
-                        defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
-                        myfile.write(defAlphaLine)
-
-                """
-            #print(master)
-            #simple = master.groupby(['WOLF_KIND','COUL_KIND'])['MEAN_REL_ERR'].min()
-            #print(simple)
-            result = master.loc[master.groupby(['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()].reset_index(drop=True)
-            print(result)
-
-            return
-            job.doc.calibration_converged = converged
-            return converged   
+                curr = master.loc[master.groupby(['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()].reset_index(drop=True)
+                curr = curr.sort_values(['WOLF_KIND', 'COUL_KIND'],ascending = [True, False])
+                print(curr)
+                print(curr.columns)
+                prev = pd.DataFrame()
+                curr.to_csv('best_alphas_replica_{}_BOX_{}.csv'.format(job.doc.replica_number_int, b), header=True, index=False, sep=',')
+            job.doc.wrote_alpha_csv = True
         except:
+            print(repr(e))
+            return False
+    except:
+        print(repr(e))
+        return False
+
+
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential == "Results")
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
+                               for j in jobs[0]._project))
+@Project.pre(lambda *jobs: all(part_4b_wrote_alpha_csv(j)
+                               for j in jobs[0]._project))
+#@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_needs_to_be_checked(j)
+#                               for j in jobs[0]._project))
+@Project.post(part_4b_all_replicates_best_alpha_found)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@flow.with_job
+def get_minimum_alpha_across_replicas(job):
+    try:
+        jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute,\
+            "wolf_potential": job.sp.wolf_potential,"wolf_model": job.sp.wolf_model,}))
+        try:
+            master = pd.DataFrame()
+            NUMBOXES = 1
+            for b in range (NUMBOXES):
+
+                cols = ["MODEL", "POT", "ALPHA"]
+                colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
+                for ewald_job in jobs:
+                    try:
+                        curr = pd.DataFrame()
+                        prev = pd.DataFrame()
+                        if (ewald_job.isfile('full_calibration_replica_{}_BOX_{}.csv'.format(ewald_job.doc.replica_number_int, b))):
+                            curr = pd.read_csv (ewald_job.fn('full_calibration_replica_{}_BOX_{}.csv'.format(ewald_job.doc.replica_number_int, b)), sep=",", header=0)
+                        else:
+                            print(ewald_job.fn('full_calibration_replica_{}_BOX_{}.csv'.format(ewald_job.doc.replica_number_int, b)), "DNE")
+                            #return False
+                        print(curr)
+                        master = master.append(curr, ignore_index=False)
+                        print("master")
+                        print(master)
+                    except:
+                        print(ewald_job.fn(""), "exc")
+                        # Make this job eligibile for the next cal run
+            master = master.sort_values(['WOLF_KIND', 'COUL_KIND', 'ALPHA'],ascending = [True, False, True])
+            print("master sorted")
+            print(master)
+            master.to_csv('full_calibration_all_replicas.csv', header=True, index=False, sep=',')
+            curr = master.groupby(['WOLF_KIND','COUL_KIND','ALPHA']).mean()
+            print("mean")
+
+            print(curr)
+            print("best")
+            curr.reset_index(inplace=True)
+            curr['MEAN_REL_ERR'] = curr['MEAN_REL_ERR'].abs()
+            #bestA = curr.loc[curr.groupby(level=['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()]
+            bestA = curr.loc[curr.groupby(['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()]
+            #bestA = curr.min(level=['WOLF_KIND','COUL_KIND'])
+            bestA.to_csv('best_alpha_all_replicas.csv', header=True, index=False, sep=',')
+        except:
+            print()
             print(repr(e))
             return False
     except:
