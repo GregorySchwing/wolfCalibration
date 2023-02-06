@@ -1327,46 +1327,15 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                         print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
                         shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
                         append_default_wolf_parameters_line(ref_job,file)
-
-                        return
-            """
+            
             regex = re.compile("wolf_sanity.conf")
-            for root, dirs, files in os.walk(ref_job.fn("")):
+            for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
                 for file in files:
                     if regex.match(file):
-                        with open(file, "a") as myfile:
-                            defWolfLine = "Wolf\tTrue\n"
-                            myfile.write(defWolfLine)
-                            defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                            myfile.write(defPotLine)
-                            defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                            myfile.write(defKindLine)
-                            for box in box_list:
-                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=row['ALPHA'])
-                                myfile.write(defAlphaLine)
+                        print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                        shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
+                        append_default_wolf_parameters_line(ref_job,file)
 
-            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-            for root, dirs, files in os.walk(ref_job.fn("")):
-                for file in files:
-                    if regex.match(file):
-                        with open(file, "a") as myfile:
-                            defWolfLine = "Wolf\tTrue\n"
-                            myfile.write(defWolfLine)
-                            defPotLine = "WolfPotential\t{pot}\n".format(pot=job.sp.wolf_potential)
-                            myfile.write(defPotLine)
-                            defKindLine = "WolfKind\t{kind}\n".format(kind=job.sp.wolf_model)
-                            myfile.write(defKindLine)
-                            for box in box_list:
-                                defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=box, val=row['ALPHA'])
-                                myfile.write(defAlphaLine)
-            """
-    return
-    dataframes = []
-
-    for b in box_list:
-        dataframes.append(pd.read_csv(job.fn(output_name_control_file_name+"WOLF_CALIBRATION_BOX_{}_BEST_ALPHA.csv".format(b)), header=None, delim_whitespace=True, names=cols))
-
-        print (dataframes[b])
 
         
 
@@ -2855,9 +2824,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.pre(part_4b_job_check_convergence)
 @Project.post(part_4b_job_gomc_calibration_completed_properly)
-@Project.post(part_4b_job_gomc_calibration_converged)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -2936,10 +2903,10 @@ def write_replicate_alpha_csv(job):
                         continue
                     curr = pd.DataFrame()
                     prev = pd.DataFrame()
-                    if (ewald_job.isfile("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1))):
-                        curr = pd.read_csv (ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)), sep=",", header=0)
+                    if (ewald_job.isfile("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b))):
+                        curr = pd.read_csv (ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b)), sep=",", header=0)
                     else:
-                        print(ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration_{}.csv DNE: converged".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b, ewald_job.doc.calibration_iteration_number-1)))
+                        print(ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration.csv DNE: converged".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b)))
                         #return False
                     master = master.append(curr, ignore_index=True)
                     # Make this job eligibile for the next cal run
