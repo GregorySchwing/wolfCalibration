@@ -778,12 +778,7 @@ def part_4b_all_replicates_best_alpha_found(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     try:
-        if (job.sp.replica_number_int != 0 or \
-            job.sp.wolf_model != "Results" or \
-            job.sp.electrostatic_method != "Wolf"):
-            return True
-        else:
-            return job.isfile("best_alpha_all_replicas.csv")
+        return job.isfile(job.doc.path_to_wolf_results_repl_0_dir+"best_alpha_all_replicas.csv")
     except:
         return False
 
@@ -958,8 +953,7 @@ def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
      }
 )
 @Project.pre(mosdef_input_written)
-@Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
-     part_4b_job_gomc_wolf_sanity_completed_properly(j) for j in jobs[0]._project))
+@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.post(part_4b_wolf_sanity_individual_simulation_averages_completed)
 @flow.with_job
 def part_4b_wolf_sanity_individual_simulation_averages(job):
@@ -1146,6 +1140,8 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
 @Project.pre(mosdef_input_written)
+@Project.pre(lambda *jobs: any(part_4b_job_gomc_winning_alpha(j) and \
+     j.sp.wolf_model != "Results" for j in jobs[0]._project))
 @Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
      part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
@@ -1270,6 +1266,8 @@ def part_4b_append_done(job):
 @flow.with_job
 def part_4b_job_gomc_winning_alpha(job):
     try:
+        if (job.doc.winning_alpha and not part_4b_job_gomc_wolf_parameters_appended(job)):
+            print(job.fn(""), job.sp.wolf_model, job.sp.wolf_potential)
         return job.doc.winning_alpha
     except:
         return False
@@ -1344,8 +1342,6 @@ def part_4b_job_gomc_append_wolf_parameters(job):
 
                 #shutil.copyfile(job.doc.path_to_gomc_sseq_dir+wolf_sanity_control_file_name, wolf_sanity_control_file_name)
                 #append_default_wolf_parameters_line(job,wolf_sanity_control_file_name)
-                ref_job.doc.winning_alpha = True
-
 
                 import re
                 regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
@@ -1363,9 +1359,9 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                             print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
                             shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
                             append_default_wolf_parameters_line(ref_job,file)
-                job.doc.winning_alpha = True
+                job.ref_job.winning_alpha = True
             else:
-                job.doc.winning_alpha = False
+                job.ref_job.winning_alpha = False
     job.doc.append_done = True
         
 
@@ -3036,6 +3032,7 @@ def get_minimum_alpha_across_replicas(job):
 #@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_analysis_completed(j)
                                for j in jobs[0]._project))
+
 @Project.post(part_4b_wolf_sanity_histograms_created)
 @Project.operation.with_directives(
     {
