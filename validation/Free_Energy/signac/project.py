@@ -1101,7 +1101,7 @@ def part_4b_wolf_sanity_individual_simulation_averages(job):
 @flow.with_job
 def part_4b_wolf_sanity_analysis_completed(job):
     try:
-        if (job.isfile(job.doc.path_to_results_dir+"/wolf_statistics.csv")):
+        if (job.isfile(job.doc.path_to_wolf_results_my_repl_dir+"/wolf_statistics.csv")):
             return True
     except:
         return False
@@ -1111,7 +1111,7 @@ def part_4b_wolf_sanity_analysis_completed(job):
 def part_4b_wolf_sanity_histograms_created(job):
     try:
         df1 = pd.DataFrame()
-        if (job.isfile(job.doc.path_to_results_dir+"/wolf_sanity_all_energies.csv") and job.isfile(job.doc.path_to_results_dir+"/PotentialEnergyDistribution_Ewald_vs_All.png")):
+        if (job.isfile(job.doc.path_to_wolf_results_repl_0_dir+"/wolf_sanity_all_energies.csv") and job.isfile(job.doc.path_to_wolf_results_repl_0_dir+"/PotentialEnergyDistribution_Ewald_vs_All.png")):
             return True
         else:
             return False
@@ -1159,6 +1159,9 @@ def part_4b_wolf_sanity_analysis(job):
     jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "solute": job.sp.solute}))
     print(jobs)
     for other_job in jobs:
+            if (other_job.sp.electrostatic_method == "Wolf" and \
+                other_job.sp.wolf_potential == "Results"):
+                continue
             print("reading wolf_sanity_equilibrated_energies_{}.csv".format(other_job.id))
             try:
                 df6 = pd.read_csv (other_job.fn('wolf_sanity_equilibrated_energies_{}.csv'.format(other_job.id)), sep=' ')
@@ -1171,7 +1174,6 @@ def part_4b_wolf_sanity_analysis(job):
             except:
                 print("failed to read dataframe")
                 
-    for other_job in jobs:
             print("reading wolf_sanity_uncorr_energies_{}.csv".format(other_job.id))
             try:
                 df2 = pd.read_csv (other_job.fn('wolf_sanity_uncorr_energies_{}.csv'.format(other_job.id)), sep=' ')
@@ -1184,7 +1186,6 @@ def part_4b_wolf_sanity_analysis(job):
             except:
                 print("failed to read dataframe")
                 
-    for other_job in jobs:
             print("reading wolf_sanity_full_energies_{}.csv".format(other_job.id))
             try:
                 df4 = pd.read_csv (other_job.fn('wolf_sanity_full_energies_{}.csv'.format(other_job.id)), sep=' ')
@@ -1211,10 +1212,10 @@ def part_4b_wolf_sanity_analysis(job):
     print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
-    ref_mean = df5["Ewald_Ewald"].mean()
+    ref_mean = df5["Results_Results"].mean()
     for method in listOfWolfMethods:
         print("Comparing statistical identicallness of Ewald and", method)
-        welchs_output = scipy.stats.ttest_ind(df5["Ewald_Ewald"], df5[method], equal_var=False, nan_policy='omit')
+        welchs_output = scipy.stats.ttest_ind(df5["Results_Results"], df5[method], equal_var=False, nan_policy='omit')
         statistics_equilibrated[method] = [df5[method].mean(), df5[method].std(),(df5[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
 
     # Change the row indexes
@@ -1227,10 +1228,10 @@ def part_4b_wolf_sanity_analysis(job):
     print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
-    ref_mean = df1["Ewald_Ewald"].mean()
+    ref_mean = df1["Results_Results"].mean()
     for method in listOfWolfMethods:
         print("Comparing statistical identicallness of Ewald and", method)
-        welchs_output = scipy.stats.ttest_ind(df1["Ewald_Ewald"], df1[method], equal_var=False, nan_policy='omit')
+        welchs_output = scipy.stats.ttest_ind(df1["Results_Results"], df1[method], equal_var=False, nan_policy='omit')
         statistics[method] = [df1[method].mean(), df1[method].std(),(df1[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
 
     # Change the row indexes
@@ -1276,8 +1277,6 @@ def part_4b_job_gomc_winning_alpha(job):
 @Project.label
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_appended(job):
-
-    
 
     if (job.sp.electrostatic_method == "Ewald"):
         return True
@@ -1847,11 +1846,11 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results"}))
     for results_job in jobs:
-        job.doc.path_to_ew_results_dir =  results_job.fn("")
+        job.doc.path_to_ew_results_my_repl_dir =  results_job.fn("")
 
     jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results"}))
     for results_job in jobs:
-        job.doc.path_to_wolf_results_repl_0_dir =  results_job.fn("")
+        job.doc.path_to_wolf_results_my_repl_dir =  results_job.fn("")
 
     jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results"}))
     for results_job in jobs:
@@ -1859,7 +1858,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results"}))
     for results_job in jobs:
-        job.doc.path_to_wolf_results_0_dir =  results_job.fn("")
+        job.doc.path_to_wolf_results_repl_0_dir =  results_job.fn("")
 
 
     FreeEnergyCalc = [True, int(gomc_free_energy_output_data_every_X_steps)]
@@ -3078,7 +3077,7 @@ def part_4b_create_wolf_sanity_histograms(job):
 
     numBins = 100
     nskip = 100
-    ref_ewald = df_equilibrated_all["Ewald_Ewald"]
+    ref_ewald = df_equilibrated_all["Results_Results"]
     """
     from pymbar import timeseries
     t0, g, Neff_max = timeseries.detectEquilibration(ref_ewald, nskip=nskip) # compute indices of uncorrelated timeseries
@@ -3094,7 +3093,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     "WAIBEL2018_DSP": 'Waibel2018a (DSP)', "RAHBARI_DSP": 'Rahbari (DSP)', "WAIBEL2019_DSP": 'Waibel2018b (DSP)'}
 
     colList = df_equilibrated_all.columns.tolist()
-    colList.remove("Ewald_Ewald")
+    colList.remove("Results_Results")
     colList.remove("steps")
 
     colList = ["WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
@@ -3215,10 +3214,10 @@ def part_4b_create_wolf_sanity_histograms(job):
     print(listOfWolfMethods)
     listOfWolfMethods.remove("steps")
     print(listOfWolfMethods)
-    ref_mean = df_equilibrated_all["Ewald_Ewald"].mean()
+    ref_mean = df_equilibrated_all["Results_Results"].mean()
     for method in listOfWolfMethods:
         print("Comparing statistical identicallness of Ewald and", method)
-        welchs_output = scipy.stats.ttest_ind(df_equilibrated_all["Ewald_Ewald"], df_equilibrated_all[method], equal_var=False, nan_policy='omit')
+        welchs_output = scipy.stats.ttest_ind(df_equilibrated_all["Results_Results"], df_equilibrated_all[method], equal_var=False, nan_policy='omit')
         statistics[method] = [df_equilibrated_all[method].mean(), df_equilibrated_all[method].std(),(df_equilibrated_all[method].mean()-ref_mean)/ref_mean, welchs_output[0], welchs_output[1]]
 
     # Change the row indexes
