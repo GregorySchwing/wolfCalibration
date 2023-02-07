@@ -1145,10 +1145,8 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
-#@Project.pre(lambda j: j.sp.solute == "solvent_box")
-#@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j)
-                               for j in jobs[0]._project))
+@Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
+     part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
@@ -1250,21 +1248,40 @@ def part_4b_wolf_sanity_analysis(job):
 # data analysis - get the average data from each individual simulation (start)
 # ******************************************************
 # ******************************************************
-        
 
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-# For some reason this is failing on all but replica 0..
+
 
 @Project.label
 @flow.with_job
-def part_4b_job_gomc_wolf_parameters_appended(job):
-    if (job.sp.electrostatic_method == "Ewald"):
-        return True
+def part_4b_append_done(job):
     if (job.sp.electrostatic_method == "Wolf" and job.sp.wolf_model == "Results"):
         try:
             return job.doc.append_done
         except:
             return False
+    else:
+        return True
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+# For some reason this is failing on all but replica 0..
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_winning_alpha(job):
+    try:
+        return job.doc.winning_alpha or job.sp.electrostatic_method == "Ewald"
+    except:
+        return False
+
+
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_wolf_parameters_appended(job):
+
+    
+
+    if (job.sp.electrostatic_method == "Ewald"):
+        return True
+
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     import re
     regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
@@ -1294,8 +1311,9 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(mosdef_input_written)
 @Project.pre(part_4b_all_replicates_best_alpha_found)
-@Project.post(part_4b_job_gomc_wolf_parameters_appended)
+@Project.post(part_4b_append_done)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1319,32 +1337,35 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         print(row)
         jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
             "wolf_model": row['WOLF_KIND'], \
-            "wolf_potential" : row['COUL_KIND'],\
-            "alpha": row['ALPHA'] }))
+            "wolf_potential" : row['COUL_KIND']}))
         for ref_job in jobs:
-            print(ref_job.fn(""))
+            if (ref_job.sp.alpha == row['ALPHA']):
+                print(ref_job.fn(""))
 
-            #shutil.copyfile(job.doc.path_to_gomc_sseq_dir+wolf_sanity_control_file_name, wolf_sanity_control_file_name)
-            #append_default_wolf_parameters_line(job,wolf_sanity_control_file_name)
+                #shutil.copyfile(job.doc.path_to_gomc_sseq_dir+wolf_sanity_control_file_name, wolf_sanity_control_file_name)
+                #append_default_wolf_parameters_line(job,wolf_sanity_control_file_name)
+                ref_job.doc.winning_alpha = True
 
 
-            import re
-            regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-            for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
-                for file in files:
-                    if regex.match(file):
-                        print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
-                        shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                        append_default_wolf_parameters_line(ref_job,file)
-            
-            regex = re.compile("wolf_sanity.conf")
-            for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
-                for file in files:
-                    if regex.match(file):
-                        print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
-                        shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                        append_default_wolf_parameters_line(ref_job,file)
-
+                import re
+                regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+                for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+                    for file in files:
+                        if regex.match(file):
+                            print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                            shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
+                            append_default_wolf_parameters_line(ref_job,file)
+                
+                regex = re.compile("wolf_sanity.conf")
+                for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+                    for file in files:
+                        if regex.match(file):
+                            print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                            shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
+                            append_default_wolf_parameters_line(ref_job,file)
+                job.doc.winning_alpha = True
+            else:
+                job.doc.winning_alpha = False
     job.doc.append_done = True
         
 
@@ -2792,6 +2813,7 @@ def run_sseq_run_gomc_command(job):
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
+@Project.pre(part_4b_job_gomc_winning_alpha)
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
@@ -2851,7 +2873,6 @@ def run_calibration_run_gomc_command(job):
 
     shutil.copyfile(job.doc.path_to_gomc_sseq_dir+control_file_name_str+".conf", control_file_name_str+".conf")
     shutil.copyfile(job.doc.path_to_gomc_sseq_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
-
     append_default_wolf_parameters_line(job,control_file_name_str+".conf")
 
     print(f"Running simulation job id {job}")
