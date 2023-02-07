@@ -83,10 +83,10 @@ gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/si
 namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-gomc_steps_equilb_design_ensemble = 30 * 10**4 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
 precal_eq_gomc_steps =  5 * 10**3 # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**7 # set value for paper = 50 * 10**6
+gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
@@ -1145,6 +1145,7 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
+@Project.pre(lambda *jobs: any(part_4b_job_gomc_winning_alpha(j) for j in jobs[0]._project))
 @Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
      part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
@@ -1269,7 +1270,7 @@ def part_4b_append_done(job):
 @flow.with_job
 def part_4b_job_gomc_winning_alpha(job):
     try:
-        return job.doc.winning_alpha or job.sp.electrostatic_method == "Ewald"
+        return job.doc.winning_alpha
     except:
         return False
 
@@ -1957,10 +1958,10 @@ def build_psf_pdb_ff_gomc_conf(job):
             }
         )
 
+    job.doc.winning_alpha = job.sp.electrostatic_method == "Ewald"
+
     if (job.sp.wolf_model != "Results"):
         return
-
-
     # generate the namd file
     # NOTE: the production and melt temps are converted to intergers so they can be ramped down
     # from hot to cool to equilibrate the system.
