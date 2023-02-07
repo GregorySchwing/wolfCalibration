@@ -925,17 +925,15 @@ def part_4b_job_gomc_sseq_completed_properly(job):
 @flow.with_job
 def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the wolf_sanity simulation is finished (set temperature)."""
-    if (job.sp.electrostatic_method == "Wolf" and job.sp.wolf_model == "Results"):
-        try:
-            return job.doc.append_done
-        except:
-            return False
     try: 
-        output_name_control_file_name = "wolf_sanity"
-        return gomc_sim_completed_properly(
-            job,
-            output_name_control_file_name,
-        )
+        if (job.doc.winning_alpha):
+            output_name_control_file_name = "wolf_sanity"
+            return gomc_sim_completed_properly(
+                job,
+                output_name_control_file_name,
+            )
+        else:
+            return False
     except:
         return False
 
@@ -959,7 +957,9 @@ def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
          "walltime": walltime_gomc_analysis_hr,
      }
 )
-@Project.pre(part_4b_job_gomc_wolf_sanity_completed_properly)
+@Project.pre(mosdef_input_written)
+@Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
+     part_4b_job_gomc_wolf_sanity_completed_properly(j) for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_individual_simulation_averages_completed)
 @flow.with_job
 def part_4b_wolf_sanity_individual_simulation_averages(job):
@@ -1145,7 +1145,7 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
-@Project.pre(lambda *jobs: any(part_4b_job_gomc_winning_alpha(j) for j in jobs[0]._project))
+@Project.pre(mosdef_input_written)
 @Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
      part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
@@ -1958,7 +1958,7 @@ def build_psf_pdb_ff_gomc_conf(job):
             }
         )
 
-    job.doc.winning_alpha = job.sp.electrostatic_method == "Ewald"
+    job.doc.winning_alpha = job.sp.electrostatic_method == "Ewald" and job.sp.wolf_model == "Results"
 
     if (job.sp.wolf_model != "Results"):
         return
