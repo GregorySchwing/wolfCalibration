@@ -853,12 +853,12 @@ def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
             curr = pd.DataFrame()
             prev = pd.DataFrame()
             if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b))):
-                curr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None, names=cols)
+                curr = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number, b)), delim_whitespace=True, header=None)
             else:
                 return False
             if (job.doc.calibration_iteration_number != 0):
                 if (job.isfile("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b))):
-                    prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None, names=cols)
+                    prev = pd.read_csv (job.fn("wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(job.doc.calibration_iteration_number-1, b)), delim_whitespace=True, header=None)
                 else:
                     return False
 
@@ -1359,9 +1359,9 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                             print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
                             shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
                             append_default_wolf_parameters_line(ref_job,file)
-                job.ref_job.winning_alpha = True
+                ref_job.doc.winning_alpha = True
             else:
-                job.ref_job.winning_alpha = False
+                ref_job.doc.winning_alpha = False
     job.doc.append_done = True
         
 
@@ -1374,21 +1374,20 @@ def part_4b_job_gomc_append_wolf_parameters(job):
 def part_4b_job_gomc_equilb_design_ensemble_completed_properly(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     try:
+        statesDone = True
         for initial_state_i in list(job.doc.InitialState_list):
             try:
                 filename_4b_iter = job.doc.gomc_equilb_design_ensemble_dict[
                     str(initial_state_i)
                 ]["output_name_control_file_name"]
 
-                if gomc_sim_completed_properly(
+                statesDone = statesDone and gomc_sim_completed_properly(
                     job,
                     filename_4b_iter,
-                ) is False:
-                    #print("gomc_equilb_design_ensemble incomplete state " +  str(initial_state_i) + " " + job.fn(""))
-                    return False
+                )
             except:
                 return False
-        return True
+        return statesDone
     except:
         return False
 
@@ -1396,28 +1395,23 @@ def part_4b_job_gomc_equilb_design_ensemble_completed_properly(job):
 @Project.label
 @flow.with_job
 def part_4c_job_production_run_completed_properly(job):
-    """Check to see if the gomc production run simulation was completed properly (set temperature)."""
+
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     try:
+        statesDone = True
         for initial_state_i in list(job.doc.InitialState_list):
             try:
-                filename_4c_iter = job.doc.gomc_production_run_ensemble_dict[
+                filename_4b_iter = job.doc.gomc_production_run_ensemble_dict[
                     str(initial_state_i)
                 ]["output_name_control_file_name"]
-                if gomc_sim_completed_properly(
+
+                statesDone = statesDone and gomc_sim_completed_properly(
                     job,
-                    filename_4c_iter,
-                ) is False:
-                    #print("Isn't finished ",filename_4c_iter)
-                    return False
-
-                # check specifically for the FE files
-                if job.isfile(f'Free_Energy_BOX_0_{filename_4c_iter}.dat') is False:
-                    #print("Isn't finished ",f'Free_Energy_BOX_0_{filename_4c_iter}.dat')
-                    return False
-
+                    filename_4b_iter,
+                )
             except:
                 return False
-        return True
+        return statesDone
     except:
         return False
 
@@ -3281,7 +3275,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
 for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-    @Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
+    #@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
 
     @Project.post(part_4c_job_production_run_completed_properly)
     @Project.operation.with_directives(
@@ -3334,8 +3328,6 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 @flow.with_job
 def part_5a_preliminary_analysis_individual_simulation_averages(job):
 
- 
-
     output_column_temp_title = 'temp_K'  # column title title for temp
     output_column_solute_title = 'solute'  # column title title for temp
     output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
@@ -3351,26 +3343,10 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
     k_b = 1.9872036E-3  # kcal/mol/K
     temperature = job.sp.production_temperature_K
     k_b_T = temperature * k_b
-    dict_of_states = {}
     for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
         reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
                                         f'initial_state_{initial_state_iter}.dat'
         files.append(reading_filename_box_0_iter)
-        blk_file = f'Blk_{gomc_equilb_design_ensemble_control_file_name_str}_' \
-                    f'initial_state_{initial_state_iter}_BOX_0.dat'
-        energies = []
-        with open(blk_file, 'r', encoding='utf8') as f:
-            for line in f:
-                #print('\n'.join(line.split()[1] for line in f))
-                try:
-                    energies.append(float(line.split()[1]))
-                except:
-                    print("An exception occurred") 
-        energies_np = np.array(energies)
-        print(energies_np.mean())
-        dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
-    df = pd.DataFrame.from_dict(dict_of_states)
-    df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
 
     #All samples
     # for TI estimator
@@ -3393,9 +3369,11 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
                 output_column_dFE_BAR_title,output_column_dFE_BAR_std_title]
 
     allData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    
-    allDataDF = pd.DataFrame(allData, cols=cols)
-
+    allDataDF = pd.DataFrame(np.array(allData).reshape(-1,len(allData)))
+    allDataDF.columns = cols    #allDataDF.columns = cols
+    print(allDataDF)
+    allDataDF.to_csv(preliminary_output_replicate_txt_file_name_box_0, header=True, index=False, sep=',')
+    """
     from pymbar import timeseries
     nskip = 100
     # Read the data for TI estimator and BAR or MBAR estimators.
@@ -3432,8 +3410,10 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
     delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
 
     deCorrData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    deCorrDataDF = pd.DataFrame(deCorrData, cols=cols)
-
+    deCorrDataDF = pd.DataFrame(np.array(deCorrData).reshape(-1,len(deCorrData)))
+    deCorrDataDF.columns = cols
+    print(deCorrDataDF)
+    """
 
 # ******************************************************
 # ******************************************************
@@ -3469,26 +3449,10 @@ def part_5a_analysis_individual_simulation_averages(job):
     k_b = 1.9872036E-3  # kcal/mol/K
     temperature = job.sp.production_temperature_K
     k_b_T = temperature * k_b
-    dict_of_states = {}
     for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
         reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_production_control_file_name_str}_' \
                                         f'initial_state_{initial_state_iter}.dat'
         files.append(reading_filename_box_0_iter)
-        blk_file = f'Blk_{gomc_production_control_file_name_str}_' \
-                    f'initial_state_{initial_state_iter}_BOX_0.dat'
-        energies = []
-        with open(blk_file, 'r', encoding='utf8') as f:
-            for line in f:
-                #print('\n'.join(line.split()[1] for line in f))
-                try:
-                    energies.append(float(line.split()[1]))
-                except:
-                    print("An exception occurred") 
-        energies_np = np.array(energies)
-        print(energies_np.mean())
-        dict_of_states[f'state_{initial_state_iter}'] = [energies_np.mean()]
-    df = pd.DataFrame.from_dict(dict_of_states)
-    df.to_csv('state_eq_blk_averages_{}.csv'.format(job.id))
 
     #All samples
     # for TI estimator
@@ -3511,9 +3475,11 @@ def part_5a_analysis_individual_simulation_averages(job):
                 output_column_dFE_BAR_title,output_column_dFE_BAR_std_title]
 
     allData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    
-    allDataDF = pd.DataFrame(allData, cols=cols)
-
+    allDataDF = pd.DataFrame(np.array(allData).reshape(-1,len(allData)))
+    allDataDF.columns = cols    #allDataDF.columns = cols
+    print(allDataDF)
+    allDataDF.to_csv(output_replicate_txt_file_name_box_0, header=True, index=False, sep=',')
+    """
     from pymbar import timeseries
     nskip = 100
     # Read the data for TI estimator and BAR or MBAR estimators.
@@ -3550,8 +3516,10 @@ def part_5a_analysis_individual_simulation_averages(job):
     delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
 
     deCorrData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    deCorrDataDF = pd.DataFrame(deCorrData, cols=cols)
-
+    deCorrDataDF = pd.DataFrame(np.array(deCorrData).reshape(-1,len(deCorrData)))
+    deCorrDataDF.columns = cols
+    print(deCorrDataDF)
+    """
 
 
 # ******************************************************
