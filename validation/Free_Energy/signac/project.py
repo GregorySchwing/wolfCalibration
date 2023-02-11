@@ -2823,25 +2823,47 @@ def run_sseq_run_gomc_command(job):
 )
 @flow.with_job
 def average_sseq_electrostatic_energy(job):
-    Single_state_gomc_eq_control_file_name = "single_state_eq"
-
-    blk_files = []
-    blk_file = f'Blk_{Single_state_gomc_eq_control_file_name}_BOX_0.dat'
+    import re
+    EnRegex = re.compile("ENER_0")
+    
+    blk_file = f'out_single_state_eq.dat'
+    steps = []
     energies = []
+    densities = []
     with open(blk_file, 'r', encoding='utf8') as f:
         for line in f:
-            try:
-                energies.append(float(line.split()[6]))
-            except:
-                print("An exception occurred") 
+            if EnRegex.match(line):
+                try:
+                    steps.append(float(line.split()[1]))
+                    #energies.append(float(line.split()[2]))
+                    # Use Total_Elec to avoid underreporting error.
+                    energies.append(float(line.split()[7]))
+
+                except:
+                    print(line)
+                    print("An exception occurred") 
+    nskip = 20
+    steps_np = np.array(steps)
     energies_np = np.array(energies)
-    print(energies_np.mean())
-    dict_of_energy_mean = {"EWALD_MEAN":energies_np.mean()}
+    from pymbar import timeseries
+    t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
+    A_t_equil = energies_np[t0:]
+    A_t_equil_steps = steps_np[t0:]
+
+    dict_of_equilibrated_energies = {}
+    dict_of_equilibrated_energies_stats = {}
+
+    dict_of_equilibrated_energies["steps"] = A_t_equil_steps
+    dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
+
+    dict_of_energy_mean = {"EWALD_MEAN":A_t_equil.mean()}
     print(dict_of_energy_mean)
-    d = {'EWALD_MEAN': [energies_np.mean()]}
+    d = {'EWALD_MEAN': [A_t_equil.mean()]}
     df = pd.DataFrame(data=d)
     #df = pd.DataFrame.from_dict(dict_of_energy_mean)
     df.to_csv("ewald_average.csv", header=True)
+
+
 
     
 
@@ -2942,6 +2964,8 @@ def run_calibration_run_gomc_command(job):
 #@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
                                for j in jobs[0]._project))
+@Project.pre(lambda *jobs: all(part_4b_job_gomc_sseq_average_obtained(j)
+                               for j in jobs[0]._project))
 #@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_needs_to_be_checked(j)
 #                               for j in jobs[0]._project))
 @Project.post(part_4b_wrote_alpha_csv)
@@ -2973,19 +2997,43 @@ def write_replicate_alpha_csv(job):
 
                     control_file_name = "wolf_calibration"
 
-                    blk_file = f'Blk_{control_file_name}_BOX_0.dat'
+                    output_file = f'out_{control_file_name}.dat'
+
+                    import re
+                    EnRegex = re.compile("ENER_0")
+                    
+                    steps = []
                     energies = []
-                    with open(ewald_job.fn(blk_file), 'r', encoding='utf8') as f:
+                    densities = []
+                    with open(ewald_job.fn(output_file), 'r', encoding='utf8') as f:
                         for line in f:
-                            try:
-                                energies.append(float(line.split()[6]))
-                            except:
-                                print("An exception occurred") 
+                            if EnRegex.match(line):
+                                try:
+                                    steps.append(float(line.split()[1]))
+                                    #energies.append(float(line.split()[2]))
+                                    # Use Total_Elec to avoid underreporting error.
+                                    energies.append(float(line.split()[7]))
+
+                                except:
+                                    print(line)
+                                    print("An exception occurred") 
+                    nskip = 1
+                    steps_np = np.array(steps)
                     energies_np = np.array(energies)
-                    print(energies_np.mean())
+                    from pymbar import timeseries
+                    t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
+                    A_t_equil = energies_np[t0:]
+                    A_t_equil_steps = steps_np[t0:]
+
+                    dict_of_equilibrated_energies = {}
+                    dict_of_equilibrated_energies_stats = {}
+
+                    dict_of_equilibrated_energies["steps"] = A_t_equil_steps
+                    dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
+
 
                     data = {'WOLF_KIND' : ewald_job.sp.wolf_model, 'COUL_KIND' : ewald_job.sp.wolf_potential,\
-                         'ALPHA' : ewald_job.sp.alpha, 'MEAN_REL_ERR' : (energies_np.mean()-ew_mean)/ew_mean}
+                         'ALPHA' : ewald_job.sp.alpha, 'MEAN_REL_ERR' : (A_t_equil.mean()-ew_mean)/ew_mean}
                     curr = pd.DataFrame(data, index=[0])  # the `index` argument is important 
                     master = master.append(curr, ignore_index=True)
                     # Make this job eligibile for the next cal run
