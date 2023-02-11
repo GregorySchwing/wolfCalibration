@@ -812,14 +812,22 @@ def part_4b_wrote_alpha_csv(job):
     """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
     #This will cause Ewald sims to wait for Wolf calibration to complete.
     try:
-        if (job.sp.wolf_model == "Results" and job.sp.electrostatic_method == "Wolf"):
-            return job.doc.wrote_alpha_csv
-        else:
-            return True
+        return job.isfile(job.doc.path_to_wolf_results_my_repl_dir+"full_calibration_replica_{}_BOX_{}.csv".format(job.doc.replica_number_int, 0))
     except:
         return False
 
 
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_sseq_average_obtained(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    try: 
+        return job.isfile(job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv")
+    except:
+        return False
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.label
@@ -2799,6 +2807,44 @@ def run_sseq_run_gomc_command(job):
     print('gomc gomc_sseq_run_ensemble run_command = ' + str(run_command))
     return run_command
 
+@Project.pre(lambda j: j.sp.electrostatic_method == "Ewald")
+@Project.pre(lambda j: j.sp.wolf_model == "Results")
+@Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
+@Project.pre(mosdef_input_written)
+@Project.pre(part_4b_job_gomc_sseq_completed_properly)
+@Project.post(part_4b_job_gomc_sseq_average_obtained)
+@Project.operation.with_directives(
+    {
+        "np": lambda job: job.doc.gomc_ncpu,
+        "ngpu": lambda job: job.doc.gomc_ngpu,
+        "memory": memory_needed,
+        "walltime": walltime_gomc_equilbrium_hr,
+    }
+)
+@flow.with_job
+def average_sseq_electrostatic_energy(job):
+    Single_state_gomc_eq_control_file_name = "single_state_eq"
+
+    blk_files = []
+    blk_file = f'Blk_{Single_state_gomc_eq_control_file_name}_BOX_0.dat'
+    energies = []
+    with open(blk_file, 'r', encoding='utf8') as f:
+        for line in f:
+            try:
+                energies.append(float(line.split()[6]))
+            except:
+                print("An exception occurred") 
+    energies_np = np.array(energies)
+    print(energies_np.mean())
+    dict_of_energy_mean = {"EWALD_MEAN":energies_np.mean()}
+    print(dict_of_energy_mean)
+    d = {'EWALD_MEAN': [energies_np.mean()]}
+    df = pd.DataFrame(data=d)
+    #df = pd.DataFrame.from_dict(dict_of_energy_mean)
+    df.to_csv("ewald_average.csv", header=True)
+
+    
+
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
@@ -2831,6 +2877,7 @@ def run_wolf_sanity_run_gomc_command(job):
     print('gomc gomc_wolf_sanity_run run_command = ' + str(run_command))
 
     return run_command
+
 
 # ******************************************************
 # ******************************************************
@@ -2909,28 +2956,41 @@ def run_calibration_run_gomc_command(job):
 @flow.with_job
 def write_replicate_alpha_csv(job):
     try:
+        ew_ref = pd.read_csv (job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv", header=0)
+        ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
+        print("Ew mean", ew_mean)
         jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute}))
         try:
             NUMBOXES = 1
             for b in range (NUMBOXES):
                 master = pd.DataFrame()
-
+                columnLabels = ["WOLF_KIND","COUL_KIND","ALPHA","MEAN_REL_ERR"]
                 cols = ["MODEL", "POT", "ALPHA"]
                 colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
                 for ewald_job in jobs:
                     if (ewald_job.sp.wolf_model == "Results"):
                         continue
-                    curr = pd.DataFrame()
-                    prev = pd.DataFrame()
-                    if (ewald_job.isfile("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b))):
-                        curr = pd.read_csv (ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration.csv".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b)), sep=",", header=0)
-                    else:
-                        print(ewald_job.fn("Wolf_Calibration_{}_{}_BOX_{}_wolf_calibration.csv DNE: converged".format(ewald_job.sp.wolf_model, ewald_job.sp.wolf_potential, b)))
-                        #return False
+
+                    control_file_name = "wolf_calibration"
+
+                    blk_file = f'Blk_{control_file_name}_BOX_0.dat'
+                    energies = []
+                    with open(ewald_job.fn(blk_file), 'r', encoding='utf8') as f:
+                        for line in f:
+                            try:
+                                energies.append(float(line.split()[6]))
+                            except:
+                                print("An exception occurred") 
+                    energies_np = np.array(energies)
+                    print(energies_np.mean())
+
+                    data = {'WOLF_KIND' : ewald_job.sp.wolf_model, 'COUL_KIND' : ewald_job.sp.wolf_potential,\
+                         'ALPHA' : ewald_job.sp.alpha, 'MEAN_REL_ERR' : (energies_np.mean()-ew_mean)/ew_mean}
+                    curr = pd.DataFrame(data, index=[0])  # the `index` argument is important 
                     master = master.append(curr, ignore_index=True)
                     # Make this job eligibile for the next cal run
                     job.doc.check_convergence = True
-                    master = master.sort_values(['WOLF_KIND', 'COUL_KIND'],ascending = [True, False])
+                    #master = master.sort_values(['WOLF_KIND', 'COUL_KIND'],ascending = [True, False])
                 master = master.sort_values(['WOLF_KIND', 'COUL_KIND', 'ALPHA'],ascending = [True, False, True])
                 master.to_csv('full_calibration_replica_{}_BOX_{}.csv'.format(job.doc.replica_number_int, b), header=True, index=False, sep=',')
 
@@ -2940,7 +3000,6 @@ def write_replicate_alpha_csv(job):
                 print(curr.columns)
                 prev = pd.DataFrame()
                 curr.to_csv('best_alphas_replica_{}_BOX_{}.csv'.format(job.doc.replica_number_int, b), header=True, index=False, sep=',')
-            job.doc.wrote_alpha_csv = True
         except:
             print(repr(e))
             return False
