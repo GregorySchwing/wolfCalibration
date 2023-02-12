@@ -79,23 +79,23 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
-precal_eq_gomc_steps =  5 * 10**3 # set value for paper = 10 * 10**6
+gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
+precal_eq_gomc_steps =  gomc_steps_equilb_design_ensemble # set value for paper = 10 * 10**6
 
-gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
+gomc_steps_lamda_production = 50 * 10**6 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
-gomc_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 5 * 10**6 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 
 MC_steps = int(gomc_steps_equilb_design_ensemble)
-EqSteps = 1000
-Calibration_MC_steps = 5 * 10**3
-Calibration_MC_Eq_Steps = 1 * 10**3 
-Wolf_Sanity_MC_steps = 1 * 10**4
+EqSteps = 5 * 10**6
+Calibration_MC_steps = 5 * 10**5
+Calibration_MC_Eq_Steps = 5 * 10**4
+Wolf_Sanity_MC_steps = 100 * 10**6 # set value for paper = 50 * 10**6
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -253,13 +253,15 @@ def append_wolf_calibration_parameters(job, filename):
         myfile.write(defPotLine)
         defPotLine = "Wolf\t{freq}\n".format(freq=True)
         myfile.write(defPotLine)
-        defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
-        myfile.write(defPotLine)
+        #defPotLine = "WolfCalibrationFreq\tTrue\t{freq}\n".format(freq=wolfCalFreq)
+        #myfile.write(defPotLine)
+        """
         for box, wolfCutoffLower, wolfCutoffUpper, wolfCutoffInterval, wolfAlphaLower, wolfAlphaUpper, wolfAlphaInterval \
         in zip(WolfCutoffBoxList, WolfCutoffCoulombLowerBoundList, WolfCutoffCoulombUpperBoundList, WolfCutoffCoulombIntervalList, \
         WolfAlphaLowerBoundList, WolfAlphabUpperBoundList, WolfAlphaIntervalList):
            alphaLine = "WolfAlphaRange\t{box}\t{lb}\t{ub}\t{inter}\n".format(box=box, lb=wolfAlphaLower, ub=wolfAlphaUpper, inter=wolfAlphaInterval)
            myfile.write(alphaLine)
+        """
 
 
 def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_file):
@@ -3036,8 +3038,6 @@ def write_replicate_alpha_csv(job):
                          'ALPHA' : ewald_job.sp.alpha, 'MEAN_REL_ERR' : (A_t_equil.mean()-ew_mean)/ew_mean}
                     curr = pd.DataFrame(data, index=[0])  # the `index` argument is important 
                     master = master.append(curr, ignore_index=True)
-                    # Make this job eligibile for the next cal run
-                    job.doc.check_convergence = True
                     #master = master.sort_values(['WOLF_KIND', 'COUL_KIND'],ascending = [True, False])
                 master = master.sort_values(['WOLF_KIND', 'COUL_KIND', 'ALPHA'],ascending = [True, False, True])
                 master.to_csv('full_calibration_replica_{}_BOX_{}.csv'.format(job.doc.replica_number_int, b), header=True, index=False, sep=',')
