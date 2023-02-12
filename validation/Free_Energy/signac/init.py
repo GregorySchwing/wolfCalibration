@@ -19,7 +19,7 @@ solute = ["ETOH"] # ["Ne", "Rn"]
 solvent = ["SPCE"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
-replicas = [0, 1] # [0, 1, 2, 3, 4]
+replicas = [0, 1, 2, 3, 4]
 
 #replicas = [0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
 #replicas = [0]# [0, 1, 2, 3, 4]
@@ -34,7 +34,7 @@ production_temperatures = [298] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 #densities_to_1 = np.arange (0.2, 0.3, 0.1)
 
 #alpha_range = np.arange (0.0, 0.505, 0.005)
-alpha_range = np.arange (0.0, 0.5, 0.1)
+alpha_range = np.arange (0.0, 0.5, 0.005)
 
 # *******************************************
 # the main user varying state points (end)
