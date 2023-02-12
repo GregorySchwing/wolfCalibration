@@ -79,10 +79,11 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
+"""
 gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 precal_eq_gomc_steps =  gomc_steps_equilb_design_ensemble # set value for paper = 10 * 10**6
 
@@ -96,6 +97,21 @@ EqSteps = 5 * 10**6
 Calibration_MC_steps = 5 * 10**5
 Calibration_MC_Eq_Steps = 5 * 10**4
 Wolf_Sanity_MC_steps = 100 * 10**6 # set value for paper = 50 * 10**6
+"""
+# number of simulation steps
+gomc_steps_equilb_design_ensemble = 5 * 10**3 # set value for paper = 10 * 10**6
+precal_eq_gomc_steps =  5 * 10**3 # set value for paper = 10 * 10**6
+
+gomc_steps_lamda_production = 5 * 10**3 # set value for paper = 50 * 10**6
+gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
+gomc_output_data_every_X_steps = 5 * 10**3 # set value for paper = 100 * 10**3
+#gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
+
+MC_steps = int(gomc_steps_equilb_design_ensemble)
+EqSteps = 1000
+Calibration_MC_steps = 5 * 10**3
+Calibration_MC_Eq_Steps = 1 * 10**3 
+Wolf_Sanity_MC_steps = 1 * 10**4
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -340,6 +356,17 @@ def part_1b_under_equilb_design_ensemble_run_limit(job):
             return True
     except:
         return False
+
+
+@Project.label
+@flow.with_job
+def part_4b_append_done(job):
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    try:
+        return job.isfile(job.doc.path_to_wolf_results_repl_0_dir+"append_done.txt")
+    except:
+        return False
+
 
 @Project.label
 def part_1a_initial_data_input_to_json(job):
@@ -1150,8 +1177,7 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
 @Project.pre(mosdef_input_written)
-@Project.pre(lambda *jobs: any(part_4b_job_gomc_winning_alpha(j) and \
-     j.sp.wolf_model != "Results" for j in jobs[0]._project))
+@Project.pre(part_4b_append_done)
 @Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
      part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
@@ -1259,16 +1285,6 @@ def part_4b_wolf_sanity_analysis(job):
 
 
 
-@Project.label
-@flow.with_job
-def part_4b_append_done(job):
-    if (job.sp.electrostatic_method == "Wolf" and job.sp.wolf_model == "Results"):
-        try:
-            return job.doc.append_done
-        except:
-            return False
-    else:
-        return True
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 # For some reason this is failing on all but replica 0..
@@ -1372,6 +1388,9 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                 ref_job.doc.winning_alpha = True
             else:
                 ref_job.doc.winning_alpha = False
+    f = open("append_done.txt", "a")
+    f.write("Now the file has more content!")
+    f.close()
     job.doc.append_done = True
         
 
@@ -3131,6 +3150,7 @@ def get_minimum_alpha_across_replicas(job):
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
 #@Project.pre(lambda j: j.sp.solute == "solvent_box")
 #@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_4b_append_done)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_analysis_completed(j)
                                for j in jobs[0]._project))
 
@@ -3335,7 +3355,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
     @Project.pre(part_4b_wolf_sanity_histograms_created)  
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
-    @Project.pre(part_4b_is_winning_wolf_model_or_ewald)
+    #@Project.pre(part_4b_is_winning_wolf_model_or_ewald)
     #@Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
