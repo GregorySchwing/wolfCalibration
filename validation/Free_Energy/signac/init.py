@@ -35,8 +35,9 @@ production_temperatures = [298] * u.K # [275, 295, 315, 335, 355, 375] * u.K
 #densities_to_1 = np.arange (0.2, 0.3, 0.1)
 
 #alpha_range = np.arange (0.0, 0.505, 0.005)
-#alpha_range = np.arange (0.0, 0.5, 0.1)
-alpha_range = np.linspace(0.0, 0.5, num=101)
+alpha_range = np.arange (0.0, 0.505, 0.005)
+#alpha_range = np.linspace(0.0, 0.5, num=101)
+print(alpha_range)
 # *******************************************
 # the main user varying state points (end)
 # *******************************************
@@ -72,7 +73,7 @@ for replica_i in replicas:
                                             "forcefield": ff_i,
                                             "wolf_model": wolfM,
                                             "wolf_potential": wolfP,
-                                            "alpha": alpha,
+                                            "alpha": np.round(alpha, 3),
                                             "production_temperature_K": np.round(prod_temp_i.to_value("K"), 4),
                                             "electrostatic_method": e_method,
                                         }
