@@ -83,7 +83,7 @@ gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/si
 namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-#"""
+"""
 gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 precal_eq_gomc_steps =  gomc_steps_equilb_design_ensemble # set value for paper = 10 * 10**6
 
@@ -112,7 +112,7 @@ EqSteps = 1000
 Calibration_MC_steps = 5 * 10**3
 Calibration_MC_Eq_Steps = 1 * 10**3 
 Wolf_Sanity_MC_steps = 1 * 10**4
-"""
+###"""
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -1189,7 +1189,7 @@ def part_4b_wolf_sanity_analysis(job):
     df5 = pd.DataFrame()
 
     # All different wolf models and ewald within a replicas
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "solute": job.sp.solute}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "solute": job.sp.solute, "solvent": job.sp.solvent}))
     print(jobs)
     for other_job in jobs:
             if (other_job.sp.electrostatic_method == "Wolf" and \
@@ -1361,7 +1361,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         print(row)
         jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
             "wolf_model": row['WOLF_KIND'], \
-            "wolf_potential" : row['COUL_KIND']}))
+            "wolf_potential" : row['COUL_KIND'], "solvent": job.sp.solvent}))
         for ref_job in jobs:
             if (ref_job.sp.alpha == row['ALPHA']):
                 print(ref_job.fn(""))
@@ -1707,7 +1707,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     # Get prefix to namd runs.
     namd_output_prefix = ""
-    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results"}))
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "solvent": job.sp.solvent}))
 
     for ref_job in jobs:
         namd_output_prefix = ref_job.fn("")
@@ -1793,7 +1793,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     )
 
 
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results"}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "solvent": job.sp.solvent}))
     for ref_job in jobs:
         #if (ref_job.isfile(f"{Coordinates_box_0}")):
         job.doc.path_to_gomc_sseq_dir =  ref_job.fn("")
@@ -1810,24 +1810,24 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
 
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results"}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results", "solvent": job.sp.solvent}))
     for ref_job in jobs:
         #if (ref_job.isfile(f"{Coordinates_box_0}")):
         job.doc.path_to_wolf_template_dir =  ref_job.fn("")
 
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent}))
     for results_job in jobs:
         job.doc.path_to_ew_results_my_repl_dir =  results_job.fn("")
 
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent}))
     for results_job in jobs:
         job.doc.path_to_wolf_results_my_repl_dir =  results_job.fn("")
 
-    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent}))
     for results_job in jobs:
         job.doc.path_to_ew_results_repl_0_dir =  results_job.fn("")
 
-    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results"}))
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent}))
     for results_job in jobs:
         job.doc.path_to_wolf_results_repl_0_dir =  results_job.fn("")
 
@@ -2598,7 +2598,7 @@ def write_replicate_alpha_csv(job):
         ew_ref = pd.read_csv (job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv", header=0)
         ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
         print("Ew mean", ew_mean)
-        jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute}))
+        jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "solvent": job.sp.solvent}))
         try:
             NUMBOXES = 1
             for b in range (NUMBOXES):
@@ -2692,7 +2692,7 @@ def write_replicate_alpha_csv(job):
 def get_minimum_alpha_across_replicas(job):
     try:
         jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute,\
-            "wolf_potential": job.sp.wolf_potential,"wolf_model": job.sp.wolf_model,}))
+            "wolf_potential": job.sp.wolf_potential,"wolf_model": job.sp.wolf_model, "solvent": job.sp.solvent}))
         try:
             master = pd.DataFrame()
             NUMBOXES = 1
@@ -2762,7 +2762,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     df1 = pd.DataFrame()
     df_equilibrated_all = pd.DataFrame()
 
-    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Results", "wolf_potential": "Results"}))
+    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Results", "wolf_potential": "Results", "solvent": job.sp.solvent}))
     print(jobs)
     try:
         for ewald_job in jobs:
@@ -2942,561 +2942,6 @@ def part_4b_create_wolf_sanity_histograms(job):
     job.doc.winningWolfPotential = (statistics.columns[1]).split("_")[1]
     print(statistics)
 
-for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
-    
-    @Project.pre(part_4a_job_namd_equilb_NPT_completed_properly)
-    @Project.pre(part_4b_job_gomc_sseq_completed_properly)
-    @Project.pre(part_4b_job_gomc_wolf_parameters_appended) 
-    @Project.pre(part_4b_wolf_sanity_histograms_created)  
-    @Project.pre(part_4b_wolf_sanity_analysis_completed)  
-    #@Project.pre(part_4b_is_winning_wolf_model_or_ewald)
-    #@Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
-    @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-    @Project.operation.with_directives(
-        {
-            "np": lambda job: job.doc.gomc_ncpu,
-            "ngpu": lambda job: job.doc.gomc_ngpu,
-            "memory": memory_needed,
-            "walltime": walltime_gomc_equilbrium_hr,
-        },
-        name = f"gomc_equilb_design_ensemble_initial_state_{initial_state_j}"
-    )
-    @flow.with_job
-    @flow.cmd
-    def run_equilb_run_gomc_command(job, *, initial_state_j=initial_state_j):
-        """Run the gomc_equilb_run_ensemble simulation."""
-        control_file_name_str = job.doc.gomc_equilb_design_ensemble_dict[
-            str(initial_state_j)
-        ]["output_name_control_file_name"]
-
-        print(f"Running simulation job id {job}")
-        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-            str(gomc_binary_path),
-            str(job.doc.gomc_equilb_design_ensemble_gomc_binary_file),
-            str(job.doc.gomc_ncpu),
-            str(control_file_name_str),
-            str(control_file_name_str),
-        )
-
-        print('gomc equilbrium_run run_command = ' + str(run_command))
-
-        return run_command
-# *****************************************
-# ******************************************************
-# equilb NPT - starting the GOMC simulation (end)
-# ******************************************************
-# ******************************************************
-
-
-# ******************************************************
-# ******************************************************
-# production run - starting the GOMC simulation (start)
-# ******************************************************
-# ******************************************************
-for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
-    @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-    @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-    #@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-
-    @Project.post(part_4c_job_production_run_completed_properly)
-    @Project.operation.with_directives(
-        {
-            "np": lambda job: job.doc.gomc_ncpu,
-            "ngpu": lambda job: job.doc.gomc_ngpu,
-            "memory": memory_needed,
-            "walltime": walltime_gomc_production_hr,
-        },
-        name = f"gomc_production_ensemble_initial_state_{initial_state_i}"
-    )
-    @flow.with_job
-    @flow.cmd
-    def run_production_run_gomc_command(job, *, initial_state_i=initial_state_i):
-        """Run the gomc_production_ensemble simulation."""
-
-        control_file_name_str = job.doc.gomc_production_run_ensemble_dict[
-            str(initial_state_i)
-        ]["output_name_control_file_name"]
-
-        print(f"Running simulation job id {job}")
-        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-            str(gomc_binary_path),
-            str(job.doc.gomc_production_ensemble_gomc_binary_file),
-            str(job.doc.gomc_ncpu),
-            str(control_file_name_str),
-            str(control_file_name_str),
-        )
-
-        print('gomc production run_command = ' + str(run_command))
-
-        return run_command
-
-# ******************************************************
-# ******************************************************
-# production run - starting the GOMC simulation (end)
-# ******************************************************
-# ******************************************************
-
-@Project.operation.with_directives(
-     {
-         "np": 1,
-         "ngpu": 0,
-         "memory": memory_needed,
-         "walltime": walltime_gomc_analysis_hr,
-     }
-)
-@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-@Project.post(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-@flow.with_job
-def part_5a_preliminary_analysis_individual_simulation_averages(job):
-
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
-
-
-    files = []
-    blk_files = []
-    k_b = 1.9872036E-3  # kcal/mol/K
-    temperature = job.sp.production_temperature_K
-    k_b_T = temperature * k_b
-    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
-        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_equilb_design_ensemble_control_file_name_str}_' \
-                                        f'initial_state_{initial_state_iter}.dat'
-        files.append(reading_filename_box_0_iter)
-
-    #All samples
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-
-    cols = [output_column_temp_title,output_column_solute_title, output_column_dFE_MBAR_title, \
-                output_column_dFE_MBAR_std_title, output_column_dFE_TI_title, output_column_dFE_TI_std_title, \
-                output_column_dFE_BAR_title,output_column_dFE_BAR_std_title]
-
-    allData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    allDataDF = pd.DataFrame(np.array(allData).reshape(-1,len(allData)))
-    allDataDF.columns = cols    #allDataDF.columns = cols
-    print(allDataDF)
-    allDataDF.to_csv(preliminary_output_replicate_txt_file_name_box_0, header=True, index=False, sep=',')
-    """
-    from pymbar import timeseries
-    nskip = 100
-    # Read the data for TI estimator and BAR or MBAR estimators.
-    list_data_TI = []
-    list_data_BAR = []
-    for f in files:
-        dHdl = extract_dHdl(f, T=temperature)
-        u_nkr = extract_u_nk(f, T=temperature)
-        #Detect uncorrelated samples using VDW+Coulomb term in derivative 
-        # of energy time series (calculated for TI)
-        srs = dHdl['VDW'] + dHdl['Coulomb'] 
-        t0, g, Neff_max = timeseries.detectEquilibration(srs, nskip=nskip) # compute indices of uncorrelated timeseries
-        A_t_equil = srs[t0:]
-        list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
-        list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
-
-    # Correlated samples
-    #for TI estimator
-    print("Working on TI method ...")
-    dHdl = pd.concat([ld for ld in list_data_TI])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    #for MBAR estimator
-    print("Working on MBAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    #for BAR estimator
-    print("Working on BAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    deCorrData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    deCorrDataDF = pd.DataFrame(np.array(deCorrData).reshape(-1,len(deCorrData)))
-    deCorrDataDF.columns = cols
-    print(deCorrDataDF)
-    """
-
-# ******************************************************
-# ******************************************************
-# data analysis - get the average data from each individual simulation (start)
-# ******************************************************
-# ******************************************************
-
-@Project.operation.with_directives(
-     {
-         "np": 1,
-         "ngpu": 0,
-         "memory": memory_needed,
-         "walltime": walltime_gomc_analysis_hr,
-     }
-)
-@Project.pre(part_4c_job_production_run_completed_properly)
-@Project.post(part_5a_analysis_individual_simulation_averages_completed)
-@flow.with_job
-def part_5a_analysis_individual_simulation_averages(job):
-
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
-
-
-    files = []
-    blk_files = []
-    k_b = 1.9872036E-3  # kcal/mol/K
-    temperature = job.sp.production_temperature_K
-    k_b_T = temperature * k_b
-    for initial_state_iter in range(0, number_of_lambda_spacing_including_zero_int):
-        reading_filename_box_0_iter = f'Free_Energy_BOX_0_{gomc_production_control_file_name_str}_' \
-                                        f'initial_state_{initial_state_iter}.dat'
-        files.append(reading_filename_box_0_iter)
-
-    #All samples
-    # for TI estimator
-    dHdl = pd.concat([extract_dHdl(job.fn(f), T=temperature) for f in files])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    # for MBAR estimator
-    u_nk = pd.concat([extract_u_nk(job.fn(f), T=temperature) for f in files])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    # for BAR estimator
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-
-    cols = [output_column_temp_title,output_column_solute_title, output_column_dFE_MBAR_title, \
-                output_column_dFE_MBAR_std_title, output_column_dFE_TI_title, output_column_dFE_TI_std_title, \
-                output_column_dFE_BAR_title,output_column_dFE_BAR_std_title]
-
-    allData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    allDataDF = pd.DataFrame(np.array(allData).reshape(-1,len(allData)))
-    allDataDF.columns = cols    #allDataDF.columns = cols
-    print(allDataDF)
-    allDataDF.to_csv(output_replicate_txt_file_name_box_0, header=True, index=False, sep=',')
-    """
-    from pymbar import timeseries
-    nskip = 100
-    # Read the data for TI estimator and BAR or MBAR estimators.
-    list_data_TI = []
-    list_data_BAR = []
-    for f in files:
-        dHdl = extract_dHdl(f, T=temperature)
-        u_nkr = extract_u_nk(f, T=temperature)
-        #Detect uncorrelated samples using VDW+Coulomb term in derivative 
-        # of energy time series (calculated for TI)
-        srs = dHdl['VDW'] + dHdl['Coulomb'] 
-        t0, g, Neff_max = timeseries.detectEquilibration(srs, nskip=nskip) # compute indices of uncorrelated timeseries
-        A_t_equil = srs[t0:]
-        list_data_TI.append(ss.statistical_inefficiency(dHdl, series=srs, conservative=False))
-        list_data_BAR.append(ss.statistical_inefficiency(u_nkr, series=srs, conservative=False))
-
-    # Correlated samples
-    #for TI estimator
-    print("Working on TI method ...")
-    dHdl = pd.concat([ld for ld in list_data_TI])
-    ti = TI().fit(dHdl)
-    delta_ti, delta_std_ti = get_delta_TI_or_MBAR(ti, k_b_T)
-
-    #for MBAR estimator
-    print("Working on MBAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    mbar = MBAR().fit(u_nk)
-    delta_mbar, delta_std_mbar = get_delta_TI_or_MBAR(mbar, k_b_T)
-
-    #for BAR estimator
-    print("Working on BAR method ...")
-    u_nk = pd.concat([ld for ld in list_data_BAR])
-    bar = BAR().fit(u_nk)
-    delta_bar, delta_std_bar = get_delta_BAR(bar, k_b_T)
-
-    deCorrData = [job.sp.production_temperature_K,job.sp.solute,delta_mbar,delta_std_mbar,delta_ti,delta_std_ti,delta_bar,delta_std_bar]
-    deCorrDataDF = pd.DataFrame(np.array(deCorrData).reshape(-1,len(deCorrData)))
-    deCorrDataDF.columns = cols
-    print(deCorrDataDF)
-    """
-
-
-# ******************************************************
-# ******************************************************
-# data analysis - get the average data from each individual simulation (end)
-# ******************************************************
-# ******************************************************
-
-
-# ******************************************************
-# ******************************************************
-# data analysis - get the average and std. dev. from/across all the replicates (start)
-# ******************************************************
-# ******************************************************
-
-#@aggregator.groupby(key=statepoint_without_replica,
-#                    sort_by="production_temperature_K",
-#                    sort_ascending=True
-#)
-#@Project.operation.with_directives(
-#     {
-#         "np": 1,
-#         "ngpu": 0,
-#         "memory": memory_needed,
-#         "walltime": walltime_gomc_analysis_hr,
-#     }
-#)
-
-@Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-@Project.post(part_5b_analysis_replica_averages_completed)
-def part_5b_preliminary_analysis_replica_averages(*jobs):
-    # ***************************************************
-    #  create the required lists and file labels for the replicates (start)
-    # ***************************************************
-    # output and labels
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
-
-    # get the list used in this function
-    temp_repilcate_list = []
-    solute_repilcate_list = []
-
-    delta_MBAR_repilcate_box_0_list = []
-    delta_TI_repilcate_box_0_list = []
-    delta_BAR_repilcate_box_0_list = []
-
-
-    output_txt_file_header = f"{output_column_temp_title: <30} " \
-                             f"{output_column_temp_std_title: <30} " \
-                             f"{output_column_solute_title: <30} "\
-                             f"{output_column_dFE_MBAR_title: <30} "\
-                             f"{output_column_dFE_MBAR_std_title: <30} "\
-                             f"{output_column_dFE_TI_title: <3    0} "\
-                             f"{output_column_dFE_TI_std_title: <30} "\
-                             f"{output_column_dFE_BAR_title: <30} "\
-                             f"{output_column_dFE_BAR_std_title: <30} "\
-                             f"\n"
-
-
-    write_file_path_and_name_box_0 = f'analysis/{preliminary_output_avg_std_of_replicates_txt_file_name_box_0}'
-    if os.path.isfile(write_file_path_and_name_box_0):
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
-    else:
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "w")
-        box_box_0_data_txt_file.write(output_txt_file_header)
-
-
-    # ***************************************************
-    #  create the required lists and file labels for the replicates (end)
-    # ***************************************************
-
-    for job in jobs:
-
-        # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (start)
-        # *************************
-        reading_file_box_box_0 = job.fn(preliminary_output_replicate_txt_file_name_box_0)
-
-        data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
-        data_box_box_0 = pd.DataFrame(data_box_box_0)
-
-        temp_repilcate_list.append(data_box_box_0.loc[:, output_column_temp_title][0])
-        solute_repilcate_list.append(data_box_box_0.loc[:, output_column_solute_title][0])
-
-        delta_MBAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_MBAR_title][0])
-        delta_TI_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_TI_title][0])
-        delta_BAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_BAR_title][0])
-
-        # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (end)
-        # *************************
-
-
-    # *************************
-    # get the replica means and std.devs (start)
-    # *************************
-    temp_mean = np.mean(temp_repilcate_list)
-    temp_std = np.std(temp_repilcate_list, ddof=1)
-
-    solute_iter = solute_repilcate_list[0]
-
-    delta_MBAR_mean_box_box_0 = np.mean(delta_MBAR_repilcate_box_0_list)
-    delta_TI_mean_box_box_0 = np.mean(delta_TI_repilcate_box_0_list)
-    delta_BAR_mean_box_box_0 = np.mean(delta_BAR_repilcate_box_0_list)
-
-    delta_std_MBAR_mean_box_box_0 = np.std(delta_MBAR_repilcate_box_0_list, ddof=1)
-    delta_std_TI_mean_box_box_0 = np.std(delta_TI_repilcate_box_0_list, ddof=1)
-    delta_std_BAR_mean_box_box_0 = np.std(delta_BAR_repilcate_box_0_list, ddof=1)
-
-    # *************************
-    # get the replica means and std.devs (end)
-    # *************************
-
-    # ************************************
-    # write the analysis data files for the liquid and vapor boxes (start)
-    # ************************************
-
-    box_box_0_data_txt_file.write(
-        f"{temp_mean: <30} "
-        f"{temp_std: <30} "
-        f"{solute_iter: <30} "
-        f"{delta_MBAR_mean_box_box_0: <30} "
-        f"{delta_std_MBAR_mean_box_box_0: <30} "
-        f"{delta_TI_mean_box_box_0: <30} "
-        f"{delta_std_TI_mean_box_box_0: <30} "
-        f"{delta_BAR_mean_box_box_0: <30} "
-        f"{delta_std_BAR_mean_box_box_0: <30} "
-        f" \n"
-    )
-
-    # ************************************
-    # write the analysis data files for the liquid and vapor boxes (end)
-    # ************************************
-
-
-@Project.pre(part_4c_job_production_run_completed_properly)
-@Project.pre(part_5a_analysis_individual_simulation_averages_completed)
-@Project.post(part_5b_analysis_replica_averages_completed)
-def part_5b_analysis_replica_averages(*jobs):
-    # ***************************************************
-    #  create the required lists and file labels for the replicates (start)
-    # ***************************************************
-    # output and labels
-    output_column_temp_title = 'temp_K'  # column title title for temp
-    output_column_temp_std_title = 'temp_std_K'  # column title title for temp
-    output_column_solute_title = 'solute'  # column title title for temp
-    output_column_dFE_MBAR_title = 'dFE_MBAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_MBAR_std_title = 'dFE_MBAR_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_TI_title = 'dFE_TI_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_TI_std_title = 'dFE_TI_std_kcal_per_mol'  # column title title for ds_MBAR
-    output_column_dFE_BAR_title = 'dFE_BAR_kcal_per_mol'  # column title title for delta_MBAR
-    output_column_dFE_BAR_std_title = 'dFE_BAR_std_kcal_per_mol'  # column title title for ds_MBAR
-
-    # get the list used in this function
-    temp_repilcate_list = []
-    solute_repilcate_list = []
-
-    delta_MBAR_repilcate_box_0_list = []
-    delta_TI_repilcate_box_0_list = []
-    delta_BAR_repilcate_box_0_list = []
-
-
-    output_txt_file_header = f"{output_column_temp_title: <30} " \
-                             f"{output_column_temp_std_title: <30} " \
-                             f"{output_column_solute_title: <30} "\
-                             f"{output_column_dFE_MBAR_title: <30} "\
-                             f"{output_column_dFE_MBAR_std_title: <30} "\
-                             f"{output_column_dFE_TI_title: <3    0} "\
-                             f"{output_column_dFE_TI_std_title: <30} "\
-                             f"{output_column_dFE_BAR_title: <30} "\
-                             f"{output_column_dFE_BAR_std_title: <30} "\
-                             f"\n"
-
-
-    write_file_path_and_name_box_0 = f'analysis/{output_avg_std_of_replicates_txt_file_name_box_0}'
-    if os.path.isfile(write_file_path_and_name_box_0):
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "a")
-    else:
-        box_box_0_data_txt_file = open(write_file_path_and_name_box_0, "w")
-        box_box_0_data_txt_file.write(output_txt_file_header)
-
-
-    # ***************************************************
-    #  create the required lists and file labels for the replicates (end)
-    # ***************************************************
-
-    for job in jobs:
-
-        # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (start)
-        # *************************
-        reading_file_box_box_0 = job.fn(output_replicate_txt_file_name_box_0)
-
-        data_box_box_0 = pd.read_csv(reading_file_box_box_0, sep='\s+', header=0, na_values='NaN', index_col=False)
-        data_box_box_0 = pd.DataFrame(data_box_box_0)
-
-        temp_repilcate_list.append(data_box_box_0.loc[:, output_column_temp_title][0])
-        solute_repilcate_list.append(data_box_box_0.loc[:, output_column_solute_title][0])
-
-        delta_MBAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_MBAR_title][0])
-        delta_TI_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_TI_title][0])
-        delta_BAR_repilcate_box_0_list.append(data_box_box_0.loc[:, output_column_dFE_BAR_title][0])
-
-        # *************************
-        # drawing in data from single file and extracting specific rows from box 0 (end)
-        # *************************
-
-
-    # *************************
-    # get the replica means and std.devs (start)
-    # *************************
-    temp_mean = np.mean(temp_repilcate_list)
-    temp_std = np.std(temp_repilcate_list, ddof=1)
-
-    solute_iter = solute_repilcate_list[0]
-
-    delta_MBAR_mean_box_box_0 = np.mean(delta_MBAR_repilcate_box_0_list)
-    delta_TI_mean_box_box_0 = np.mean(delta_TI_repilcate_box_0_list)
-    delta_BAR_mean_box_box_0 = np.mean(delta_BAR_repilcate_box_0_list)
-
-    delta_std_MBAR_mean_box_box_0 = np.std(delta_MBAR_repilcate_box_0_list, ddof=1)
-    delta_std_TI_mean_box_box_0 = np.std(delta_TI_repilcate_box_0_list, ddof=1)
-    delta_std_BAR_mean_box_box_0 = np.std(delta_BAR_repilcate_box_0_list, ddof=1)
-
-    # *************************
-    # get the replica means and std.devs (end)
-    # *************************
-
-    # ************************************
-    # write the analysis data files for the liquid and vapor boxes (start)
-    # ************************************
-
-    box_box_0_data_txt_file.write(
-        f"{temp_mean: <30} "
-        f"{temp_std: <30} "
-        f"{solute_iter: <30} "
-        f"{delta_MBAR_mean_box_box_0: <30} "
-        f"{delta_std_MBAR_mean_box_box_0: <30} "
-        f"{delta_TI_mean_box_box_0: <30} "
-        f"{delta_std_TI_mean_box_box_0: <30} "
-        f"{delta_BAR_mean_box_box_0: <30} "
-        f"{delta_std_BAR_mean_box_box_0: <30} "
-        f" \n"
-    )
-
-    # ************************************
-    # write the analysis data files for the liquid and vapor boxes (end)
-    # ************************************
 
 # ******************************************************
 # ******************************************************
