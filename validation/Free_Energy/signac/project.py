@@ -551,8 +551,8 @@ def initial_parameters(job):
     #job.doc.density = (job.sp.density * g_per_cm3).to(kg_per_m3)
 
     job.doc.namd_node_ncpu = 4
-    job.doc.namd_node_ngpu = 1
-    #job.doc.namd_node_ngpu = 0
+    #job.doc.namd_node_ngpu = 1
+    job.doc.namd_node_ngpu = 0
 
     job.doc.gomc_ncpu = 4  # 1 is optimal but I want data quick.  run time is set for 1 cpu
     #job.doc.gomc_ngpu = 1
@@ -2749,7 +2749,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 @Project.operation.with_directives(
     {
         "np": lambda job: job.doc.namd_node_ncpu,
-        "ngpu": lambda job: job.doc.namd_node_ngpu,
+        "ngpu": lambda job: 0,
         "memory": memory_needed,
         "walltime": walltime_namd_hr,
     }
