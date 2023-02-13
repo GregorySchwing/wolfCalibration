@@ -1190,7 +1190,7 @@ def part_4b_wolf_sanity_analysis(job):
     df5 = pd.DataFrame()
 
     # All different wolf models and ewald within a replicas
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "solute": job.sp.solute, "solvent": job.sp.solvent}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "solute": job.sp.solute, "solvent": job.sp.solvent, "density":job.sp.density}))
     print(jobs)
     for other_job in jobs:
             if (other_job.sp.electrostatic_method == "Wolf" and \
@@ -1362,7 +1362,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         print(row)
         jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
             "wolf_model": row['WOLF_KIND'], \
-            "wolf_potential" : row['COUL_KIND'], "solvent": job.sp.solvent}))
+            "wolf_potential" : row['COUL_KIND'], "solvent": job.sp.solvent, "density":job.sp.density}))
         for ref_job in jobs:
             if (ref_job.sp.alpha == row['ALPHA']):
                 print(ref_job.fn(""))
@@ -1708,7 +1708,7 @@ def build_psf_pdb_ff_gomc_conf(job):
 
     # Get prefix to namd runs.
     namd_output_prefix = ""
-    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "solvent": job.sp.solvent}))
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "solvent": job.sp.solvent, "density":job.sp.density}))
 
     for ref_job in jobs:
         namd_output_prefix = ref_job.fn("")
@@ -1794,7 +1794,7 @@ def build_psf_pdb_ff_gomc_conf(job):
     )
 
 
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "solvent": job.sp.solvent}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Ewald", "wolf_model": "Results", "solvent": job.sp.solvent, "density":job.sp.density}))
     for ref_job in jobs:
         #if (ref_job.isfile(f"{Coordinates_box_0}")):
         job.doc.path_to_gomc_sseq_dir =  ref_job.fn("")
@@ -1811,7 +1811,7 @@ def build_psf_pdb_ff_gomc_conf(job):
         job.doc.path_to_sseq_console =  ref_job.fn(f"out_{Single_state_gomc_eq_control_file_name}.dat")
         job.doc.path_to_sseq_checkpoint =  ref_job.fn(f"{Single_state_gomc_eq_control_file_name}_restart.chk")
 
-    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results", "solvent": job.sp.solvent}))
+    jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": "Wolf", "wolf_model": "Results", "solvent": job.sp.solvent, "density":job.sp.density}))
     for ref_job in jobs:
         #if (ref_job.isfile(f"{Coordinates_box_0}")):
         job.doc.path_to_wolf_template_dir =  ref_job.fn("")
@@ -1824,11 +1824,11 @@ def build_psf_pdb_ff_gomc_conf(job):
     for results_job in jobs:
         job.doc.path_to_wolf_results_my_repl_dir =  results_job.fn("")
 
-    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent}))
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Ewald", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent, "density":job.sp.density}))
     for results_job in jobs:
         job.doc.path_to_ew_results_repl_0_dir =  results_job.fn("")
 
-    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent}))
+    jobs = list(pr.find_jobs({"replica_number_int": 0, "electrostatic_method": "Wolf", "wolf_model": "Results", "wolf_potential" : "Results", "solvent": job.sp.solvent, "density":job.sp.density}))
     for results_job in jobs:
         job.doc.path_to_wolf_results_repl_0_dir =  results_job.fn("")
 
@@ -2599,7 +2599,7 @@ def write_replicate_alpha_csv(job):
         ew_ref = pd.read_csv (job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv", header=0)
         ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
         print("Ew mean", ew_mean)
-        jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "solvent": job.sp.solvent}))
+        jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "solvent": job.sp.solvent, "density":job.sp.density}))
         try:
             NUMBOXES = 1
             for b in range (NUMBOXES):
@@ -2693,7 +2693,7 @@ def write_replicate_alpha_csv(job):
 def get_minimum_alpha_across_replicas(job):
     try:
         jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute,\
-            "wolf_potential": job.sp.wolf_potential,"wolf_model": job.sp.wolf_model, "solvent": job.sp.solvent}))
+            "wolf_potential": job.sp.wolf_potential,"wolf_model": job.sp.wolf_model, "solvent": job.sp.solvent, "density":job.sp.density}))
         try:
             master = pd.DataFrame()
             NUMBOXES = 1
@@ -2763,7 +2763,7 @@ def part_4b_create_wolf_sanity_histograms(job):
     df1 = pd.DataFrame()
     df_equilibrated_all = pd.DataFrame()
 
-    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Results", "wolf_potential": "Results", "solvent": job.sp.solvent}))
+    jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute, "wolf_model": "Results", "wolf_potential": "Results", "solvent": job.sp.solvent, "density":job.sp.density}))
     print(jobs)
     try:
         for ewald_job in jobs:
