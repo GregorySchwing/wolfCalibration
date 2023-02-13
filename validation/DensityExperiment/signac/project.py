@@ -48,7 +48,8 @@ class Potoff(DefaultSlurmEnvironment):  # Grid(StandardEnvironment):
     template = "potoff.sh"
 
 
-
+import warnings
+warnings.filterwarnings("ignore")
 
 # ******************************************************
 # users typical variables, but not all (start)

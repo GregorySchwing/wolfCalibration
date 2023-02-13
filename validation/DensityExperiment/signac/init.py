@@ -32,9 +32,9 @@ startingDensities = np.array([0.001, 0.01, 0.1])
 densities_spce = np.concatenate((startingDensities, densities_to_1), axis=0)* g_per_cm3
 print(densities_spce)
 
-startingDensities_mtoh = np.array([0.01, 0.1])
+startingDensities_mtoh = np.array([0.00266, 0.01, 0.1])
 densities_mtoh_to_7 = np.concatenate((startingDensities_mtoh, densities_to_pt_7), axis=0)
-relevantLiquidDensities = np.array([0.748, 0.7863])
+relevantLiquidDensities = np.array([0.692, 0.748, 0.7863])
 
 densities_mtoh = np.concatenate((densities_mtoh_to_7, relevantLiquidDensities), axis=0)* g_per_cm3
 
