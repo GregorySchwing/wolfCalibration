@@ -592,13 +592,13 @@ def initial_parameters(job):
     if equilibration_ensemble == "NPT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NPT"
-        #job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NPT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NPT"
+        #job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NPT"
     elif equilibration_ensemble == "NVT":
         job.doc.namd_equilb_NPT_gomc_binary_file = f"namd2"
         job.doc.gomc_equilb_design_ensemble_gomc_binary_file = f"GOMC_{job.doc.gomc_cpu_or_gpu}_NVT"
-        #job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NVT"
-        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
+        job.doc.gomc_calibration_gomc_binary_file = f"GOMC_CPU_NVT"
+        #job.doc.gomc_calibration_gomc_binary_file = f"GOMC_GPU_NVT"
 
     else:
         raise ValueError(
@@ -2937,9 +2937,9 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.operation.with_directives(
     {
         "np": 1,
-        "ngpu": 1,
+        "ngpu": 0,
         "memory": memory_needed,
-        "walltime": 144,
+        "walltime": 7,
     }
 )
 @flow.with_job
