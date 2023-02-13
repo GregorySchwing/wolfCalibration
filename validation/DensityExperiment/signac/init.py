@@ -19,8 +19,8 @@ solute = ["solvent_box"] # ["Ne", "Rn"]
 solvent = ["SPCE", "MTOH"] # ["Ne", "Rn"]
 #solvent = ["SPC", "MSPCE"] # ["Ne", "Rn"]
 electrostatic_method = ["Wolf", "Ewald"] # ["Ne", "Rn"]
-#replicas = [0, 1, 2, 3, 4]
-replicas = [0]
+replicas = [0, 1, 2, 3, 4]
+#replicas = [0]
 
 g_per_cm3 = u.g / (u.cm * u.cm * u.cm)
 #densities_to_1 = np.arange (0.2, 0.3, 0.1)
@@ -47,8 +47,8 @@ solvent_to_densities = {"SPCE": densities_spce, "MTOH": densities_mtoh}
 # the main user varying state points (end)
 # *******************************************
 #alpha_range = np.arange (0.0, 0.505, 0.005)
-#alpha_range = np.arange (0.0, 0.505, 0.005)
-alpha_range = np.linspace(0.0, 0.5, num=6)
+alpha_range = np.arange (0.0, 0.505, 0.005)
+#alpha_range = np.linspace(0.0, 0.5, num=6)
 print(alpha_range)
 # *******************************************
 # the main user varying state points (end)
