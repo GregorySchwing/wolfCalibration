@@ -2892,6 +2892,7 @@ def average_sseq_electrostatic_energy(job):
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.pre(part_4b_job_gomc_winning_alpha)
+@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
