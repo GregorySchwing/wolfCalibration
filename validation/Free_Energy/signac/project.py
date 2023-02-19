@@ -79,11 +79,11 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-#"""
+"""
 gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 precal_eq_gomc_steps =  gomc_steps_equilb_design_ensemble # set value for paper = 10 * 10**6
 
@@ -112,7 +112,7 @@ EqSteps = 1000
 Calibration_MC_steps = 5 * 10**3
 Calibration_MC_Eq_Steps = 1 * 10**3 
 Wolf_Sanity_MC_steps = 1 * 10**4
-"""
+#"""
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
