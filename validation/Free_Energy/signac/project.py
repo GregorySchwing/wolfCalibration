@@ -946,8 +946,9 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
         NUMBOXES = 1
         for b in range (NUMBOXES):
             curr = pd.DataFrame()
-            if (job.isfile(job.doc.path_to_ew_results_repl_0_dir+"/wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(0, b))):
-                curr = pd.read_csv (job.doc.path_to_ew_results_repl_0_dir+"/wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(0, b), delim_whitespace=True, header=None)
+            if (job.isfile(job.doc.path_to_ew_results_repl_0_dir+"wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(0, b))):
+                curr = pd.read_csv (job.doc.path_to_ew_results_repl_0_dir+"wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(0, b), delim_whitespace=True, header=None)
+                curr.columns = cols
             else:
                 return False
 
@@ -965,6 +966,14 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
                 job.doc.calibration_iteration_number
             )
             with open(job.fn(output_name_control_file_name), "a") as myfile:
+                defPotLine = "InitStep\t{zero}\n".format(zero=0)
+                myfile.write(defPotLine)
+                defPotLine = "Wolf\t{freq}\n".format(freq=True)
+                myfile.write(defPotLine)
+                defPotLine = "WolfKind\t{freq}\n".format(freq=job.sp.wolf_model)
+                myfile.write(defPotLine)
+                defPotLine = "WolfPotential\t{freq}\n".format(freq=job.sp.wolf_potential)
+                myfile.write(defPotLine)   
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
     except:
