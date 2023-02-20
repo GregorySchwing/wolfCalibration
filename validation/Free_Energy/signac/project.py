@@ -978,9 +978,9 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
                 myfile.write(defPotLine)   
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
-                bestA.append(nextAlpha)
             """
-            return bestA
+            bestA.append(nextAlpha)
+        return bestA
     except:
         print(repr(e))
         return False
@@ -3151,7 +3151,6 @@ def run_calibration_run_gomc_command(job):
             suggested = part_4b_extract_best_initial_guess_from_ewald_calibration(job)
         else:
             suggested = opt.ask()
-        
         with open(job.fn("{}.conf".format(control_file_name_str)), "a") as myfile:
             defPotLine = "InitStep\t{zero}\n".format(zero=0)
             myfile.write(defPotLine)
