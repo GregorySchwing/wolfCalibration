@@ -3128,6 +3128,7 @@ def run_calibration_run_gomc_command(job):
                 n_initial_points=5)
     #for cal_run in range(job.doc.calibration_iteration_number_max_number):
     for cal_run in range(10):
+        print("Calibration_iteration_number", cal_run)
         control_file_name_str = "wolf_calibration_{}".format(cal_run)
         """Run the gomc_calibration_run_ensemble simulation."""
         #control_file_name_str = "wolf_calibration"
@@ -3182,10 +3183,11 @@ def run_calibration_run_gomc_command(job):
             y = extract_electrostatic_energy(job, "out_{}.dat".format(control_file_name_str))
             print(suggested, y-ew_mean)
             res = opt.tell(suggested, y-ew_mean)
-            print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-            job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
-            print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+            #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+            #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
+            #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
     print("x*=%.2f f(x*)=%.2f" % (res.x[0], res.fun))
+    job.doc.best_alpha = res.x[0]
 # ******************************************************
 # ******************************************************
 # equilb NPT - starting the GOMC simulation (start)
