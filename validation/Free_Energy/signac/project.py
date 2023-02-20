@@ -944,7 +944,6 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
         colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
         print(job.doc.calibration_iteration_number)
         NUMBOXES = 1
-        bestA = []
         for b in range (NUMBOXES):
             curr = pd.DataFrame()
             if (job.isfile(job.doc.path_to_ew_results_repl_0_dir+"wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(0, b))):
@@ -977,8 +976,7 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
                 myfile.write(defPotLine)   
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
-            bestA.append(nextAlpha)
-        return bestA
+            return nextAlpha
     except:
         print(repr(e))
         return False
@@ -3118,10 +3116,16 @@ def generate_initial_guesses_for_calibration_run_gomc_command(job):
 )
 @flow.with_job
 def run_calibration_run_gomc_command(job):
-
+    ew_ref = pd.read_csv (job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv", header=0)
+    ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
+    print("Ew mean", ew_mean)
     from skopt import Optimizer
-    opt = Optimizer([(0, 0.5)])
-    for cal_run in range(job.doc.calibration_iteration_number_max_number):
+    opt = Optimizer([(0, 0.5)], "GP", acq_func="EI",
+                acq_optimizer="sampling",
+                initial_point_generator="lhs",
+                n_initial_points=5)
+    #for cal_run in range(job.doc.calibration_iteration_number_max_number):
+    for cal_run in range(10):
         control_file_name_str = "wolf_calibration_{}".format(cal_run)
         """Run the gomc_calibration_run_ensemble simulation."""
         #control_file_name_str = "wolf_calibration"
@@ -3135,12 +3139,22 @@ def run_calibration_run_gomc_command(job):
         shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
         suggested = 0.0
         if (cal_run == 0):
-            suggested = part_4b_extract_best_initial_guess_from_ewald_calibration(job)
+            suggested = [part_4b_extract_best_initial_guess_from_ewald_calibration(job)]
         else:
             suggested = opt.ask()
-        #else:
-        #    append_default_wolf_parameters_line(job,control_file_name_str+".conf")
         
+        with open(job.fn(control_file_name_str), "a") as myfile:
+            defPotLine = "InitStep\t{zero}\n".format(zero=0)
+            myfile.write(defPotLine)
+            defPotLine = "Wolf\t{freq}\n".format(freq=True)
+            myfile.write(defPotLine)
+            defPotLine = "WolfKind\t{freq}\n".format(freq=job.sp.wolf_model)
+            myfile.write(defPotLine)
+            defPotLine = "WolfPotential\t{freq}\n".format(freq=job.sp.wolf_potential)
+            myfile.write(defPotLine)  
+            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=0, val=suggested)
+            myfile.write(defAlphaLine)
+
         print(f"Running simulation job id {job}")
         run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
             str(gomc_binary_path),
@@ -3164,15 +3178,12 @@ def run_calibration_run_gomc_command(job):
             control_file_name_str
         ):
             y = extract_electrostatic_energy(job, "out_{}.dat".format(control_file_name_str))
-            print(suggested, y)
-            res = opt.tell(suggested, y)
-            """
-            part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
+            print(suggested, y-ew_mean)
+            res = opt.tell(suggested, y-ew_mean)
             print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
             job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
             print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-            """
-
+    print("x*=%.2f f(x*)=%.2f" % (res.x[0], res.fun))
 # ******************************************************
 # ******************************************************
 # equilb NPT - starting the GOMC simulation (start)
