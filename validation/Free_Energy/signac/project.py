@@ -3019,6 +3019,8 @@ def extract_electrostatic_energy(job, filename):
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
 @Project.pre(part_4b_job_gomc_winning_alpha)
+@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
+                               for j in jobs[0]._project))
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
@@ -3127,9 +3129,9 @@ def run_calibration_run_gomc_command(job):
     opt = Optimizer([(0, 0.5)], "GP", acq_func="EI",
                 acq_optimizer="sampling",
                 initial_point_generator="lhs",
-                n_initial_points=5)
+                n_initial_points=10)
     #for cal_run in range(job.doc.calibration_iteration_number_max_number):
-    for cal_run in range(10):
+    for cal_run in range(20):
         print("Calibration_iteration_number", cal_run)
         control_file_name_str = "wolf_calibration_{}".format(cal_run)
         """Run the gomc_calibration_run_ensemble simulation."""
