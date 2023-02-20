@@ -3126,14 +3126,31 @@ def run_calibration_run_gomc_command(job):
     ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
     print("Ew mean", ew_mean)
     from skopt import Optimizer
+    from skopt import callbacks
+    from skopt.callbacks import CheckpointSaver
+    from skopt import load
     import matplotlib.pyplot as plt
     from skopt.plots import plot_convergence, plot_evaluations, plot_objective, plot_regret
+    if (job.isfile('./checkpoint.pkl')):
+        res = load('./checkpoint.pkl')
+        x0 = res.x_iters
+        y0 = res.func_vals
+        kwargs_dict = {"callback": [CheckpointSaver("./checkpoint.pkl", compress=9)],
+                       "x0":x0,              # already examined values for x
+                        "y0":y0} # keyword arguments will be passed to `skopt.dump`}
+
+    else:
+        kwargs_dict = {"callback": [CheckpointSaver("./checkpoint.pkl", compress=9)]} # keyword arguments will be passed to `skopt.dump`}
     opt = Optimizer([(0, 0.5)], "GP", acq_func="EI",
                 acq_optimizer="sampling",
                 initial_point_generator="lhs",
-                n_initial_points=10)
+                n_initial_points=10,
+                acq_optimizer_kwargs=kwargs_dict)
+
     #for cal_run in range(job.doc.calibration_iteration_number_max_number):
     for cal_run in range(20):
+        if (job.isfile("out_{}.dat".format(control_file_name_str))):
+            continue
         print("Calibration_iteration_number", cal_run)
         control_file_name_str = "wolf_calibration_{}".format(cal_run)
         """Run the gomc_calibration_run_ensemble simulation."""
@@ -3186,11 +3203,12 @@ def run_calibration_run_gomc_command(job):
             control_file_name_str
         ):
             y = extract_electrostatic_energy(job, "out_{}.dat".format(control_file_name_str))
-            print(suggested, y-ew_mean)
+            print(suggested, y, ew_mean, y-ew_mean, (y-ew_mean)/ew_mean)
             res = opt.tell(suggested, y-ew_mean)
             #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
             #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
             #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+            checkpoint_callback = skopt.callbacks.CheckpointSaver("./result.pkl")
     print("x*=%.2f f(x*)=%.2f" % (res.x[0], res.fun))
     job.doc.best_alpha = res.x[0]
     job.doc.best_alpha_elec_mean = res.fun
