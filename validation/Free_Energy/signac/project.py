@@ -3122,6 +3122,8 @@ def run_calibration_run_gomc_command(job):
     ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
     print("Ew mean", ew_mean)
     from skopt import Optimizer
+    import matplotlib.pyplot as plt
+    from skopt.plots import plot_convergence, plot_evaluations, plot_objective, plot_regret
     opt = Optimizer([(0, 0.5)], "GP", acq_func="EI",
                 acq_optimizer="sampling",
                 initial_point_generator="lhs",
@@ -3189,6 +3191,18 @@ def run_calibration_run_gomc_command(job):
     print("x*=%.2f f(x*)=%.2f" % (res.x[0], res.fun))
     job.doc.best_alpha = res.x[0]
     job.doc.best_alpha_elec_mean = res.fun
+    _ = plot_objective(res)
+    plt.savefig('plot_objective.png', bbox_inches='tight')
+    plt.show()
+    _ = plot_convergence(res)
+    plt.savefig('plot_convergence.png', bbox_inches='tight')
+    plt.show()
+    _ = plot_evaluations(res)
+    plt.savefig('plot_evaluations.png', bbox_inches='tight')
+    plt.show()
+    _ = plot_regret(res)
+    plt.savefig('plot_regret.png', bbox_inches='tight')
+    plt.show()
 
 # ******************************************************
 # ******************************************************
