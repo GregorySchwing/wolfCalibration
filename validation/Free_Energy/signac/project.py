@@ -944,6 +944,7 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
         colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
         print(job.doc.calibration_iteration_number)
         NUMBOXES = 1
+        bestA = []
         for b in range (NUMBOXES):
             curr = pd.DataFrame()
             if (job.isfile(job.doc.path_to_ew_results_repl_0_dir+"wolf_calibration_{}_WOLF_CALIBRATION_BOX_{}_BEST_ALPHAS.csv".format(0, b))):
@@ -976,6 +977,8 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
                 myfile.write(defPotLine)   
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
+            bestA.append(nextAlpha)
+        return bestA
     except:
         print(repr(e))
         return False
@@ -2964,7 +2967,51 @@ def average_sseq_electrostatic_energy(job):
     df.to_csv("ewald_average.csv", header=True)
 
 
+def extract_electrostatic_energy(job, filename):
+    import re
+    EnRegex = re.compile("ENER_0")
+    
+    steps = []
+    energies = []
+    densities = []
+    with open(filename, 'r', encoding='utf8') as f:
+        for line in f:
+            if EnRegex.match(line):
+                try:
+                    steps.append(float(line.split()[1]))
+                    #energies.append(float(line.split()[2]))
+                    # Use Total_Elec to avoid underreporting error.
+                    energies.append(float(line.split()[7]))
 
+                except:
+                    print(line)
+                    print("An exception occurred") 
+    nskip = 20
+    steps_np = np.array(steps)
+    energies_np = np.array(energies)
+    from pymbar import timeseries
+    t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
+    A_t_equil = energies_np[t0:]
+    A_t_equil_steps = steps_np[t0:]
+
+
+    """
+
+    dict_of_equilibrated_energies = {}
+    dict_of_equilibrated_energies_stats = {}
+
+    dict_of_equilibrated_energies["steps"] = A_t_equil_steps
+    dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
+
+    dict_of_energy_mean = {"EWALD_MEAN":A_t_equil.mean()}
+    print(dict_of_energy_mean)
+    d = {'EWALD_MEAN': [A_t_equil.mean()]}
+    df = pd.DataFrame(data=d)
+    #df = pd.DataFrame.from_dict(dict_of_energy_mean)
+    df.to_csv("ewald_average.csv", header=True)
+    """
+
+    return A_t_equil.mean()
     
 
 @Project.pre(part_1a_initial_data_input_to_json)
@@ -3071,50 +3118,60 @@ def generate_initial_guesses_for_calibration_run_gomc_command(job):
 )
 @flow.with_job
 def run_calibration_run_gomc_command(job):
-    """Run the gomc_calibration_run_ensemble simulation."""
-    #control_file_name_str = "wolf_calibration"
-    template_control_file_name_str = "wolf_calibration_{}".format(1)
-    control_file_name_str = "wolf_calibration_{}".format(job.doc.calibration_iteration_number)
 
-    #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
+    from skopt import Optimizer
+    opt = Optimizer([(0, 0.5)])
+    for cal_run in range(job.doc.calibration_iteration_number_max_number):
+        control_file_name_str = "wolf_calibration_{}".format(cal_run)
+        """Run the gomc_calibration_run_ensemble simulation."""
+        #control_file_name_str = "wolf_calibration"
+        template_control_file_name_str = "wolf_calibration_{}".format(1)
 
-    import shutil
+        #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
 
-    shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+template_control_file_name_str+".conf", control_file_name_str+".conf")
-    shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
-    
-    if (job.doc.calibration_iteration_number == 0):
-        part_4b_extract_best_initial_guess_from_ewald_calibration(job)
-    else:
-        append_default_wolf_parameters_line(job,control_file_name_str+".conf")
-    
-    print(f"Running simulation job id {job}")
-    run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-        str(gomc_binary_path),
-        str(job.doc.gomc_calibration_gomc_binary_file),
-        str(1),
-        str(control_file_name_str),
-        str(control_file_name_str),
-    )
-    print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
-    import subprocess
+        import shutil
 
-    exec_run_command = subprocess.Popen(
-        run_command, shell=True, stderr=subprocess.STDOUT
-    )
-    os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
-    # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
-    # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
-    """
-    if gomc_sim_completed_properly(
-        job,
-        control_file_name_str
-    ):
-        part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
-        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-        job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
-        print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-    """
+        shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+template_control_file_name_str+".conf", control_file_name_str+".conf")
+        shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
+        suggested = 0.0
+        if (cal_run == 0):
+            suggested = part_4b_extract_best_initial_guess_from_ewald_calibration(job)
+        else:
+            suggested = opt.ask()
+        #else:
+        #    append_default_wolf_parameters_line(job,control_file_name_str+".conf")
+        
+        print(f"Running simulation job id {job}")
+        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
+            str(gomc_binary_path),
+            str(job.doc.gomc_calibration_gomc_binary_file),
+            str(1),
+            str(control_file_name_str),
+            str(control_file_name_str),
+        )
+        print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
+        import subprocess
+
+        exec_run_command = subprocess.Popen(
+            run_command, shell=True, stderr=subprocess.STDOUT
+        )
+        os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
+        # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
+        # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
+
+        if gomc_sim_completed_properly(
+            job,
+            control_file_name_str
+        ):
+            y = extract_electrostatic_energy(job, "out_{}.dat".format(control_file_name_str))
+            print(suggested, y)
+            res = opt.tell(suggested, y)
+            """
+            part_4b_job_gomc_append_wolf_parameters_to_calibration(job)
+            print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+            job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
+            print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
+            """
 
 # ******************************************************
 # ******************************************************
