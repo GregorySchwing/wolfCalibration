@@ -83,7 +83,7 @@ gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/si
 namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-"""
+#"""
 gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 precal_eq_gomc_steps =  gomc_steps_equilb_design_ensemble # set value for paper = 10 * 10**6
 
@@ -112,7 +112,7 @@ EqSteps = 1000
 Calibration_MC_steps = 5 * 10**3
 Calibration_MC_Eq_Steps = 1 * 10**3 
 Wolf_Sanity_MC_steps = 1 * 10**4
-#"""
+"""
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -943,6 +943,7 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
         cols = ["MODEL", "POT", "ALPHA"]
         colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
         print(job.doc.calibration_iteration_number)
+        bestA = []
         NUMBOXES = 1
         for b in range (NUMBOXES):
             curr = pd.DataFrame()
@@ -976,7 +977,8 @@ def part_4b_extract_best_initial_guess_from_ewald_calibration(job):
                 myfile.write(defPotLine)   
                 defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=b, val=nextAlpha)
                 myfile.write(defAlphaLine)
-            return nextAlpha
+                bestA.append(nextAlpha)
+            return bestA
     except:
         print(repr(e))
         return False
@@ -3137,9 +3139,9 @@ def run_calibration_run_gomc_command(job):
 
         shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+template_control_file_name_str+".conf", control_file_name_str+".conf")
         shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
-        suggested = 0.0
+        suggested = []
         if (cal_run == 0):
-            suggested = [part_4b_extract_best_initial_guess_from_ewald_calibration(job)]
+            suggested = part_4b_extract_best_initial_guess_from_ewald_calibration(job)
         else:
             suggested = opt.ask()
         
