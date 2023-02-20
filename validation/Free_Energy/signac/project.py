@@ -3208,7 +3208,6 @@ def run_calibration_run_gomc_command(job):
             #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
             #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
             #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-            checkpoint_callback = skopt.callbacks.CheckpointSaver("./result.pkl")
     print("x*=%.2f f(x*)=%.2f" % (res.x[0], res.fun))
     job.doc.best_alpha = res.x[0]
     job.doc.best_alpha_elec_mean = res.fun
