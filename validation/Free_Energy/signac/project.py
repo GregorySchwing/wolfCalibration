@@ -3267,8 +3267,10 @@ def run_calibration_run_gomc_command(job):
     cal = Calibrator(gomc, job.sp.wolf_model, job.sp.wolf_potential,target_y,\
                initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield)
     #cal.objective(initial_x[0])
-
     cal.calibrate()
+    print("x*=%.2f f(x*)=%.2f" % (cal.x, cal.fun))
+    job.doc.best_alpha = cal.x
+    job.doc.best_alpha_elec_mean = cal.fun
     quit()
 # ******************************************************
 # ******************************************************

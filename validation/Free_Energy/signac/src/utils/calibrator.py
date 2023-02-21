@@ -19,7 +19,8 @@ class Calibrator:
         self.forcefield = forcefield
         self.iteration = 0
         self.num_iters = num_iters
-
+        self.x = 0
+        self.fun = 0
     
     def copy_template(self, x):
         shutil.copyfile("{}{}.conf".format(self.template_directory,self.template_control_file_name_str), "{}{}.conf".format(self.conffile, self.iteration))
@@ -33,7 +34,7 @@ class Calibrator:
             myfile.write(defPotLine)
             defPotLine = "WolfPotential\t{freq}\n".format(freq=self.wolf_potential)
             myfile.write(defPotLine)  
-            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=0, val=x)
+            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=0, val=x[0])
             myfile.write(defAlphaLine)
 
     def run_simulation(self):
@@ -86,7 +87,7 @@ class Calibrator:
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self)
-        print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x, self.target_y, y_hat, np.abs(self.target_y-y_hat)))
+        print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, np.abs(self.target_y-y_hat)))
         self.iteration = self.iteration + 1
         return np.abs(self.target_y-y_hat)
     
@@ -97,6 +98,8 @@ class Calibrator:
             fmin_bfgs(f, 
                     x0, 
                     #callback=callbackF, 
-                    maxiter=3, 
+                    maxiter=self.num_iters, 
                     full_output=True, 
                     retall=False)
+        self.x = xopt
+        self.fun = fopt
