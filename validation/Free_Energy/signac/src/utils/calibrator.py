@@ -143,7 +143,7 @@ class Calibrator:
                     approx_grad=True,
                     maxiter=self.num_iters, 
                     iprint=99, 
-                    bounds = [(self.min, self.max)])
+                    bounds = [(self.min, self.max)]) 
         """
         res = minimize(f, x0, method='L-BFGS-B', bounds=[(self.min, self.max)],\
                        options={'gtol': 1e-6, 'maxiter':self.num_iters, 'iprint':101, })
