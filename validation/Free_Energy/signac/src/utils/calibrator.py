@@ -5,9 +5,10 @@ import re
 import numpy as np
 import pandas as pd
 from pymbar import timeseries
-from scipy.optimize import fmin_l_bfgs_b, minimize
+from scipy.optimize import fmin_l_bfgs_b, minimize, fmin_cobyla
 from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
+
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
                  conffile, forcefield, min, max, num_iters=10):
@@ -29,7 +30,9 @@ class Calibrator:
         self.fun = 0
         self.obj_calls = {}
 
-    
+    def constr(self, x):
+        return float((self.initial_x - 0.1) < x < (self.initial_x + 0.1))
+
     def copy_template(self, x):
         shutil.copyfile("{}{}.conf".format(self.template_directory,self.template_control_file_name_str), "{}{}.conf".format(self.conffile, self.iteration))
         shutil.copyfile("{}{}".format(self.template_directory,self.forcefield), self.forcefield)
@@ -136,6 +139,14 @@ class Calibrator:
     
     def calibrate(self):
         f = lambda x: Calibrator.objective(self,x)
+        c = lambda x: Calibrator.constr(self,x)
+        """
+        print(self.initial_x,c(self.initial_x))
+        print(self.initial_x+0.09,c(self.initial_x+0.09))
+        print(self.initial_x-0.09,c(self.initial_x-0.09))
+        print(self.initial_x+0.11,c(self.initial_x+0.11))
+        print(self.initial_x-0.11,c(self.initial_x-0.11))
+        """
         x0 = np.array([self.initial_x], dtype=np.double)
         """
         [xopt, fopt, d] = \
@@ -146,12 +157,22 @@ class Calibrator:
                     iprint=99, 
                     bounds = [(self.min, self.max)]) 
         """
-        #res = minimize(f, x0, method='L-BFGS-B', bounds=[(self.min, self.max)],\
-        #               options={'gtol': 1e-6, 'maxiter':self.num_iters, 'iprint':101, })
-        res = least_squares(f, x0, bounds=[(x0-0.1, x0+0.1)],diffstep=0.05,max_nfev=self.num_iters)
-        self.x = res.x
-        self.fun = res.fun
-        self.converged = res.success
+        res = \
+            fmin_cobyla(f, 
+                    x0, 
+                    cons=[c],
+                    rhobeg=0.01,
+                    rhoend=0.005, 
+                    disp=3, 
+                    catol=0.0,
+                    maxfun=self.num_iters) 
+        """
+        res = minimize(f, x0, method='COBYLA', bounds=[(self.min, self.max)],\
+                       options={'rhobeg': 0.1, 'rhoend':0.05, 'disp':3, 'maxfun': self.num_iters})
+        """
+        self.x = res
+        #self.fun = res.fun
+        #self.converged = res.success
 
 
         Calibrator.extract_reference_target(self)
