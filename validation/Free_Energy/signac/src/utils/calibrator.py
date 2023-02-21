@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
-                 conffile, forcefield, min, max, num_iters=10):
+                 conffile, forcefield, min, max, num_iters=2):
         self.gomc = gomc
         self.wolf_model = wolf_model
         self.wolf_potential = wolf_potential
@@ -129,14 +129,14 @@ class Calibrator:
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self, x[0])
-        self.obj_calls[x[0]] = 100.0*np.abs((self.target_y-y_hat)/self.target_y)
-        print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, 100.0*(np.abs(self.target_y-y_hat)/self.target_y)))
+        self.obj_calls[x[0]] = 100.0*(np.abs((self.target_y-y_hat)/self.target_y))
+        print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, 100.0*(np.abs((self.target_y-y_hat)/self.target_y))))
         with open("calibration.log", "a") as myfile:
             line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], 100.0*(np.abs(self.target_y-y_hat)/self.target_y))
             myfile.write(line)
 
         self.iteration = self.iteration + 1
-        return 100.0*np.abs((self.target_y-y_hat)/self.target_y)
+        return 100.0*(np.abs((self.target_y-y_hat)/self.target_y))
     
     def calibrate(self):
         f = lambda x: Calibrator.objective(self,x)
@@ -158,6 +158,6 @@ class Calibrator:
 
         Calibrator.extract_reference_target(self)
         self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
-        plot = self.traj.plot(figsize=(10,5), grid=True)
+        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
         fig = plot.get_figure()
         fig.savefig('plot_alphas.png', bbox_inches='tight')
