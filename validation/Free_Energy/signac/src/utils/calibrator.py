@@ -5,7 +5,8 @@ import re
 import numpy as np
 import pandas as pd
 from pymbar import timeseries
-from scipy.optimize import fmin_l_bfgs_b
+from scipy.optimize import fmin_l_bfgs_b, minimize
+import matplotlib.pyplot as plt
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
                  conffile, forcefield, min, max, num_iters=20):
@@ -25,6 +26,8 @@ class Calibrator:
         self.num_iters = num_iters
         self.x = 0
         self.fun = 0
+        self.obj_calls = {}
+
     
     def copy_template(self, x):
         shutil.copyfile("{}{}.conf".format(self.template_directory,self.template_control_file_name_str), "{}{}.conf".format(self.conffile, self.iteration))
@@ -81,16 +84,47 @@ class Calibrator:
         t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil = energies_np[t0:]
         A_t_equil_steps = steps_np[t0:]
-        self.traj[x] = A_t_equil
+        #energies_np[:t0] = np.nan
+        self.traj[x] = energies_np
+        return A_t_equil.mean()
+        
+    def extract_reference_target(self):
+        EnRegex = re.compile("ENER_0")
+        
+        steps = []
+        energies = []
+        densities = []
+        with open("{}/out_{}{}.dat".format(self.template_directory,self.conffile, 0), 'r', encoding='utf8') as f:
+            for line in f:
+                if EnRegex.match(line):
+                    try:
+                        steps.append(float(line.split()[1]))
+                        #energies.append(float(line.split()[2]))
+                        # Use Total_Elec to avoid underreporting error.
+                        energies.append(float(line.split()[7]))
+
+                    except:
+                        print(line)
+                        print("An exception occurred") 
+        nskip = 20
+        steps_np = np.array(steps)
+        energies_np = np.array(energies)
+        t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
+        A_t_equil = energies_np[t0:]
+        A_t_equil_steps = steps_np[t0:]
+        self.traj['Ewald'] = energies_np
         return A_t_equil.mean()
         
 
 
     # objective function
     def objective(self, x):
+        if (x in self.obj_calls):
+            return self.obj_calls[x]
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self, x[0])
+        self.obj_calls[x] = np.abs(self.target_y-y_hat)
         print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, np.abs(self.target_y-y_hat)))
         with open("calibration.log", "a") as myfile:
             line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], 100.0*(np.abs(self.target_y-y_hat)/self.target_y))
@@ -102,13 +136,24 @@ class Calibrator:
     def calibrate(self):
         f = lambda x: Calibrator.objective(self,x)
         x0 = np.array([self.initial_x], dtype=np.double)
-        [xopt, fopt, gopt, Bopt, func_calls, grad_calls, warnflg] = \
+        """
+        [xopt, fopt, d] = \
             fmin_l_bfgs_b(f, 
                     x0, 
                     approx_grad=True,
                     maxiter=self.num_iters, 
                     iprint=99, 
                     bounds = [(self.min, self.max)])
-        self.x = xopt
-        self.fun = fopt
+        """
+        res = minimize(f, x0, method='L-BFGS-B', bounds=[(self.min, self.max)],\
+                       options={'gtol': 1e-6, 'maxiter':self.num_iters, 'iprint':101, })
+        self.x = res.x
+        self.fun = res.fun
+        self.converged = res.success
+
+
+        Calibrator.extract_reference_target(self)
         self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index=False, sep=' ')
+        plot = self.traj.plot(figsize=(10,5), grid=True)
+        fig = plot.get_figure()
+        fig.savefig('plot_alphas.png', bbox_inches='tight')
