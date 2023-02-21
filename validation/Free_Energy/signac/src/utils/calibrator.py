@@ -4,7 +4,7 @@ import shutil
 import re
 import numpy as np
 from pymbar import timeseries
-from scipy.optimize import fmin_l_bfgs
+from scipy.optimize import fmin_l_bfgs_b
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
                  conffile, forcefield, min, max, num_iters=20):
@@ -97,12 +97,10 @@ class Calibrator:
         f = lambda x: Calibrator.objective(self,x)
         x0 = np.array([self.initial_x], dtype=np.double)
         [xopt, fopt, gopt, Bopt, func_calls, grad_calls, warnflg] = \
-            fmin_l_bfgs(f, 
+            fmin_l_bfgs_b(f, 
                     x0, 
-                    #callback=callbackF, 
-                    maxiter=self.num_iters, 
-                    full_output=True, 
-                    retall=False,
-                    bounds = [self.min, self.max])
+                    maxfun=self.num_iters, 
+                    iprint=99, 
+                    bounds = [(self.min, self.max)])
         self.x = xopt
         self.fun = fopt
