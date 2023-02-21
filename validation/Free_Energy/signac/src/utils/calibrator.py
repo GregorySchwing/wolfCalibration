@@ -119,8 +119,8 @@ class Calibrator:
 
     # objective function
     def objective(self, x):
-        if (x in self.obj_calls):
-            return self.obj_calls[x]
+        if (x[0] in self.obj_calls):
+            return self.obj_calls[x[0]]
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self, x[0])
