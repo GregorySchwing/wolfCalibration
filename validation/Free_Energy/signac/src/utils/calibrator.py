@@ -120,7 +120,8 @@ class Calibrator:
         self.traj['Ewald'] = energies_np
         return A_t_equil.mean()
         
-
+    def loss(self,y_hat):
+        return 100.0*(np.abs((self.target_y-y_hat)/self.target_y))
 
     # objective function
     def objective(self, x):
@@ -129,14 +130,14 @@ class Calibrator:
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self, x[0])
-        self.obj_calls[x[0]] = 100.0*(np.abs((self.target_y-y_hat)/self.target_y))
-        print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, 100.0*(np.abs((self.target_y-y_hat)/self.target_y))))
+        self.obj_calls[x[0]] = Calibrator.loss(self,y_hat)
+        print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, Calibrator.loss(self,y_hat)))
         with open("calibration.log", "a") as myfile:
-            line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], 100.0*(np.abs(self.target_y-y_hat)/self.target_y))
+            line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], Calibrator.loss(self,y_hat))
             myfile.write(line)
 
         self.iteration = self.iteration + 1
-        return 100.0*(np.abs((self.target_y-y_hat)/self.target_y))
+        return Calibrator.loss(self,y_hat)
     
     def calibrate(self):
         f = lambda x: Calibrator.objective(self,x)
