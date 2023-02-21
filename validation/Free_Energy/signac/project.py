@@ -3103,6 +3103,7 @@ def generate_initial_guesses_for_calibration_run_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+"""
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_model != "Results")
@@ -3149,11 +3150,11 @@ def run_calibration_run_gomc_command(job):
 
     #for cal_run in range(job.doc.calibration_iteration_number_max_number):
     for cal_run in range(20):
-        if (job.isfile("out_{}.dat".format(control_file_name_str))):
-            continue
+
         print("Calibration_iteration_number", cal_run)
         control_file_name_str = "wolf_calibration_{}".format(cal_run)
-        """Run the gomc_calibration_run_ensemble simulation."""
+        if (job.isfile("out_{}.dat".format(control_file_name_str))):
+            continue
         #control_file_name_str = "wolf_calibration"
         template_control_file_name_str = "wolf_calibration_{}".format(1)
 
@@ -3204,7 +3205,7 @@ def run_calibration_run_gomc_command(job):
         ):
             y = extract_electrostatic_energy(job, "out_{}.dat".format(control_file_name_str))
             print(suggested, y, ew_mean, y-ew_mean, (y-ew_mean)/ew_mean)
-            res = opt.tell(suggested, y-ew_mean)
+            res = opt.tell(suggested, np.abs(y-ew_mean))
             #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
             #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
             #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
@@ -3224,6 +3225,51 @@ def run_calibration_run_gomc_command(job):
     plt.savefig('plot_regret.png', bbox_inches='tight')
     plt.show()
 
+"""
+
+# ******************************************************
+# ******************************************************
+# equilb NPT - starting the GOMC simulation (start)
+# ******************************************************
+# ******************************************************
+#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_model != "Results")
+#@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
+@Project.pre(mosdef_input_written)
+@Project.pre(part_4b_job_gomc_sseq_completed_properly)
+@Project.pre(part_4b_initial_guesses_generated) 
+@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": 7,
+    }
+)
+@flow.with_job
+def run_calibration_run_gomc_command(job):
+    print(f"Running simulation job id {job}")
+    ew_ref = pd.read_csv (job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv", header=0)
+    ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
+    print("Ew mean", ew_mean)
+    target_y = ew_mean
+    initial_x = part_4b_extract_best_initial_guess_from_ewald_calibration(job)
+    template_directory = job.doc.path_to_ew_results_repl_0_dir
+
+    template_control_file_name_str = "wolf_calibration_{}".format(1)
+    conffile = "wolf_calibration_"
+    forcefield = "in_gomc_FF.inp"
+    from src.utils.calibrator import Calibrator 
+    gomc = "{}/{}".format(gomc_binary_path,job.doc.gomc_calibration_gomc_binary_file)
+    cal = Calibrator(gomc, job.sp.wolf_model, job.sp.wolf_potential,target_y,\
+               initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield)
+    #cal.objective(initial_x[0])
+
+    cal.calibrate()
+    quit()
 # ******************************************************
 # ******************************************************
 # equilb NPT - starting the GOMC simulation (start)
