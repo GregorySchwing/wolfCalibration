@@ -91,7 +91,7 @@ class Calibrator:
         y_hat = Calibrator.extract_target(self)
         print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, np.abs(self.target_y-y_hat)))
         with open("calibration.log", "a") as myfile:
-            line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], np.abs(self.target_y-y_hat)/self.target_y)
+            line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], 100.0*(np.abs(self.target_y-y_hat)/self.target_y))
             myfile.write(line)
 
         self.iteration = self.iteration + 1
