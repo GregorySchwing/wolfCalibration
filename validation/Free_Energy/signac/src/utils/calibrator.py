@@ -31,7 +31,7 @@ class Calibrator:
         self.obj_calls = {}
 
     def constr(self, x):
-        return float((self.initial_x - 0.1) < x < (self.initial_x + 0.1))
+        return float((self.initial_x - 0.05) < x < (self.initial_x + 0.05))
 
     def copy_template(self, x):
         shutil.copyfile("{}{}.conf".format(self.template_directory,self.template_control_file_name_str), "{}{}.conf".format(self.conffile, self.iteration))
@@ -112,6 +112,7 @@ class Calibrator:
                         print("An exception occurred") 
         nskip = 20
         steps_np = np.array(steps)
+        self.traj['steps']=steps_np
         energies_np = np.array(energies)
         t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil = energies_np[t0:]
@@ -140,23 +141,8 @@ class Calibrator:
     def calibrate(self):
         f = lambda x: Calibrator.objective(self,x)
         c = lambda x: Calibrator.constr(self,x)
-        """
-        print(self.initial_x,c(self.initial_x))
-        print(self.initial_x+0.09,c(self.initial_x+0.09))
-        print(self.initial_x-0.09,c(self.initial_x-0.09))
-        print(self.initial_x+0.11,c(self.initial_x+0.11))
-        print(self.initial_x-0.11,c(self.initial_x-0.11))
-        """
+
         x0 = np.array([self.initial_x], dtype=np.double)
-        """
-        [xopt, fopt, d] = \
-            fmin_l_bfgs_b(f, 
-                    x0, 
-                    approx_grad=True,
-                    maxiter=self.num_iters, 
-                    iprint=99, 
-                    bounds = [(self.min, self.max)]) 
-        """
         res = \
             fmin_cobyla(f, 
                     x0, 
@@ -166,17 +152,12 @@ class Calibrator:
                     disp=3, 
                     catol=0.0,
                     maxfun=self.num_iters) 
-        """
-        res = minimize(f, x0, method='COBYLA', bounds=[(self.min, self.max)],\
-                       options={'rhobeg': 0.1, 'rhoend':0.05, 'disp':3, 'maxfun': self.num_iters})
-        """
+
         self.x = res
-        #self.fun = res.fun
-        #self.converged = res.success
 
 
         Calibrator.extract_reference_target(self)
-        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index=False, sep=' ')
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
         plot = self.traj.plot(figsize=(10,5), grid=True)
         fig = plot.get_figure()
         fig.savefig('plot_alphas.png', bbox_inches='tight')
