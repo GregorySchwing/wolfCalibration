@@ -90,6 +90,10 @@ class Calibrator:
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self)
         print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, np.abs(self.target_y-y_hat)))
+        with open("calibration.log", "a") as myfile:
+            line = "{0: 3.6f}   {1: 3.6f}".format(x[0], np.abs(self.target_y-y_hat)/self.target_y)
+            myfile.write(line)
+
         self.iteration = self.iteration + 1
         return np.abs(self.target_y-y_hat)
     
@@ -99,7 +103,8 @@ class Calibrator:
         [xopt, fopt, gopt, Bopt, func_calls, grad_calls, warnflg] = \
             fmin_l_bfgs_b(f, 
                     x0, 
-                    maxfun=self.num_iters, 
+                    approx_grad=True,
+                    maxiter=self.num_iters, 
                     iprint=99, 
                     bounds = [(self.min, self.max)])
         self.x = xopt
