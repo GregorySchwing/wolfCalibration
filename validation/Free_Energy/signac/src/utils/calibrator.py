@@ -86,6 +86,7 @@ class Calibrator:
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self)
+        print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x, self.target_y, y_hat, np.abs(self.target_y-y_hat)))
         self.iteration = self.iteration + 1
         return np.abs(self.target_y-y_hat)
     
