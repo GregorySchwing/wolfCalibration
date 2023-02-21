@@ -3,6 +3,7 @@ import subprocess
 import shutil
 import re
 import numpy as np
+import pandas as pd
 from pymbar import timeseries
 from scipy.optimize import fmin_l_bfgs_b
 class Calibrator:
@@ -19,6 +20,7 @@ class Calibrator:
         self.forcefield = forcefield
         self.min = min
         self.max = max
+        self.traj = pd.DataFrame()
         self.iteration = 0
         self.num_iters = num_iters
         self.x = 0
@@ -55,7 +57,7 @@ class Calibrator:
         # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
         # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
 
-    def extract_target(self):
+    def extract_target(self, x):
         EnRegex = re.compile("ENER_0")
         
         steps = []
@@ -79,7 +81,7 @@ class Calibrator:
         t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil = energies_np[t0:]
         A_t_equil_steps = steps_np[t0:]
-
+        self.traj[x] = A_t_equil
         return A_t_equil.mean()
         
 
@@ -88,7 +90,7 @@ class Calibrator:
     def objective(self, x):
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
-        y_hat = Calibrator.extract_target(self)
+        y_hat = Calibrator.extract_target(self, x[0])
         print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, np.abs(self.target_y-y_hat)))
         with open("calibration.log", "a") as myfile:
             line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], 100.0*(np.abs(self.target_y-y_hat)/self.target_y))
@@ -109,3 +111,4 @@ class Calibrator:
                     bounds = [(self.min, self.max)])
         self.x = xopt
         self.fun = fopt
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index=False, sep=' ')
