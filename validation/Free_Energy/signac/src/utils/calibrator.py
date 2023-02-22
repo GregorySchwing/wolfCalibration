@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
-                conffile, forcefield, min, max, num_iters=10):
+                conffile, forcefield, min, max, num_iters=50):
         self.gomc = gomc
         self.wolf_model = wolf_model
         self.wolf_potential = wolf_potential
