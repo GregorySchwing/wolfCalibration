@@ -83,7 +83,7 @@ gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/si
 namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-#"""
+"""
 gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 precal_eq_gomc_steps =  gomc_steps_equilb_design_ensemble # set value for paper = 10 * 10**6
 
@@ -91,7 +91,6 @@ gomc_steps_lamda_production = 50 * 10**6 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 5 * 10**6 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
-#"""
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 5 * 10**6
 Calibration_MC_steps = 5 * 10**5
@@ -112,7 +111,7 @@ EqSteps = 1000
 Calibration_MC_steps = 5 * 10**3
 Calibration_MC_Eq_Steps = 1 * 10**3 
 Wolf_Sanity_MC_steps = 1 * 10**4
-"""
+#"""
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -1053,14 +1052,11 @@ def part_4b_initial_guesses_generated(job):
 def part_4b_job_gomc_wolf_sanity_completed_properly(job):
     """Check to see if the wolf_sanity simulation is finished (set temperature)."""
     try: 
-        if (job.doc.winning_alpha):
-            output_name_control_file_name = "wolf_sanity"
-            return gomc_sim_completed_properly(
-                job,
-                output_name_control_file_name,
-            )
-        else:
-            return False
+        output_name_control_file_name = "wolf_sanity"
+        return gomc_sim_completed_properly(
+            job,
+            output_name_control_file_name,
+        )
     except:
         return False
 
@@ -1993,8 +1989,6 @@ def build_psf_pdb_ff_gomc_conf(job):
                 }
             }
         )
-
-    job.doc.winning_alpha = job.sp.electrostatic_method == "Ewald" and job.sp.wolf_model == "Results"
 
     if (job.sp.wolf_model != "Results"):
         return
@@ -2951,13 +2945,10 @@ def extract_electrostatic_energy(job, filename):
 
     return A_t_equil.mean()
     
-
 @Project.pre(part_1a_initial_data_input_to_json)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
-                               for j in jobs[0]._project))
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
 @Project.operation.with_directives(
     {
@@ -3081,9 +3072,7 @@ def run_calibration_run_gomc_command(job):
     #cal.objective(initial_x[0])
     cal.calibrate()
     print("x*={}".format(cal.x))
-    alpha = pd.DataFrame()
-    alpha["alpha"]=cal.x
-    alpha.to_csv("best_alpha.csv", header=True)
+
 
 # ******************************************************
 # ******************************************************
@@ -3093,6 +3082,7 @@ def run_calibration_run_gomc_command(job):
 
 
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.pre(mosdef_input_written)
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential != "Results")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
@@ -3109,7 +3099,7 @@ def run_calibration_run_gomc_command(job):
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
     import shutil
-    bestAlphas = pd.read_csv("best_alpha.csv",header=True)
+    bestAlphas = pd.read_csv("best_alpha.csv",header=0)
     print(bestAlphas)
     alpha = bestAlphas['alpha'].values[0]
     if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
@@ -3120,23 +3110,28 @@ def part_4b_job_gomc_append_wolf_parameters(job):
     jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
         "wolf_model": job.sp.wolf_model, \
         "wolf_potential" : job.sp.wolf_potential}))
+    #print(jobs)
     for ref_job in jobs:
+        #print(ref_job.sp.replica_number_int)
         import re
+        forcefield = "in_gomc_FF.inp"
+        shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, forcefield), ref_job.fn(forcefield))
+
         regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
         for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
             for file in files:
                 if regex.match(file):
-                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                    #print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
                     shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                    append_default_wolf_parameters_line(job,file,alpha)
+                    append_default_wolf_parameters_line(ref_job,file,alpha)
         
         regex = re.compile("wolf_sanity.conf")
         for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
             for file in files:
                 if regex.match(file):
-                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                    #print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
                     shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                    append_default_wolf_parameters_line(job,file,alpha)
+                    append_default_wolf_parameters_line(ref_job,file,alpha)
     
 
 
