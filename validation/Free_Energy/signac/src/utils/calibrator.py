@@ -82,7 +82,7 @@ class Calibrator:
                     except:
                         print(line)
                         print("An exception occurred") 
-        nskip = 20
+        nskip = 1
         steps_np = np.array(steps)
         energies_np = np.array(energies)
         t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
@@ -90,7 +90,6 @@ class Calibrator:
         A_t_equil_steps = steps_np[t0:]
         #energies_np[:t0] = np.nan
         df=pd.DataFrame({'steps':steps_np, x:energies_np})
-        df=pd.DataFrame({'steps':steps_np, 'Ewald':energies_np})
         if (self.traj.empty):
             self.traj = df
         else:
@@ -115,7 +114,7 @@ class Calibrator:
                     except:
                         print(line)
                         print("An exception occurred") 
-        nskip = 20
+        nskip = 1
         steps_np = np.array(steps)
         energies_np = np.array(energies)
         t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
