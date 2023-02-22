@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
-                 conffile, forcefield, min, max, num_iters=2):
+                 conffile, forcefield, min, max, num_iters=10):
         self.gomc = gomc
         self.wolf_model = wolf_model
         self.wolf_potential = wolf_potential
@@ -89,7 +89,8 @@ class Calibrator:
         A_t_equil = energies_np[t0:]
         A_t_equil_steps = steps_np[t0:]
         #energies_np[:t0] = np.nan
-        self.traj[x] = energies_np
+        df=pd.DataFrame({'steps':steps_np, x:energies_np})
+        pd.concat([self.traj, df])
         return A_t_equil.mean()
         
     def extract_reference_target(self):
@@ -112,12 +113,12 @@ class Calibrator:
                         print("An exception occurred") 
         nskip = 20
         steps_np = np.array(steps)
-        self.traj['steps']=steps_np
         energies_np = np.array(energies)
         t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
         A_t_equil = energies_np[t0:]
         A_t_equil_steps = steps_np[t0:]
-        self.traj['Ewald'] = energies_np
+        df=pd.DataFrame({'steps':steps_np, 'Ewald':energies_np})
+        pd.concat([self.traj, df])
         return A_t_equil.mean()
         
     def loss(self,y_hat):
