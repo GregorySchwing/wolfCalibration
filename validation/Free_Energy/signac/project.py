@@ -79,11 +79,11 @@ namd_binary_path = "/wsu/home/go/go24/go2432/wolfCalibration/validation/Free_Ene
 #namd_binary_path = "/mnt/c/Users/grego/OneDrive/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # brads workstation binary paths
-gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
-namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#gomc_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
+#namd_binary_path = "/home/greg/Desktop/wolfCalibration/validation/Free_Energy/signac/bin"
 
 # number of simulation steps
-"""
+#"""
 gomc_steps_equilb_design_ensemble = 30 * 10**6 # set value for paper = 10 * 10**6
 precal_eq_gomc_steps =  gomc_steps_equilb_design_ensemble # set value for paper = 10 * 10**6
 
@@ -111,7 +111,7 @@ EqSteps = 1000
 Calibration_MC_steps = 5 * 10**3
 Calibration_MC_Eq_Steps = 1 * 10**3 
 Wolf_Sanity_MC_steps = 1 * 10**4
-#"""
+"""
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -1303,8 +1303,9 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
 @Project.pre(mosdef_input_written)
-@Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
+#@Project.pre(part_4b_job_gomc_wolf_parameters_appended)
+@Project.pre(lambda *jobs: not any(not part_4b_wolf_sanity_individual_simulation_averages_completed(j) \
+                                   and j.sp.wolf_model != "Results" for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
@@ -2996,9 +2997,9 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.operation.with_directives(
     {
         "np": 1,
-        "ngpu": 0,
+        "ngpu": 1,
         "memory": memory_needed,
-        "walltime": 7,
+        "walltime": 24,
     }
 )
 @flow.with_job
@@ -3046,10 +3047,10 @@ def generate_initial_guesses_for_calibration_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_calibration_best_alpha_obtained)
 @Project.operation.with_directives(
     {
-        "np": 1,
+        "np": 4,
         "ngpu": 0,
         "memory": memory_needed,
-        "walltime": 7,
+        "walltime": 48,
     }
 )
 @flow.with_job
@@ -3139,12 +3140,8 @@ def part_4b_job_gomc_append_wolf_parameters(job):
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
-#@Project.pre(lambda j: j.sp.solute == "solvent_box")
-#@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(part_4b_append_done)
 @Project.pre(lambda *jobs: all(part_4b_wolf_sanity_analysis_completed(j)
                                for j in jobs[0]._project))
-
 @Project.post(part_4b_wolf_sanity_histograms_created)
 @Project.operation.with_directives(
     {
@@ -3393,8 +3390,6 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
 for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-    #@Project.pre(part_5a_preliminary_analysis_individual_simulation_averages_completed)
-
     @Project.post(part_4c_job_production_run_completed_properly)
     @Project.operation.with_directives(
         {

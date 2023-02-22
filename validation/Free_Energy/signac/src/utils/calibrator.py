@@ -61,7 +61,7 @@ class Calibrator:
     def run_simulation(self):
         run_command = "{} +p{} {}.conf > out_{}.dat".format(
             str(self.gomc),
-            str(1),
+            str(4),
             "{}{}".format(self.conffile, self.iteration),
             "{}{}".format(self.conffile, self.iteration),
         )
