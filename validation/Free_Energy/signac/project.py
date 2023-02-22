@@ -1830,28 +1830,28 @@ def build_psf_pdb_ff_gomc_conf(job):
     Single_state_gomc_eq_control_file_name = "single_state_eq"
 
 
-    Single_state_gomc_eq_Coordinates_box_0 = namd_output_prefix+"{}_BOX_0_restart.pdb".format(
+    Single_state_gomc_eq_Coordinates_box_0 = "{}_BOX_0_restart.pdb".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_Structure_box_0 = namd_output_prefix+"{}_BOX_0_restart.psf".format(
+    Single_state_gomc_eq_Structure_box_0 = "{}_BOX_0_restart.psf".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_binCoordinates_box_0 = namd_output_prefix+"{}_BOX_0_restart.coor".format(
+    Single_state_gomc_eq_binCoordinates_box_0 = "{}_BOX_0_restart.coor".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_extendedSystem_box_0 = namd_output_prefix+"{}_BOX_0_restart.xsc".format(
+    Single_state_gomc_eq_extendedSystem_box_0 = "{}_BOX_0_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_Coordinates_box_1 = namd_output_prefix+"{}_BOX_1_restart.pdb".format(
+    Single_state_gomc_eq_Coordinates_box_1 = "{}_BOX_1_restart.pdb".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_Structure_box_1 = namd_output_prefix+"{}_BOX_1_restart.psf".format(
+    Single_state_gomc_eq_Structure_box_1 = "{}_BOX_1_restart.psf".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_binCoordinates_box_1 = namd_output_prefix+"{}_BOX_1_restart.coor".format(
+    Single_state_gomc_eq_binCoordinates_box_1 = "{}_BOX_1_restart.coor".format(
         Single_state_gomc_eq_control_file_name
     )
-    Single_state_gomc_eq_extendedSystem_box_1 = namd_output_prefix+"{}_BOX_1_restart.xsc".format(
+    Single_state_gomc_eq_extendedSystem_box_1 = "{}_BOX_1_restart.xsc".format(
         Single_state_gomc_eq_control_file_name
     )
 
