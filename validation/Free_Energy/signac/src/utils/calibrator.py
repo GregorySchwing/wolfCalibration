@@ -178,7 +178,7 @@ class Calibrator:
         x0 = np.array([self.initial_x], dtype=np.double)
         res = minimize(f, x0, method='COBYLA', constraints=cons, options={'rhobeg': 0.0025, 'disp': True, 'tol': 0.00125,'catol': 0.000,'maxiter': self.num_iters})
         print(res)
-        self.x = res.x
+        self.x = np.round(res.x[0], 4)
 
         Calibrator.extract_reference_target(self)
         self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')

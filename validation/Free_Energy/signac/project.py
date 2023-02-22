@@ -91,7 +91,7 @@ gomc_steps_lamda_production = 50 * 10**6 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 5 * 10**6 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
-"""
+#"""
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 5 * 10**6
 Calibration_MC_steps = 5 * 10**5
@@ -112,7 +112,7 @@ EqSteps = 1000
 Calibration_MC_steps = 5 * 10**3
 Calibration_MC_Eq_Steps = 1 * 10**3 
 Wolf_Sanity_MC_steps = 1 * 10**4
-#"""
+"""
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -1265,34 +1265,35 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.label
 @flow.with_job
 def part_4b_job_gomc_wolf_parameters_appended(job):
+    try:
+        if (job.sp.electrostatic_method == "Ewald"):
+            return True
 
-    if (job.sp.electrostatic_method == "Ewald"):
-        return True
+        """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+        import re
+        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+        success = True
+        atLeastOneMatchExists = False
+        if (job.sp.electrostatic_method == "Ewald"):
+            return True
 
-    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    import re
-    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-    success = True
-    atLeastOneMatchExists = False
-    if (job.sp.electrostatic_method == "Ewald"):
-        return True
+        if(not job.isfile("wolf_sanity.conf")):
+            return False
+        regex = re.compile("wolf_sanity.conf")
+        for root, dirs, files in os.walk(job.fn("")):
+            for file in files:
+                if regex.match(file):
+                    atLeastOneMatchExists = True
+                    with open(file, "r") as openedfile:
+                        last_line = openedfile.readlines()[-1]
+                    if ("WolfAlpha" in last_line):
+                        continue
+                    else:
+                        success = success and False
 
-    if(not job.isfile("wolf_sanity.conf")):
+        return success and atLeastOneMatchExists
+    except:
         return False
-    regex = re.compile("wolf_sanity.conf")
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                atLeastOneMatchExists = True
-                with open(file, "r") as openedfile:
-                    last_line = openedfile.readlines()[-1]
-                if ("WolfAlpha" in last_line):
-                    continue
-                else:
-                    success = success and False
-
-    return success and atLeastOneMatchExists
-
 
 @Project.operation.with_directives(
     {
@@ -1410,56 +1411,6 @@ def part_4b_wolf_sanity_analysis(job):
 # data analysis - get the average data from each individual simulation (start)
 # ******************************************************
 # ******************************************************
-
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential != "Results")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(mosdef_input_written)
-@Project.pre(part_4b_job_gomc_calibration_best_alpha_obtained)
-@Project.post(part_4b_job_gomc_wolf_parameters_appended)
-@Project.operation.with_directives(
-    {
-        "np": 1,
-        "ngpu": 0,
-        "memory": memory_needed,
-        "walltime": walltime_mosdef_hr,
-    }
-)
-@flow.with_job
-def part_4b_job_gomc_append_wolf_parameters(job):
-    import shutil
-    bestAlphas = pd.read_csv("best_alpha.csv", )
-    print(bestAlphas)
-    alpha = bestAlphas['alpha'].values[0]
-    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
-        box_list = [0, 1]
-    else:
-        box_list = [0]
-       
-    jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
-        "wolf_model": job.sp.wolf_model, \
-        "wolf_potential" : job.sp.wolf_potential}))
-    for ref_job in jobs:
-        import re
-        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
-            for file in files:
-                if regex.match(file):
-                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
-                    shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                    append_default_wolf_parameters_line(job,file,alpha)
-        
-        regex = re.compile("wolf_sanity.conf")
-        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
-            for file in files:
-                if regex.match(file):
-                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
-                    shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                    append_default_wolf_parameters_line(job,file,alpha)
-    
-
 
 
 
@@ -3129,7 +3080,7 @@ def run_calibration_run_gomc_command(job):
                initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield, 0.0, 0.5)
     #cal.objective(initial_x[0])
     cal.calibrate()
-    print("x*=%.2f" % (cal.x[0]))
+    print("x*={}".format(cal.x))
     alpha = pd.DataFrame()
     alpha["alpha"]=cal.x
     alpha.to_csv("best_alpha.csv", header=True)
@@ -3139,6 +3090,55 @@ def run_calibration_run_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
+
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
+@Project.pre(lambda j: j.sp.wolf_potential != "Results")
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(part_4b_job_gomc_calibration_best_alpha_obtained)
+@Project.post(part_4b_job_gomc_wolf_parameters_appended)
+@Project.operation.with_directives(
+    {
+        "np": 1,
+        "ngpu": 0,
+        "memory": memory_needed,
+        "walltime": walltime_mosdef_hr,
+    }
+)
+@flow.with_job
+def part_4b_job_gomc_append_wolf_parameters(job):
+    import shutil
+    bestAlphas = pd.read_csv("best_alpha.csv",header=True)
+    print(bestAlphas)
+    alpha = bestAlphas['alpha'].values[0]
+    if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
+        box_list = [0, 1]
+    else:
+        box_list = [0]
+       
+    jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
+        "wolf_model": job.sp.wolf_model, \
+        "wolf_potential" : job.sp.wolf_potential}))
+    for ref_job in jobs:
+        import re
+        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+            for file in files:
+                if regex.match(file):
+                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                    shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
+                    append_default_wolf_parameters_line(job,file,alpha)
+        
+        regex = re.compile("wolf_sanity.conf")
+        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+            for file in files:
+                if regex.match(file):
+                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                    shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
+                    append_default_wolf_parameters_line(job,file,alpha)
+    
+
 
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
