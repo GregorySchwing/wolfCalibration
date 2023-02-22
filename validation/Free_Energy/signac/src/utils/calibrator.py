@@ -5,10 +5,7 @@ import re
 import numpy as np
 import pandas as pd
 from pymbar import timeseries
-from scipy.optimize import fmin_l_bfgs_b, minimize, fmin_cobyla
-from scipy.optimize import basinhopping
-from scipy.optimize import least_squares
-from noisyopt import minimizeCompass
+from scipy.optimize import minimize, fmin_cobyla
 import matplotlib.pyplot as plt
 
 class Calibrator:
