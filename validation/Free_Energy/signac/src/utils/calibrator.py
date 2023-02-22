@@ -30,9 +30,18 @@ class Calibrator:
         self.fun = 0
         self.obj_calls = {}
 
-    def constr(self, x):
-        return (float((self.initial_x - 0.05) < x)) + float(( x > (self.initial_x + 0.05)))
-
+    # >= x0-0.05
+    def constr1(self,x):
+        return (x) - (self.initial_x - 0.05)
+    # <= x0+0.05
+    def constr2(self,x):
+        return (self.initial_x + 0.05) - (x)
+    # >= 0.0
+    def constr3(self,x):
+        return x
+    # <= 0.5
+    def constr4(self,x):
+        return 0.50 - x
     def copy_template(self, x):
         shutil.copyfile("{}{}.conf".format(self.template_directory,self.template_control_file_name_str), "{}{}.conf".format(self.conffile, self.iteration))
         shutil.copyfile("{}{}".format(self.template_directory,self.forcefield), self.forcefield)
@@ -132,8 +141,8 @@ class Calibrator:
 
     # objective function
     def objective(self, x):
-        if (x[0] in self.obj_calls):
-            return self.obj_calls[x[0]]
+        #if (x[0] in self.obj_calls):
+        #    return self.obj_calls[x[0]]
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self, x[0])
@@ -148,13 +157,16 @@ class Calibrator:
     
     def calibrate(self):
         f = lambda x: Calibrator.objective(self,x)
-        c = lambda x: Calibrator.constr(self,x)
+        c1 = lambda x: Calibrator.constr1(self,x)
+        c2 = lambda x: Calibrator.constr2(self,x)
+        c3 = lambda x: Calibrator.constr3(self,x)
+        c4 = lambda x: Calibrator.constr4(self,x)
 
         x0 = np.array([self.initial_x], dtype=np.double)
         res = \
             fmin_cobyla(f, 
                     x0, 
-                    cons=[c],
+                    cons=[c1,c2,c3,c4],
                     rhobeg=0.01,
                     rhoend=0.005, 
                     disp=3, 
