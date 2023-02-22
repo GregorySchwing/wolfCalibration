@@ -6,7 +6,9 @@ import numpy as np
 import pandas as pd
 from pymbar import timeseries
 from scipy.optimize import fmin_l_bfgs_b, minimize, fmin_cobyla
+from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
+from noisyopt import minimizeCompass
 import matplotlib.pyplot as plt
 
 class Calibrator:
@@ -43,6 +45,8 @@ class Calibrator:
     def constr4(self,x):
         return 0.50 - x
     def copy_template(self, x):
+        print('creating template files')
+
         shutil.copyfile("{}{}.conf".format(self.template_directory,self.template_control_file_name_str), "{}{}.conf".format(self.conffile, self.iteration))
         shutil.copyfile("{}{}".format(self.template_directory,self.forcefield), self.forcefield)
         with open("{}{}.conf".format(self.conffile, self.iteration), "a") as myfile:
@@ -54,7 +58,7 @@ class Calibrator:
             myfile.write(defPotLine)
             defPotLine = "WolfPotential\t{freq}\n".format(freq=self.wolf_potential)
             myfile.write(defPotLine)  
-            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=0, val=x[0])
+            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=0, val=np.round(x[0], 4))
             myfile.write(defAlphaLine)
 
     def run_simulation(self):
@@ -75,7 +79,8 @@ class Calibrator:
 
     def extract_target(self, x):
         EnRegex = re.compile("ENER_0")
-        
+        print('extract_target')
+
         steps = []
         energies = []
         densities = []
@@ -98,7 +103,7 @@ class Calibrator:
         A_t_equil = energies_np[t0:]
         A_t_equil_steps = steps_np[t0:]
         #energies_np[:t0] = np.nan
-        df=pd.DataFrame({'steps':steps_np, np.round(x, 3) :energies_np})
+        df=pd.DataFrame({'steps':steps_np, np.round(x, 4) :energies_np})
         if (self.traj.empty):
             self.traj = df
         else:
@@ -143,18 +148,45 @@ class Calibrator:
     def objective(self, x):
         #if (x[0] in self.obj_calls):
         #    return self.obj_calls[x[0]]
+        
         Calibrator.copy_template(self,x)
         Calibrator.run_simulation(self)
         y_hat = Calibrator.extract_target(self, x[0])
-        self.obj_calls[x[0]] = Calibrator.loss(self,y_hat)
+        #self.obj_calls[x[0]] = Calibrator.loss(self,y_hat)
         print('{0:4d}   {1: 3.6f}   {2: 3.6f}   {3: 3.6f}   {4: 3.6f}'.format(self.iteration, x[0], self.target_y, y_hat, Calibrator.loss(self,y_hat)))
         with open("calibration.log", "a") as myfile:
             line = "{0: 3.6f}   {1: 3.6f}\n".format(x[0], Calibrator.loss(self,y_hat))
             myfile.write(line)
 
         self.iteration = self.iteration + 1
+        print("returning")
         return Calibrator.loss(self,y_hat)
     
+    def calibrate(self):
+        f = lambda x: Calibrator.objective(self,x)
+        c1 = lambda x: Calibrator.constr1(self,x)
+        c2 = lambda x: Calibrator.constr2(self,x)
+        c3 = lambda x: Calibrator.constr3(self,x)
+        c4 = lambda x: Calibrator.constr4(self,x)
+
+        cons = [{'type':'ineq', 'fun':c1},        
+        {'type':'ineq', 'fun':c2},
+        {'type':'ineq', 'fun':c3},        
+        {'type':'ineq', 'fun':c4}]
+
+
+        x0 = np.array([self.initial_x], dtype=np.double)
+        res = minimize(f, x0, method='COBYLA', constraints=cons, options={'rhobeg': 0.01, 'disp': True, 'tol': 0.00125,'catol': 0.000,'maxiter': self.num_iters})
+        print(res)
+        self.x = res.x
+
+        Calibrator.extract_reference_target(self)
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
+        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
+        fig = plot.get_figure()
+        fig.savefig('plot_alphas.png', bbox_inches='tight')
+
+"""
     def calibrate(self):
         f = lambda x: Calibrator.objective(self,x)
         c1 = lambda x: Calibrator.constr1(self,x)
@@ -166,9 +198,9 @@ class Calibrator:
         res = \
             fmin_cobyla(f, 
                     x0, 
-                    cons=[c1,c2,c3,c4],
+                    cons=[],
                     rhobeg=0.01,
-                    rhoend=0.005, 
+                    rhoend=0.0025, 
                     disp=3, 
                     catol=0.0,
                     maxfun=self.num_iters) 
@@ -180,3 +212,59 @@ class Calibrator:
         plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
         fig = plot.get_figure()
         fig.savefig('plot_alphas.png', bbox_inches='tight')
+
+    def calibrate_basin(self):
+        f = lambda x: Calibrator.objective(self,x)
+        c1 = lambda x: Calibrator.constr1(self,x)
+        c2 = lambda x: Calibrator.constr2(self,x)
+        c3 = lambda x: Calibrator.constr3(self,x)
+        c4 = lambda x: Calibrator.constr4(self,x)
+        #bounds = [self.initial_x-0.05, self.initial_x+0.05]
+
+        bounds = [[self.initial_x-0.05, self.initial_x+0.05]]
+        x0 = np.array([self.initial_x], dtype=np.double)
+        #minimizer_kwargs = {"method": "BFGS"}
+        minimizer_kwargs = {"method": "COBYLA", 
+                            "rhobeg":0.01,
+                            "rhoend":0.0025, 
+                            "maxfun":self.num_iters}
+
+        res = basinhopping(f, x0, stepsize=0.01, minimizer_kwargs=minimizer_kwargs,niter=self.num_iters)
+        print(res)
+        self.x = res
+
+        Calibrator.extract_reference_target(self)
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
+        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
+        fig = plot.get_figure()
+        fig.savefig('plot_alphas.png', bbox_inches='tight')
+
+    def calibrate_noisy(self):
+        f = lambda x: Calibrator.objective(self,x)
+        c1 = lambda x: Calibrator.constr1(self,x)
+        c2 = lambda x: Calibrator.constr2(self,x)
+        c3 = lambda x: Calibrator.constr3(self,x)
+        c4 = lambda x: Calibrator.constr4(self,x)
+        #bounds = [self.initial_x-0.05, self.initial_x+0.05]
+
+        bounds = [[self.initial_x-0.05, self.initial_x+0.05]]
+        x0 = np.array([self.initial_x], dtype=np.double)
+        res = \
+            minimizeCompass(f, 
+                    x0, 
+                    bounds=bounds,
+                    redfactor=0.005,
+                    #scaling=[1.0],
+                    deltainit=0.01,
+                    deltatol=0.005,
+                    errorcontrol=False, 
+                    paired=False) 
+        print(res)
+        self.x = res
+
+        Calibrator.extract_reference_target(self)
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
+        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
+        fig = plot.get_figure()
+        fig.savefig('plot_alphas.png', bbox_inches='tight')
+"""
