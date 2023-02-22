@@ -176,7 +176,7 @@ class Calibrator:
 
 
         x0 = np.array([self.initial_x], dtype=np.double)
-        res = minimize(f, x0, method='COBYLA', constraints=cons, options={'rhobeg': 0.01, 'disp': True, 'tol': 0.00125,'catol': 0.000,'maxiter': self.num_iters})
+        res = minimize(f, x0, method='COBYLA', constraints=cons, options={'rhobeg': 0.0025, 'disp': True, 'tol': 0.00125,'catol': 0.000,'maxiter': self.num_iters})
         print(res)
         self.x = res.x
 
@@ -213,58 +213,4 @@ class Calibrator:
         fig = plot.get_figure()
         fig.savefig('plot_alphas.png', bbox_inches='tight')
 
-    def calibrate_basin(self):
-        f = lambda x: Calibrator.objective(self,x)
-        c1 = lambda x: Calibrator.constr1(self,x)
-        c2 = lambda x: Calibrator.constr2(self,x)
-        c3 = lambda x: Calibrator.constr3(self,x)
-        c4 = lambda x: Calibrator.constr4(self,x)
-        #bounds = [self.initial_x-0.05, self.initial_x+0.05]
-
-        bounds = [[self.initial_x-0.05, self.initial_x+0.05]]
-        x0 = np.array([self.initial_x], dtype=np.double)
-        #minimizer_kwargs = {"method": "BFGS"}
-        minimizer_kwargs = {"method": "COBYLA", 
-                            "rhobeg":0.01,
-                            "rhoend":0.0025, 
-                            "maxfun":self.num_iters}
-
-        res = basinhopping(f, x0, stepsize=0.01, minimizer_kwargs=minimizer_kwargs,niter=self.num_iters)
-        print(res)
-        self.x = res
-
-        Calibrator.extract_reference_target(self)
-        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
-        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
-        fig = plot.get_figure()
-        fig.savefig('plot_alphas.png', bbox_inches='tight')
-
-    def calibrate_noisy(self):
-        f = lambda x: Calibrator.objective(self,x)
-        c1 = lambda x: Calibrator.constr1(self,x)
-        c2 = lambda x: Calibrator.constr2(self,x)
-        c3 = lambda x: Calibrator.constr3(self,x)
-        c4 = lambda x: Calibrator.constr4(self,x)
-        #bounds = [self.initial_x-0.05, self.initial_x+0.05]
-
-        bounds = [[self.initial_x-0.05, self.initial_x+0.05]]
-        x0 = np.array([self.initial_x], dtype=np.double)
-        res = \
-            minimizeCompass(f, 
-                    x0, 
-                    bounds=bounds,
-                    redfactor=0.005,
-                    #scaling=[1.0],
-                    deltainit=0.01,
-                    deltatol=0.005,
-                    errorcontrol=False, 
-                    paired=False) 
-        print(res)
-        self.x = res
-
-        Calibrator.extract_reference_target(self)
-        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
-        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
-        fig = plot.get_figure()
-        fig.savefig('plot_alphas.png', bbox_inches='tight')
 """
