@@ -90,7 +90,11 @@ class Calibrator:
         A_t_equil_steps = steps_np[t0:]
         #energies_np[:t0] = np.nan
         df=pd.DataFrame({'steps':steps_np, x:energies_np})
-        pd.concat([self.traj, df])
+        df=pd.DataFrame({'steps':steps_np, 'Ewald':energies_np})
+        if (self.traj.empty):
+            self.traj = df
+        else:
+            self.traj = pd.merge(self.traj, df, on='steps', how='outer')
         return A_t_equil.mean()
         
     def extract_reference_target(self):
@@ -118,7 +122,10 @@ class Calibrator:
         A_t_equil = energies_np[t0:]
         A_t_equil_steps = steps_np[t0:]
         df=pd.DataFrame({'steps':steps_np, 'Ewald':energies_np})
-        pd.concat([self.traj, df])
+        if (self.traj.empty):
+            self.traj = df
+        else:
+            self.traj = pd.merge(self.traj, df, on='steps', how='outer')
         return A_t_equil.mean()
         
     def loss(self,y_hat):

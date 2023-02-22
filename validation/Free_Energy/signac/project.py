@@ -285,7 +285,7 @@ def append_checkpoint_line(job, config_file_name, path_to_previous_checkpoint_fi
         myfile.write(checkpointLine)
 
 
-def append_default_wolf_parameters_line(job, config_file_name):
+def append_default_wolf_parameters_line(job, config_file_name,alpha):
     with open(job.fn(config_file_name), "a") as myfile:
         defPotLine = "Wolf\t{freq}\n".format(freq=True)
         myfile.write(defPotLine)
@@ -293,7 +293,7 @@ def append_default_wolf_parameters_line(job, config_file_name):
         myfile.write(defPotLine)
         defPotLine = "WolfPotential\t{freq}\n".format(freq=job.sp.wolf_potential)
         myfile.write(defPotLine)   
-        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=job.sp.alpha)
+        defPotLine = "WolfAlpha\t0\t{freq}\n".format(freq=alpha)
         myfile.write(defPotLine)   
 
 # ******************************************************
@@ -875,6 +875,20 @@ def part_4b_job_gomc_calibration_completed_properly(job):
     except:
         return False
 
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_calibration_best_alpha_obtained(job):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    #This will cause Ewald sims to wait for Wolf calibration to complete.
+    #if(job.sp.wolf_potential == "Results"):
+    #    return True
+    try: 
+        return job.isfile("best_alpha.csv")
+    except:
+        return False
+
 def part_4b_job_gomc_append_wolf_parameters_to_calibration(job):
     try:
         if (job.doc.calibration_iteration_number >= job.doc.calibration_iteration_number_max_number):
@@ -1245,6 +1259,40 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 
     except:
         return False
+    
+
+
+@Project.label
+@flow.with_job
+def part_4b_job_gomc_wolf_parameters_appended(job):
+
+    if (job.sp.electrostatic_method == "Ewald"):
+        return True
+
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    import re
+    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+    success = True
+    atLeastOneMatchExists = False
+    if (job.sp.electrostatic_method == "Ewald"):
+        return True
+
+    if(not job.isfile("wolf_sanity.conf")):
+        return False
+    regex = re.compile("wolf_sanity.conf")
+    for root, dirs, files in os.walk(job.fn("")):
+        for file in files:
+            if regex.match(file):
+                atLeastOneMatchExists = True
+                with open(file, "r") as openedfile:
+                    last_line = openedfile.readlines()[-1]
+                if ("WolfAlpha" in last_line):
+                    continue
+                else:
+                    success = success and False
+
+    return success and atLeastOneMatchExists
+
 
 @Project.operation.with_directives(
     {
@@ -1258,9 +1306,8 @@ def part_4b_is_winning_wolf_model_or_ewald(job):
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
 @Project.pre(lambda j: j.sp.wolf_model == "Results")
 @Project.pre(mosdef_input_written)
-@Project.pre(part_4b_append_done)
-@Project.pre(lambda *jobs: not any(part_4b_job_gomc_winning_alpha(j) and not\
-     part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
+@Project.pre(part_4b_job_gomc_wolf_parameters_appended)
+@Project.pre(lambda *jobs: all(part_4b_wolf_sanity_individual_simulation_averages_completed(j) for j in jobs[0]._project))
 @Project.post(part_4b_wolf_sanity_analysis_completed)
 @flow.with_job
 def part_4b_wolf_sanity_analysis(job):
@@ -1365,60 +1412,13 @@ def part_4b_wolf_sanity_analysis(job):
 # ******************************************************
 
 
-
-
-# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
-# For some reason this is failing on all but replica 0..
-@Project.label
-@flow.with_job
-def part_4b_job_gomc_winning_alpha(job):
-    try:
-        if (job.doc.winning_alpha and not part_4b_job_gomc_wolf_parameters_appended(job)):
-            print(job.fn(""), job.sp.wolf_model, job.sp.wolf_potential)
-        return job.doc.winning_alpha
-    except:
-        return False
-
-
-@Project.label
-@flow.with_job
-def part_4b_job_gomc_wolf_parameters_appended(job):
-
-    if (job.sp.electrostatic_method == "Ewald"):
-        return True
-
-    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
-    import re
-    regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-    success = True
-    atLeastOneMatchExists = False
-    if (job.sp.electrostatic_method == "Ewald"):
-        return True
-
-    if(not job.isfile("wolf_sanity.conf")):
-        return False
-    regex = re.compile("wolf_sanity.conf")
-    for root, dirs, files in os.walk(job.fn("")):
-        for file in files:
-            if regex.match(file):
-                atLeastOneMatchExists = True
-                with open(file, "r") as openedfile:
-                    last_line = openedfile.readlines()[-1]
-                if ("WolfAlpha" in last_line):
-                    continue
-                else:
-                    success = success and False
-
-    return success and atLeastOneMatchExists
-
 # check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_model == "Results")
-@Project.pre(lambda j: j.sp.wolf_potential == "Results")
+@Project.pre(lambda j: j.sp.wolf_potential != "Results")
 @Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(mosdef_input_written)
-@Project.pre(part_4b_all_replicates_best_alpha_found)
-@Project.post(part_4b_append_done)
+@Project.pre(part_4b_job_gomc_calibration_best_alpha_obtained)
+@Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -1430,50 +1430,35 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 @flow.with_job
 def part_4b_job_gomc_append_wolf_parameters(job):
     import shutil
-
-    cols = ["MODEL", "POT", "ALPHA"]
-    bestAlphas = pd.read_csv("best_alpha_all_replicas.csv")
+    bestAlphas = pd.read_csv("best_alpha.csv", )
     print(bestAlphas)
+    alpha = bestAlphas['alpha'].values[0]
     if (job.doc.equilibration_ensemble in ["GCMC", "GEMC_NVT", "GEMC_NPT"]):  
         box_list = [0, 1]
     else:
         box_list = [0]
-    for index, row in bestAlphas.iterrows():
-        print(row)
-        jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
-            "wolf_model": row['WOLF_KIND'], \
-            "wolf_potential" : row['COUL_KIND']}))
-        for ref_job in jobs:
-            if (ref_job.sp.alpha == row['ALPHA']):
-                print(ref_job.fn(""))
-
-                #shutil.copyfile(job.doc.path_to_gomc_sseq_dir+wolf_sanity_control_file_name, wolf_sanity_control_file_name)
-                #append_default_wolf_parameters_line(job,wolf_sanity_control_file_name)
-
-                import re
-                regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-                for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
-                    for file in files:
-                        if regex.match(file):
-                            print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
-                            shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                            append_default_wolf_parameters_line(ref_job,file)
-                
-                regex = re.compile("wolf_sanity.conf")
-                for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
-                    for file in files:
-                        if regex.match(file):
-                            print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
-                            shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
-                            append_default_wolf_parameters_line(ref_job,file)
-                ref_job.doc.winning_alpha = True
-            else:
-                ref_job.doc.winning_alpha = False
-    f = open("append_done.txt", "a")
-    f.write("Now the file has more content!")
-    f.close()
-    job.doc.append_done = True
+       
+    jobs = list(pr.find_jobs({"electrostatic_method": "Wolf", \
+        "wolf_model": job.sp.wolf_model, \
+        "wolf_potential" : job.sp.wolf_potential}))
+    for ref_job in jobs:
+        import re
+        regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
+        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+            for file in files:
+                if regex.match(file):
+                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                    shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
+                    append_default_wolf_parameters_line(job,file,alpha)
         
+        regex = re.compile("wolf_sanity.conf")
+        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+            for file in files:
+                if regex.match(file):
+                    print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
+                    shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, file), ref_job.fn(file))
+                    append_default_wolf_parameters_line(job,file,alpha)
+    
 
 
 
@@ -3020,7 +3005,6 @@ def extract_electrostatic_energy(job, filename):
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_job_gomc_wolf_parameters_appended)
-@Project.pre(part_4b_job_gomc_winning_alpha)
 @Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
                                for j in jobs[0]._project))
 @Project.post(part_4b_job_gomc_wolf_sanity_completed_properly)
@@ -3103,129 +3087,6 @@ def generate_initial_guesses_for_calibration_run_gomc_command(job):
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
-"""
-#@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_model != "Results")
-#@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
-@Project.pre(mosdef_input_written)
-@Project.pre(part_4b_job_gomc_sseq_completed_properly)
-@Project.pre(part_4b_initial_guesses_generated) 
-@Project.post(part_4b_job_gomc_calibration_completed_properly)
-@Project.operation.with_directives(
-    {
-        "np": 1,
-        "ngpu": 0,
-        "memory": memory_needed,
-        "walltime": 7,
-    }
-)
-@flow.with_job
-def run_calibration_run_gomc_command(job):
-    ew_ref = pd.read_csv (job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv", header=0)
-    ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
-    print("Ew mean", ew_mean)
-    from skopt import Optimizer
-    from skopt import callbacks
-    from skopt.callbacks import CheckpointSaver
-    from skopt import load
-    import matplotlib.pyplot as plt
-    from skopt.plots import plot_convergence, plot_evaluations, plot_objective, plot_regret
-    if (job.isfile('./checkpoint.pkl')):
-        res = load('./checkpoint.pkl')
-        x0 = res.x_iters
-        y0 = res.func_vals
-        kwargs_dict = {"callback": [CheckpointSaver("./checkpoint.pkl", compress=9)],
-                       "x0":x0,              # already examined values for x
-                        "y0":y0} # keyword arguments will be passed to `skopt.dump`}
-
-    else:
-        kwargs_dict = {"callback": [CheckpointSaver("./checkpoint.pkl", compress=9)]} # keyword arguments will be passed to `skopt.dump`}
-    opt = Optimizer([(0, 0.5)], "GP", acq_func="EI",
-                acq_optimizer="sampling",
-                initial_point_generator="lhs",
-                n_initial_points=10,
-                acq_optimizer_kwargs=kwargs_dict)
-
-    #for cal_run in range(job.doc.calibration_iteration_number_max_number):
-    for cal_run in range(20):
-
-        print("Calibration_iteration_number", cal_run)
-        control_file_name_str = "wolf_calibration_{}".format(cal_run)
-        if (job.isfile("out_{}.dat".format(control_file_name_str))):
-            continue
-        #control_file_name_str = "wolf_calibration"
-        template_control_file_name_str = "wolf_calibration_{}".format(1)
-
-        #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
-
-        import shutil
-
-        shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+template_control_file_name_str+".conf", control_file_name_str+".conf")
-        shutil.copyfile(job.doc.path_to_ew_results_repl_0_dir+"in_gomc_FF.inp", "in_gomc_FF.inp")
-        suggested = []
-        if (cal_run == 0):
-            suggested = part_4b_extract_best_initial_guess_from_ewald_calibration(job)
-        else:
-            suggested = opt.ask()
-        with open(job.fn("{}.conf".format(control_file_name_str)), "a") as myfile:
-            defPotLine = "InitStep\t{zero}\n".format(zero=0)
-            myfile.write(defPotLine)
-            defPotLine = "Wolf\t{freq}\n".format(freq=True)
-            myfile.write(defPotLine)
-            defPotLine = "WolfKind\t{freq}\n".format(freq=job.sp.wolf_model)
-            myfile.write(defPotLine)
-            defPotLine = "WolfPotential\t{freq}\n".format(freq=job.sp.wolf_potential)
-            myfile.write(defPotLine)  
-            defAlphaLine = "WolfAlpha\t{box}\t{val}\n".format(box=0, val=suggested[0])
-            myfile.write(defAlphaLine)
-
-        print(f"Running simulation job id {job}")
-        run_command = "{}/{} +p{} {}.conf > out_{}.dat".format(
-            str(gomc_binary_path),
-            str(job.doc.gomc_calibration_gomc_binary_file),
-            str(1),
-            str(control_file_name_str),
-            str(control_file_name_str),
-        )
-        print('gomc gomc_calibration_run_ensemble run_command = ' + str(run_command))
-        import subprocess
-
-        exec_run_command = subprocess.Popen(
-            run_command, shell=True, stderr=subprocess.STDOUT
-        )
-        os.waitpid(exec_run_command.pid, 0)  # os.WSTOPPED) # 0)
-        # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
-        # test if the simulation actualy finished before checkin and adding 1 to the equilb counter
-
-        if gomc_sim_completed_properly(
-            job,
-            control_file_name_str
-        ):
-            y = extract_electrostatic_energy(job, "out_{}.dat".format(control_file_name_str))
-            print(suggested, y, ew_mean, y-ew_mean, (y-ew_mean)/ew_mean)
-            res = opt.tell(suggested, np.abs(y-ew_mean))
-            #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-            #job.doc.calibration_iteration_number = job.doc.calibration_iteration_number+1
-            #print("Incrementing calibration_iteration_number", job.doc.calibration_iteration_number)
-    print("x*=%.2f f(x*)=%.2f" % (res.x[0], res.fun))
-    job.doc.best_alpha = res.x[0]
-    job.doc.best_alpha_elec_mean = res.fun
-    _ = plot_objective(res)
-    plt.savefig('plot_objective.png', bbox_inches='tight')
-    plt.show()
-    _ = plot_convergence(res)
-    plt.savefig('plot_convergence.png', bbox_inches='tight')
-    plt.show()
-    _ = plot_evaluations(res)
-    plt.savefig('plot_evaluations.png', bbox_inches='tight')
-    plt.show()
-    _ = plot_regret(res)
-    plt.savefig('plot_regret.png', bbox_inches='tight')
-    plt.show()
-
-"""
 
 # ******************************************************
 # ******************************************************
@@ -3235,12 +3096,12 @@ def run_calibration_run_gomc_command(job):
 #@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_model != "Results")
-#@Project.pre(lambda j: j.sp.replica_number_int == 0)
+@Project.pre(lambda j: j.sp.replica_number_int == 0)
 @Project.pre(part_1b_under_equilb_design_ensemble_run_limit)
 @Project.pre(mosdef_input_written)
 @Project.pre(part_4b_job_gomc_sseq_completed_properly)
 @Project.pre(part_4b_initial_guesses_generated) 
-@Project.post(part_4b_job_gomc_calibration_completed_properly)
+@Project.post(part_4b_job_gomc_calibration_best_alpha_obtained)
 @Project.operation.with_directives(
     {
         "np": 1,
@@ -3268,181 +3129,17 @@ def run_calibration_run_gomc_command(job):
                initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield, 0.0, 0.5)
     #cal.objective(initial_x[0])
     cal.calibrate()
-    print("x*=%.2f f(x*)=%.2f" % (cal.x, cal.fun))
-    job.doc.best_alpha = cal.x
-    job.doc.best_alpha_elec_mean = cal.fun
-    quit()
+    print("x*=%.2f" % (cal.x))
+    alpha = pd.DataFrame()
+    alpha["alpha"]=cal.x
+    alpha.to_csv("best_alpha.csv", header=True)
+
 # ******************************************************
 # ******************************************************
 # equilb NPT - starting the GOMC simulation (start)
 # ******************************************************
 # ******************************************************
 
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Results")
-@Project.pre(lambda j: j.sp.wolf_model == "Results")
-#@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
-                               for j in jobs[0]._project))
-@Project.pre(lambda *jobs: all(part_4b_job_gomc_sseq_average_obtained(j)
-                               for j in jobs[0]._project))
-#@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_needs_to_be_checked(j)
-#                               for j in jobs[0]._project))
-@Project.post(part_4b_wrote_alpha_csv)
-@Project.operation.with_directives(
-    {
-        "np": 1,
-        "ngpu": 0,
-        "memory": memory_needed,
-        "walltime": walltime_mosdef_hr,
-    }
-)
-@flow.with_job
-def write_replicate_alpha_csv(job):
-    try:
-        ew_ref = pd.read_csv (job.doc.path_to_ew_results_my_repl_dir+"ewald_average.csv", header=0)
-        ew_mean = ew_ref['EWALD_MEAN'].iloc[0]
-        print("Ew mean", ew_mean)
-        jobs = list(pr.find_jobs({"replica_number_int": job.sp.replica_number_int, "electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute}))
-        try:
-            NUMBOXES = 1
-            for b in range (NUMBOXES):
-                master = pd.DataFrame()
-                columnLabels = ["WOLF_KIND","COUL_KIND","ALPHA","MEAN_REL_ERR"]
-                cols = ["MODEL", "POT", "ALPHA"]
-                colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
-                for ewald_job in jobs:
-                    if (ewald_job.sp.wolf_model == "Results"):
-                        continue
-
-                    control_file_name = "wolf_calibration"
-
-                    output_file = f'out_{control_file_name}.dat'
-
-                    import re
-                    EnRegex = re.compile("ENER_0")
-                    
-                    steps = []
-                    energies = []
-                    densities = []
-                    with open(ewald_job.fn(output_file), 'r', encoding='utf8') as f:
-                        for line in f:
-                            if EnRegex.match(line):
-                                try:
-                                    steps.append(float(line.split()[1]))
-                                    #energies.append(float(line.split()[2]))
-                                    # Use Total_Elec to avoid underreporting error.
-                                    energies.append(float(line.split()[7]))
-
-                                except:
-                                    print(line)
-                                    print("An exception occurred") 
-                    nskip = 1
-                    steps_np = np.array(steps)
-                    energies_np = np.array(energies)
-                    from pymbar import timeseries
-                    t0, g, Neff_max = timeseries.detectEquilibration(energies_np, nskip=nskip) # compute indices of uncorrelated timeseries
-                    A_t_equil = energies_np[t0:]
-                    A_t_equil_steps = steps_np[t0:]
-
-                    dict_of_equilibrated_energies = {}
-                    dict_of_equilibrated_energies_stats = {}
-
-                    dict_of_equilibrated_energies["steps"] = A_t_equil_steps
-                    dict_of_equilibrated_energies[f'{job.sp.wolf_model}_{job.sp.wolf_potential}'] = A_t_equil
-
-
-                    data = {'WOLF_KIND' : ewald_job.sp.wolf_model, 'COUL_KIND' : ewald_job.sp.wolf_potential,\
-                         'ALPHA' : ewald_job.sp.alpha, 'MEAN_REL_ERR' : (A_t_equil.mean()-ew_mean)/ew_mean}
-                    curr = pd.DataFrame(data, index=[0])  # the `index` argument is important 
-                    master = master.append(curr, ignore_index=True)
-                    #master = master.sort_values(['WOLF_KIND', 'COUL_KIND'],ascending = [True, False])
-                master = master.sort_values(['WOLF_KIND', 'COUL_KIND', 'ALPHA'],ascending = [True, False, True])
-                master.to_csv('full_calibration_replica_{}_BOX_{}.csv'.format(job.doc.replica_number_int, b), header=True, index=False, sep=',')
-
-                curr = master.loc[master.groupby(['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()].reset_index(drop=True)
-                curr = curr.sort_values(['WOLF_KIND', 'COUL_KIND'],ascending = [True, False])
-                print(curr)
-                print(curr.columns)
-                prev = pd.DataFrame()
-                curr.to_csv('best_alphas_replica_{}_BOX_{}.csv'.format(job.doc.replica_number_int, b), header=True, index=False, sep=',')
-        except:
-            print(repr(e))
-            return False
-    except:
-        print(repr(e))
-        return False
-
-
-@Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
-@Project.pre(lambda j: j.sp.wolf_potential == "Results")
-@Project.pre(lambda j: j.sp.wolf_model == "Results")
-@Project.pre(lambda j: j.sp.replica_number_int == 0)
-@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_completed_properly(j)
-                               for j in jobs[0]._project))
-@Project.pre(lambda *jobs: all(part_4b_wrote_alpha_csv(j)
-                               for j in jobs[0]._project))
-#@Project.pre(lambda *jobs: all(part_4b_job_gomc_calibration_needs_to_be_checked(j)
-#                               for j in jobs[0]._project))
-@Project.post(part_4b_all_replicates_best_alpha_found)
-@Project.operation.with_directives(
-    {
-        "np": 1,
-        "ngpu": 0,
-        "memory": memory_needed,
-        "walltime": walltime_mosdef_hr,
-    }
-)
-@flow.with_job
-def get_minimum_alpha_across_replicas(job):
-    try:
-        jobs = list(pr.find_jobs({"electrostatic_method": job.sp.electrostatic_method, "solute": job.sp.solute,\
-            "wolf_potential": job.sp.wolf_potential,"wolf_model": job.sp.wolf_model,}))
-        try:
-            master = pd.DataFrame()
-            NUMBOXES = 1
-            for b in range (NUMBOXES):
-
-                cols = ["MODEL", "POT", "ALPHA"]
-                colList = ["ALPHA","WAIBEL2018_DSF", "RAHBARI_DSF", "WAIBEL2019_DSF", "WAIBEL2018_DSP", "RAHBARI_DSP", "WAIBEL2019_DSP"]
-                for ewald_job in jobs:
-                    try:
-                        curr = pd.DataFrame()
-                        prev = pd.DataFrame()
-                        if (ewald_job.isfile('full_calibration_replica_{}_BOX_{}.csv'.format(ewald_job.doc.replica_number_int, b))):
-                            curr = pd.read_csv (ewald_job.fn('full_calibration_replica_{}_BOX_{}.csv'.format(ewald_job.doc.replica_number_int, b)), sep=",", header=0)
-                        else:
-                            print(ewald_job.fn('full_calibration_replica_{}_BOX_{}.csv'.format(ewald_job.doc.replica_number_int, b)), "DNE")
-                            #return False
-                        print(curr)
-                        master = master.append(curr, ignore_index=False)
-                        print("master")
-                        print(master)
-                    except:
-                        print(ewald_job.fn(""), "exc")
-                        # Make this job eligibile for the next cal run
-            master = master.sort_values(['WOLF_KIND', 'COUL_KIND', 'ALPHA'],ascending = [True, False, True])
-            print("master sorted")
-            print(master)
-            master.to_csv('full_calibration_all_replicas.csv', header=True, index=False, sep=',')
-            curr = master.groupby(['WOLF_KIND','COUL_KIND','ALPHA']).mean()
-            print("mean")
-
-            print(curr)
-            print("best")
-            curr.reset_index(inplace=True)
-            curr['MEAN_REL_ERR'] = curr['MEAN_REL_ERR'].abs()
-            #bestA = curr.loc[curr.groupby(level=['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()]
-            bestA = curr.loc[curr.groupby(['WOLF_KIND','COUL_KIND']).MEAN_REL_ERR.idxmin()]
-            #bestA = curr.min(level=['WOLF_KIND','COUL_KIND'])
-            bestA.to_csv('best_alpha_all_replicas.csv', header=True, index=False, sep=',')
-        except:
-            print()
-            print(repr(e))
-            return False
-    except:
-        print(repr(e))
-        return False
 
 @Project.pre(lambda j: j.sp.electrostatic_method == "Wolf")
 @Project.pre(lambda j: j.sp.wolf_potential == "Results")
