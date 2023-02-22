@@ -91,7 +91,7 @@ gomc_steps_lamda_production = 50 * 10**6 # set value for paper = 50 * 10**6
 gomc_console_output_data_every_X_steps = 5 * 10**2 # set value for paper = 100 * 10**3
 gomc_output_data_every_X_steps = 5 * 10**6 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
-
+"""
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 5 * 10**6
 Calibration_MC_steps = 5 * 10**5
@@ -112,7 +112,7 @@ EqSteps = 1000
 Calibration_MC_steps = 5 * 10**3
 Calibration_MC_Eq_Steps = 1 * 10**3 
 Wolf_Sanity_MC_steps = 1 * 10**4
-"""
+#"""
 """
 During the
 production run, the change in energy (DeltaU i,j ) between
@@ -3129,7 +3129,7 @@ def run_calibration_run_gomc_command(job):
                initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield, 0.0, 0.5)
     #cal.objective(initial_x[0])
     cal.calibrate()
-    print("x*=%.2f" % (cal.x))
+    print("x*=%.2f" % (cal.x[0]))
     alpha = pd.DataFrame()
     alpha["alpha"]=cal.x
     alpha.to_csv("best_alpha.csv", header=True)
