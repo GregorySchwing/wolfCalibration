@@ -3066,8 +3066,9 @@ def run_calibration_run_gomc_command(job):
     template_control_file_name_str = "wolf_calibration_{}".format(1)
     conffile = "wolf_calibration_"
     forcefield = "in_gomc_FF.inp"
-    from src.utils.calibrator import Calibrator 
-    gomc = "{}/{}".format(gomc_binary_path,job.doc.gomc_calibration_gomc_binary_file)
+    from src.utils.calibrator import Calibrator
+    gomc = "{}/{}".format("/wsu/home/go/go24/go2432/GOMC/bin",job.doc.gomc_calibration_gomc_binary_file) 
+    #gomc = "{}/{}".format(gomc_binary_path,job.doc.gomc_calibration_gomc_binary_file)
     cal = Calibrator(gomc, job.sp.wolf_model, job.sp.wolf_potential,target_y,\
                initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield, 0.0, 0.5)
     #cal.objective(initial_x[0])
