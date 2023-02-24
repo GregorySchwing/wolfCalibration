@@ -5,9 +5,11 @@ import re
 import numpy as np
 import pandas as pd
 from pymbar import timeseries
-from scipy.optimize import minimize, fmin_cobyla, basinhopping
+from scipy.optimize import minimize, fmin_cobyla, basinhopping, Bounds
+from scipy.interpolate import RectBivariateSpline
+from scipy import interpolate
 import matplotlib.pyplot as plt
-
+import scipy.interpolate as si
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
                 conffile, forcefield, min, max, num_iters=50):
@@ -189,24 +191,40 @@ class Calibrator:
 
     
     def calibrate_global(self):
+
+        title = "Wolf_Calibration_"+self.wolf_model+"_"+self.wolf_potential+"_BOX_0_"+self.conffile+"0.dat"
+        print("Reading ", title)
+        df = pd.read_csv(self.template_directory+title,sep='\t',index_col=0, header=None)
+        print(df)
+        # remove the nan column
+        df = df.iloc[: , :-1]
+        alphas = np.arange (0.0, 0.5, 0.005)
+        df.columns = alphas
+        # You can test Vlugt's assertion that 
+        """
+        For dense liquids such as water and methanol at ambient conditions, 
+        it is suﬃcient to plot Figure 1 for a single conﬁguration [93].
+        
+        dfMean = df.iloc[0, :]
+        """
+
+        dfMean = df.mean()
+        print(dfMean)
+        plot = dfMean.plot(figsize=(10,5), grid=True)
+        fig = plot.get_figure()
+        fig.savefig('plot_ewald_surface_{}.png'.format(title), bbox_inches='tight')
+
+        sampleEwaldSurface = si.interp1d(dfMean.index, dfMean)
+        print(sampleEwaldSurface(0.25))
+
+
         f = lambda x: Calibrator.objective(self,x)
-        """
-        c1 = lambda x: Calibrator.constr1(self,x)
-        c2 = lambda x: Calibrator.constr2(self,x)
-        c3 = lambda x: Calibrator.constr3(self,x)
-        c4 = lambda x: Calibrator.constr4(self,x)
 
-        cons = [{'type':'ineq', 'fun':c1},        
-        {'type':'ineq', 'fun':c2},
-        {'type':'ineq', 'fun':c3},        
-        {'type':'ineq', 'fun':c4}]
-        """
-
-        bounds = [0.0, 0.5]
+        bounds = Bounds(0.0, 0.5)
 
         x0 = np.array([self.initial_x], dtype=np.double)
         #res = minimize(f, x0, method='COBYLA', constraints=cons, options={'rhobeg': 0.0025, 'disp': True, 'tol': 0.00125,'catol': 0.000,'maxiter': self.num_iters})
-        minimizer_kwargs = {"method":"L-BFGS-B", "jac":None, "bounds":bounds, "ftol":0.01}
+        minimizer_kwargs = {"method":"L-BFGS-B", "jac":None, "bounds":bounds, "tol":0.01}
         res = basinhopping(f, x0, minimizer_kwargs=minimizer_kwargs,niter=200,niter_success=5,stepsize=0.05,seed=1)
 
         print(res)
