@@ -5,7 +5,7 @@ import re
 import numpy as np
 import pandas as pd
 from pymbar import timeseries
-from scipy.optimize import minimize, fmin_cobyla
+from scipy.optimize import minimize, fmin_cobyla, basinhopping
 import matplotlib.pyplot as plt
 
 class Calibrator:
@@ -186,6 +186,42 @@ class Calibrator:
         plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
         fig = plot.get_figure()
         fig.savefig('plot_alphas.png', bbox_inches='tight')
+
+    
+    def calibrate_global(self):
+        f = lambda x: Calibrator.objective(self,x)
+        """
+        c1 = lambda x: Calibrator.constr1(self,x)
+        c2 = lambda x: Calibrator.constr2(self,x)
+        c3 = lambda x: Calibrator.constr3(self,x)
+        c4 = lambda x: Calibrator.constr4(self,x)
+
+        cons = [{'type':'ineq', 'fun':c1},        
+        {'type':'ineq', 'fun':c2},
+        {'type':'ineq', 'fun':c3},        
+        {'type':'ineq', 'fun':c4}]
+        """
+
+        bounds = [0.0, 0.5]
+
+        x0 = np.array([self.initial_x], dtype=np.double)
+        #res = minimize(f, x0, method='COBYLA', constraints=cons, options={'rhobeg': 0.0025, 'disp': True, 'tol': 0.00125,'catol': 0.000,'maxiter': self.num_iters})
+        minimizer_kwargs = {"method":"L-BFGS-B", "jac":None, "bounds":bounds, "ftol":0.01}
+        res = basinhopping(f, x0, minimizer_kwargs=minimizer_kwargs,niter=200,niter_success=5,stepsize=0.05,seed=1)
+
+        print(res)
+        self.x = np.round(res.x, 4)
+        print(self.x)
+        alpha = pd.DataFrame()
+        alpha["alpha"]=self.x
+        alpha.to_csv("best_alpha.csv", header=True)
+        print(alpha)
+        Calibrator.extract_reference_target(self)
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
+        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
+        fig = plot.get_figure()
+        fig.savefig('plot_alphas.png', bbox_inches='tight')
+
 
 """
     def calibrate(self):

@@ -3071,7 +3071,9 @@ def run_calibration_run_gomc_command(job):
     cal = Calibrator(gomc, job.sp.wolf_model, job.sp.wolf_potential,target_y,\
                initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield, 0.0, 0.5)
     #cal.objective(initial_x[0])
-    cal.calibrate()
+    #cal.calibrate()
+    cal.calibrate_global()
+
     print("x*={}".format(cal.x))
 
 
