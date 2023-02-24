@@ -225,7 +225,7 @@ class Calibrator:
         x0 = np.array([self.initial_x], dtype=np.double)
         #res = minimize(f, x0, method='COBYLA', constraints=cons, options={'rhobeg': 0.0025, 'disp': True, 'tol': 0.00125,'catol': 0.000,'maxiter': self.num_iters})
         minimizer_kwargs = {"method":"L-BFGS-B", "jac":None, "bounds":bounds, "tol":0.01}
-        res = basinhopping(f, x0, minimizer_kwargs=minimizer_kwargs,niter=200,niter_success=5,stepsize=0.05,seed=1)
+        res = basinhopping(f, x0, minimizer_kwargs=minimizer_kwargs,niter=200,niter_success=40,stepsize=0.05,seed=1)
 
         print(res)
         self.x = np.round(res.x, 4)
