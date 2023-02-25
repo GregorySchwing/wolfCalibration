@@ -3073,8 +3073,8 @@ def run_calibration_run_gomc_command(job):
                initial_x[0],template_directory,template_control_file_name_str,conffile,forcefield, 0.0, 0.5)
     #cal.objective(initial_x[0])
     #cal.calibrate()
-    cal.calibrate_global()
-
+    #cal.calibrate_global()
+    cal.calibrate_skopt()
     print("x*={}".format(cal.x))
 
 

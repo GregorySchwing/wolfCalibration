@@ -5,7 +5,7 @@ import re
 import numpy as np
 import pandas as pd
 from pymbar import timeseries
-from scipy.optimize import minimize, fmin_cobyla, basinhopping, Bounds
+from scipy.optimize import minimize, fmin_cobyla, basinhopping, Bounds, shgo
 from scipy.interpolate import RectBivariateSpline
 from scipy import interpolate
 import matplotlib.pyplot as plt
@@ -190,6 +190,29 @@ class Calibrator:
         fig.savefig('plot_alphas.png', bbox_inches='tight')
 
     
+    def calibrate_shgo(self):
+
+        f = lambda x: Calibrator.objective(self,x)
+
+        bounds = Bounds(0.0, 0.5)
+
+        x0 = np.array([self.initial_x], dtype=np.double)
+        res = shgo(f, bounds)
+        print(res)
+        self.x = np.round(res.x, 4)
+        print(self.x)
+        alpha = pd.DataFrame()
+        alpha["alpha"]=self.x
+        alpha.to_csv("best_alpha.csv", header=True)
+        print(alpha)
+        Calibrator.extract_reference_target(self)
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
+        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
+        fig = plot.get_figure()
+        fig.savefig('plot_alphas.png', bbox_inches='tight')
+
+
+    
     def calibrate_global(self):
 
         title = "Wolf_Calibration_"+self.wolf_model+"_"+self.wolf_potential+"_BOX_0_"+self.conffile+"0.dat"
@@ -230,6 +253,59 @@ class Calibrator:
         print(res)
         self.x = np.round(res.x, 4)
         print(self.x)
+        alpha = pd.DataFrame()
+        alpha["alpha"]=self.x
+        alpha.to_csv("best_alpha.csv", header=True)
+        print(alpha)
+        Calibrator.extract_reference_target(self)
+        self.traj.to_csv('alpha_v_mc_steps.csv', header=True, index='steps', sep=' ')
+        plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
+        fig = plot.get_figure()
+        fig.savefig('plot_alphas.png', bbox_inches='tight')
+
+
+    
+    def calibrate_skopt(self):
+
+
+        f = lambda x: Calibrator.objective(self,x)
+
+        bounds = Bounds(0.0, 0.5)
+
+        x0 = np.array([self.initial_x], dtype=np.double)
+
+        from skopt import Optimizer
+        import matplotlib.pyplot as plt
+        from skopt.plots import plot_convergence, plot_evaluations, plot_objective, plot_regret
+        opt = Optimizer([(0, 0.5)], "GP", acq_func="EI",
+                    acq_optimizer="sampling",
+                    initial_point_generator="lhs",
+                    n_initial_points=5)
+        
+        for cal_run in range(self.num_iters):
+            if (cal_run == 0):
+                x = [self.initial_x]
+            else:
+                x = opt.ask()
+            res = opt.tell(x, f(x))
+
+        print(res)
+        self.x = np.round(res.x, 4)
+        print(self.x)
+
+        _ = plot_objective(res)
+        plt.savefig('plot_objective.png', bbox_inches='tight')
+        #plt.show()
+        _ = plot_convergence(res)
+        plt.savefig('plot_convergence.png', bbox_inches='tight')
+        #plt.show()
+        _ = plot_evaluations(res)
+        plt.savefig('plot_evaluations.png', bbox_inches='tight')
+        #plt.show()
+        _ = plot_regret(res)
+        plt.savefig('plot_regret.png', bbox_inches='tight')
+        #plt.show()
+
         alpha = pd.DataFrame()
         alpha["alpha"]=self.x
         alpha.to_csv("best_alpha.csv", header=True)
