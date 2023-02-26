@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import scipy.interpolate as si
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
-                conffile, forcefield, min, max, num_iters=50):
+                conffile, forcefield, min, max, num_iters=5):
         self.gomc = gomc
         self.wolf_model = wolf_model
         self.wolf_potential = wolf_potential
@@ -267,7 +267,25 @@ class Calibrator:
     
     def calibrate_skopt(self):
 
+        title = "Wolf_Calibration_"+self.wolf_model+"_"+self.wolf_potential+"_BOX_0_"+self.conffile+"0.dat"
+        print("Reading ", title)
+        df = pd.read_csv(self.template_directory+title,sep='\t',index_col=0, header=None)
+        print(df)
+        # remove the nan column
+        df = df.iloc[: , :-1]
+        alphas = np.arange (0.0, 0.5, 0.005)
+        df.columns = alphas
+        # You can test Vlugt's assertion that 
+        """
+        For dense liquids such as water and methanol at ambient conditions, 
+        it is suﬃcient to plot Figure 1 for a single conﬁguration [93].
+        
+        dfMean = df.iloc[0, :]
+        """
 
+        dfMean = df.mean()
+        dfMean = dfMean.abs()
+        print(dfMean)
         f = lambda x: Calibrator.objective(self,x)
 
         bounds = Bounds(0.0, 0.5)
@@ -294,6 +312,8 @@ class Calibrator:
         print(self.x)
 
         _ = plot_objective(res)
+        _.plot(dfMean.index, dfMean.values)
+        _.legend(loc="upper left", labels=["Wolf","Wolf Minimum","Ewald"])
         plt.savefig('plot_objective.png', bbox_inches='tight')
         #plt.show()
         _ = plot_convergence(res)
