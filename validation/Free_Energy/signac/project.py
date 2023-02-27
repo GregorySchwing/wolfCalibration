@@ -93,7 +93,7 @@ gomc_output_data_every_X_steps = 5 * 10**6 # set value for paper = 100 * 10**3
 #gomc_free_energy_output_data_every_X_steps = 10 * 10**3 # set value for paper = 10 * 10**3
 MC_steps = int(gomc_steps_equilb_design_ensemble)
 EqSteps = 5 * 10**6
-Calibration_MC_steps = 5 * 10**5
+Calibration_MC_steps = 10 * 10**5
 Calibration_MC_Eq_Steps = 5 * 10**4
 Wolf_Sanity_MC_steps = 100 * 10**6 # set value for paper = 50 * 10**6
 """
