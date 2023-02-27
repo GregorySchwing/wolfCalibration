@@ -10,6 +10,8 @@ from scipy.interpolate import RectBivariateSpline
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import scipy.interpolate as si
+from skopt import dump, load, expected_minimum
+
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
                 conffile, forcefield, min, max, num_iters=5):
@@ -266,8 +268,8 @@ class Calibrator:
 
     
     def calibrate_skopt(self):
-
-        title = "Wolf_Calibration_"+self.wolf_model+"_"+self.wolf_potential+"_BOX_0_"+self.conffile+"0.dat"
+        prefix = "Wolf_Calibration_"+self.wolf_model+"_"+self.wolf_potential+"_BOX_0_"+self.conffile+"0"
+        title = "{}.dat".format(prefix)
         print("Reading ", title)
         df = pd.read_csv(self.template_directory+title,sep='\t',index_col=0, header=None)
         print(df)
@@ -298,7 +300,8 @@ class Calibrator:
         opt = Optimizer([(0, 0.5)], "GP", acq_func="EI",
                     acq_optimizer="sampling",
                     initial_point_generator="lhs",
-                    n_initial_points=5)
+                    n_initial_points=5,
+                    random_state=123)
         
         for cal_run in range(self.num_iters):
             if (cal_run == 0):
@@ -306,23 +309,39 @@ class Calibrator:
             else:
                 x = opt.ask()
             res = opt.tell(x, f(x))
+            dump(res, "./{}_checkpoint.pkl".format(prefix), compress=3)
 
-        print(res)
-        self.x = np.round(res.x, 4)
+        em = expected_minimum(res, n_random_starts=100000, random_state=123)
+        print(em)
+        self.x = np.round(em.x, 4)
         print(self.x)
 
-        _ = plot_objective(res)
+
+        dump(res, '{}.pkl'.format(prefix))
+
+        _ = plot_objective(res, minimum='expected_minimum', n_minimum_search=100000, dimensions=["Alpha"], size=4)
         _.plot(dfMean.index, dfMean.values)
         _.legend(loc="upper left", labels=["Wolf","Wolf Minimum","Ewald"])
+        ylim = _.get_ylim()
+        print(ylim)
+        ylim_l = list(ylim)
+        if (ylim_l[0] >= 0.0):
+            ylim_l[0] = 0.0
+        _.set_ylim(tuple(ylim_l))
+        _.set_title("Objective")
+        _.set_ylabel("Relative Error")
         plt.savefig('plot_objective.png', bbox_inches='tight')
-        #plt.show()
+        plt.show()
         _ = plot_convergence(res)
+        _.set_title("Convergence")
         plt.savefig('plot_convergence.png', bbox_inches='tight')
         #plt.show()
         _ = plot_evaluations(res)
+        _.set_title("Evaluations")
         plt.savefig('plot_evaluations.png', bbox_inches='tight')
         #plt.show()
         _ = plot_regret(res)
+        _.set_title("Regret")
         plt.savefig('plot_regret.png', bbox_inches='tight')
         #plt.show()
 
@@ -335,7 +354,6 @@ class Calibrator:
         plot = self.traj.plot(figsize=(10,5), grid=True, x='steps')
         fig = plot.get_figure()
         fig.savefig('plot_alphas.png', bbox_inches='tight')
-
 
 """
     def calibrate(self):
