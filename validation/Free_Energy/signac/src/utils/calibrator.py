@@ -14,7 +14,7 @@ from skopt import dump, load, expected_minimum
 
 class Calibrator:
     def __init__(self, gomc, wolf_model, wolf_potential, target_y, initial_x, template_directory, template_control_file_name_str, \
-                conffile, forcefield, min, max, num_iters=5):
+                conffile, forcefield, min, max, num_iters=100):
         self.gomc = gomc
         self.wolf_model = wolf_model
         self.wolf_potential = wolf_potential
@@ -332,7 +332,7 @@ class Calibrator:
         _.set_title("Objective")
         _.set_ylabel("Relative Error")
         plt.savefig('plot_objective.png', bbox_inches='tight')
-        plt.show()
+        #plt.show()
         _ = plot_convergence(res)
         _.set_title("Convergence")
         plt.savefig('plot_convergence.png', bbox_inches='tight')
