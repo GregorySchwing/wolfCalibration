@@ -311,15 +311,16 @@ class Calibrator:
             res = opt.tell(x, f(x))
             dump(res, "./{}_checkpoint.pkl".format(prefix), compress=3)
 
-        em = expected_minimum(res, n_random_starts=100000, random_state=123)
+        print("sampling for expected minimum")
+        em = expected_minimum(res, n_random_starts=10000, random_state=123)
         print(em)
-        self.x = np.round(em.x, 4)
+        em_l = list(em)
+        self.x = np.round(em_l[0][0], 4)
         print(self.x)
-
 
         dump(res, '{}.pkl'.format(prefix))
 
-        _ = plot_objective(res, minimum='expected_minimum', n_minimum_search=100000, dimensions=["Alpha"], size=4)
+        _ = plot_objective(res, minimum='expected_minimum', n_minimum_search=10000, dimensions=["Alpha"], size=4)
         _.plot(dfMean.index, dfMean.values)
         _.legend(loc="upper left", labels=["Wolf","Wolf Minimum","Ewald"])
         ylim = _.get_ylim()
