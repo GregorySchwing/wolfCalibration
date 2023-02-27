@@ -3050,7 +3050,7 @@ def generate_initial_guesses_for_calibration_run_gomc_command(job):
         "np": 4,
         "ngpu": 0,
         "memory": memory_needed,
-        "walltime": 48,
+        "walltime": 96,
     }
 )
 @flow.with_job
