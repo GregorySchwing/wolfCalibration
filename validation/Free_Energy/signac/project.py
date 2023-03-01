@@ -644,6 +644,9 @@ def mosdef_input_written(job):
             and job.isfile(
                 job.doc.namd_output_dir+f"{mosdef_structure_box_0_name_str}.pdb"
             )
+            and job.isfile(
+                job.doc.path_to_wolf_template_dir+f"wolf_sanity.conf"
+            )
         ):
             file_written_bool = True
 
