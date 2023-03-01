@@ -347,7 +347,7 @@ class Calibrator:
         #plt.show()
 
         alpha = pd.DataFrame()
-        alpha["alpha"]=self.x
+        alpha.insert(0, 'alpha', self.x)
         alpha.to_csv("best_alpha.csv", header=True)
         print(alpha)
         Calibrator.extract_reference_target(self)
