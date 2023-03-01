@@ -3122,7 +3122,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
         shutil.copyfile(os.path.join(ref_job.doc.path_to_wolf_template_dir, forcefield), ref_job.fn(forcefield))
 
         regex = re.compile("(\w+?)_initial_state_(\w+?).conf")
-        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+        for root, dirs, files in os.walk(ref_job.doc.path_to_wolf_template_dir):
             for file in files:
                 if regex.match(file):
                     #print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
@@ -3130,7 +3130,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
                     append_default_wolf_parameters_line(ref_job,file,alpha)
         
         regex = re.compile("wolf_sanity.conf")
-        for root, dirs, files in os.walk(ref_job.doc.path_to_gomc_sseq_dir):
+        for root, dirs, files in os.walk(ref_job.doc.path_to_wolf_template_dir):
             for file in files:
                 if regex.match(file):
                     #print(os.path.join(ref_job.doc.path_to_gomc_sseq_dir, file), "copied to", ref_job.fn(file))
