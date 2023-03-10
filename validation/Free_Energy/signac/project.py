@@ -1437,6 +1437,28 @@ def part_4b_job_gomc_equilb_design_ensemble_completed_properly(job):
     except:
         return False
 
+
+# check if equilb selected ensemble GOMC run completed by checking the end of the GOMC consol file
+def part_4b_job_gomc_equilb_design_ensemble__state_completed_properly(job, initial_state_i):
+    """Check to see if the gomc_equilb_design_ensemble simulation was completed properly (set temperature)."""
+    try:
+        statesDone = True
+        try:
+            filename_4b_iter = job.doc.gomc_equilb_design_ensemble_dict[
+                str(initial_state_i)
+            ]["output_name_control_file_name"]
+
+            statesDone = statesDone and gomc_sim_completed_properly(
+                job,
+                filename_4b_iter,
+            )
+        except:
+            return False
+        return statesDone
+    except:
+        return False
+
+
 # check if production GOMC run completed by checking the end of the GOMC consol file
 @Project.label
 @flow.with_job
@@ -3352,7 +3374,8 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     #@Project.pre(part_4b_is_winning_wolf_model_or_ewald)
     #@Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
-    @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+    #@Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
+    @Project.post(lambda job: part_4b_job_gomc_equilb_design_ensemble__state_completed_properly(job,initial_state_j))
     @Project.operation.with_directives(
         {
             "np": lambda job: job.doc.gomc_ncpu,
