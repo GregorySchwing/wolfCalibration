@@ -3374,8 +3374,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.pre(part_4b_wolf_sanity_analysis_completed)  
     #@Project.pre(part_4b_is_winning_wolf_model_or_ewald)
     #@Project.post(part_3b_output_gomc_equilb_design_ensemble_started)
-    #@Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
-    @Project.post(lambda job: part_4b_job_gomc_equilb_design_ensemble__state_completed_properly(job,initial_state_j))
+    @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
         {
             "np": lambda job: job.doc.gomc_ncpu,
