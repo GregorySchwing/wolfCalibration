@@ -173,7 +173,7 @@ preliminary_output_avg_std_of_replicates_txt_file_name_box_0 = "preliminary_anal
 walltime_mosdef_hr = 24
 walltime_namd_hr = 24
 #CPU
-walltime_gomc_equilbrium_hr = 120
+walltime_gomc_equilbrium_hr = 144
 #GPU
 #walltime_gomc_equilbrium_hr = 48
 #CPU
