@@ -379,7 +379,7 @@ def part_1a_initial_data_input_to_json(job):
 @Project.post(part_1a_initial_data_input_to_json)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": 0,
         "memory": memory_needed,
         "walltime": walltime_mosdef_hr,
@@ -1077,7 +1077,7 @@ def part_4b_wolf_sanity_individual_simulation_averages_completed(job):
 
 @Project.operation.with_directives(
      {
-         "np": lambda job: job.doc.gomc_ncpu,
+         "np": lambda job: 1,#job.doc.gomc_ncpu,
          "ngpu": 0,
          "memory": memory_needed,
          "walltime": walltime_gomc_analysis_hr,
@@ -1296,7 +1296,7 @@ def part_4b_job_gomc_wolf_parameters_appended(job):
 
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": 0,
         "memory": memory_needed,
         "walltime": walltime_mosdef_hr,
@@ -1777,7 +1777,7 @@ def build_charmm(job, write_files=True):
 @Project.post(mosdef_input_written)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": 0,
         "memory": memory_needed,
         "walltime": walltime_mosdef_hr,
@@ -2844,7 +2844,7 @@ def run_namd_equilb_NPT_gomc_command(job):
 @Project.post(part_4b_job_gomc_sseq_completed_properly)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
@@ -2876,7 +2876,7 @@ def run_sseq_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_sseq_average_obtained)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": lambda job: job.doc.gomc_ngpu,
         "memory": memory_needed,
         "walltime": walltime_gomc_equilbrium_hr,
@@ -3021,7 +3021,7 @@ def run_wolf_sanity_run_gomc_command(job):
 @Project.post(part_4b_initial_guesses_generated)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": 1,
         "memory": memory_needed,
         "walltime": 24,
@@ -3119,7 +3119,7 @@ def run_calibration_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_wolf_parameters_appended)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": 0,
         "memory": memory_needed,
         "walltime": walltime_mosdef_hr,
@@ -3174,7 +3174,7 @@ def part_4b_job_gomc_append_wolf_parameters(job):
 @Project.post(part_4b_wolf_sanity_histograms_created)
 @Project.operation.with_directives(
     {
-        "np": lambda job: job.doc.gomc_ncpu,
+        "np": lambda job: 1,#job.doc.gomc_ncpu,
         "ngpu": 0,
         "memory": memory_needed,
         "walltime": walltime_mosdef_hr,
@@ -3377,7 +3377,7 @@ for initial_state_j in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.post(part_4b_job_gomc_equilb_design_ensemble_completed_properly)
     @Project.operation.with_directives(
         {
-            "np": lambda job: job.doc.gomc_ncpu,
+            "np": lambda job: 1,#job.doc.gomc_ncpu,
             "ngpu": lambda job: job.doc.gomc_ngpu,
             "memory": memory_needed,
             "walltime": walltime_gomc_equilbrium_hr,
@@ -3422,7 +3422,7 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
     @Project.post(part_4c_job_production_run_completed_properly)
     @Project.operation.with_directives(
         {
-            "np": lambda job: job.doc.gomc_ncpu,
+            "np": lambda job: 1,#job.doc.gomc_ncpu,
             "ngpu": lambda job: job.doc.gomc_ngpu,
             "memory": memory_needed,
             "walltime": walltime_gomc_production_hr,
@@ -3459,7 +3459,7 @@ for initial_state_i in range(0, number_of_lambda_spacing_including_zero_int):
 
 @Project.operation.with_directives(
      {
-         "np": lambda job: job.doc.gomc_ncpu,
+         "np": lambda job: 1,#job.doc.gomc_ncpu,
          "ngpu": 0,
          "memory": memory_needed,
          "walltime": walltime_gomc_analysis_hr,
@@ -3683,7 +3683,7 @@ def part_5a_analysis_individual_simulation_averages(job):
 #)
 #@Project.operation.with_directives(
 #     {
-#         "np": lambda job: job.doc.gomc_ncpu,
+#         "np": lambda job: 1,#job.doc.gomc_ncpu,
 #         "ngpu": 0,
 #         "memory": memory_needed,
 #         "walltime": walltime_gomc_analysis_hr,
