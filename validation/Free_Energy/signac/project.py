@@ -3072,7 +3072,7 @@ def generate_initial_guesses_for_calibration_run_gomc_command(job):
 @Project.post(part_4b_job_gomc_calibration_best_alpha_obtained)
 @Project.operation.with_directives(
     {
-        "np": 4,
+        "np": 1,
         "ngpu": 0,
         "memory": memory_needed,
         "walltime": 96,
@@ -3565,7 +3565,7 @@ def part_5a_preliminary_analysis_individual_simulation_averages(job):
 
 @Project.operation.with_directives(
      {
-         "np": 4,
+         "np": 1,
          "ngpu": 0,
          "memory": memory_needed,
          "walltime": walltime_gomc_analysis_hr,
